@@ -1,0 +1,75 @@
+\RequirePackage[l2tabu, orthodox]{nag}
+\documentclass[a4paper, twocolumn]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[pdftex, hidelinks,
+            pdftitle={Rendering 3-D Curl Noise Particle Flow in Real-Time},
+            pdfauthor={Martin Estgren and and Rasmus Hedin and Alfred Rundquist and Erik S. V. Jansson},
+            pdfsubject={},
+            pdfkeywords={}]{hyperref}
+
+\usepackage{bm}
+\usepackage{caption}
+\usepackage{csquotes}
+\usepackage{listings}
+\usepackage{pdfpages}
+\usepackage{booktabs}
+\usepackage{mathtools}
+\usepackage{blindtext}
+\usepackage{algorithmic}
+\usepackage{todonotes}
+\usepackage{graphicx}
+\usepackage{courier}
+\usepackage{acronym}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{siunitx}
+\usepackage{algorithm}
+\usepackage[capitalize, noabbrev]{cleveref}
+\usepackage[activate={true, nocompatibility}, final,
+            tracking=true, kerning=true, spacing=true,
+            factor=1100, stretch=10, shrink=10]{microtype}
+
+\DeclareCaptionFormat{modifiedlst}{\rule{\textwidth}{0.85pt}\\[-2.9pt]#1#2#3}
+\captionsetup[lstlisting]{format =  modifiedlst,
+labelfont=bf,singlelinecheck=off,labelsep=space}
+\lstset{basicstyle=\footnotesize\ttfamily,
+        breakatwhitespace = false,
+        breaklines = true,
+        keepspaces = true,
+        language = C++,
+        showspaces = false,
+        showstringspaces = false,
+        frame = tb,
+        numbers = left,
+        numbersep = 5pt,
+        xleftmargin = 16pt,
+        framexleftmargin = 16pt,
+        belowskip = \bigskipamount,
+        aboveskip = \bigskipamount,
+        escapeinside={<@}{@>}}
+
+\title{\textbf{Rendering 3-D Curl Noise Particle Flow in Real-Time}\\
+       \Large{\textit{--- Project in Computer Graphics at Linköping University ---}}}
+\author{{\textbf{Martin Estgren}}\; {\href{mailto:mares480@student.liu.se}{\texttt{<mares480@student.liu.se>}}}\\
+        {\textbf{Rasmus Hedin}}\; {\href{mailto:rashe877@student.liu.se}{\texttt{<rashe877@student.liu.se>}}}\\
+        {\textbf{Alfred Rundquist}}\; {\href{mailto:alfru536@student.liu.se}{\texttt{<alfru536@student.liu.se>}}}\\
+        {\textbf{Erik S. V. Jansson}}\; {\href{mailto:erija578@student.liu.se}{\texttt{<erija578@student.liu.se>}}}}
+
+\begin{document}
+    \maketitle
+    \section*{Abstract}
+    \pagenumbering{gobble}
+    \section*{Acknowledgments}
+    \tableofcontents \newpage
+
+
+
+    \newpage % Next column...
+    \nocite{*} % Include all.
+    \bibliographystyle{abbrv}
+    \bibliography{cnpf}
+    \clearpage % Pages!!
+    \pagenumbering{arabic}
+\end{document}
