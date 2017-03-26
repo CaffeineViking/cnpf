@@ -7,6 +7,7 @@ Dependencies
 ### For windows:
 
 * Install [MinGW](http://www.mingw.org/) with everything except ADA and Fortan under `C:\MinGW` (should be default location).
+* Download [GLM](http://glm.g-truc.net/0.9.8/index.html) and place the `glm` folder with all includes into `C:\MinGW\include`. 
 * Download the pre-compiled [GLFW](https://github.com/glfw/glfw/releases/download/3.2.1/glfw-3.2.1.bin.WIN32.zip) binaries.
   * Copy the `include` directory into `C:\MinGW\include`.
   * Copy the content of `lib-mingw` into `C:\MinGW\lib` except the `glfw3.dll`which you will place under the `bin` folder for this repo.
