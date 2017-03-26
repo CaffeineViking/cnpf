@@ -14,7 +14,16 @@ Dependencies
 * Download the source for [GLEW](https://sourceforge.net/projects/glew/files/glew/2.0.0/glew-2.0.0.zip/download) and copy the `compile_glew.bat` from the `misc` folder provided with this repo to the root of the glew source folder.
   * Run the bat and copy the libraries from `lib` into `C:\MinGW\lib`. Copy the `glew32.dll` into the `C:\Windows` folder. 
 
-Buidling
+### For linux or bsd:
+
+* Using your favorite package manager, install:
+    * GLFW with development packages.
+    * GLEW with development packages.
+    * The standard MESA schenanigans.
+    * The Premake5 build system.
+* If it doesn't work, ask Erik!!
+
+Building
 --------
 
 1. Make sure library dependencies are in your path.

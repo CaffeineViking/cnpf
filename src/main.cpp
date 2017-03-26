@@ -75,8 +75,8 @@ int main()
     
     // Use default vertex and fragment shader. Fragment makes suff orange and
     // vertrex draw vertecies with camera taken into account.
-    Shader vertexShader = Shader("assets/shaders/default.vert",GL_VERTEX_SHADER);
-    Shader fragmentShader = Shader("assets/shaders/default.frag",GL_FRAGMENT_SHADER);
+    Shader vertexShader = Shader("share/shaders/default.vert",GL_VERTEX_SHADER);
+    Shader fragmentShader = Shader("share/shaders/default.frag",GL_FRAGMENT_SHADER);
     fragmentShader.compile();
     vertexShader.compile();
 
