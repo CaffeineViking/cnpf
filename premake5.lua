@@ -22,7 +22,7 @@ project (name)
     kind "WindowedApp"
     files {"src/**.cc"}
     includedirs {"include"}
-    filter {"system:window"} -- Damn hipsters...
+    filter {"system:windows"} -- Inconsistent...
         links {"glfw3dll", "glew32", "opengl32"}
     filter {"system:linux or bsd or macosx"}
         links {"glfw", "GLEW", "GL"}
@@ -48,7 +48,7 @@ project (name.."-tests")
     files {"tests/main.cc"}
     removefiles {"src/main.cc"}
     includedirs {"include"}
-    filter {"system:window"} -- Damn hipsters...
+    filter {"system:windows"} -- Inconsistent...
         links {"glfw3dll", "glew32", "opengl32"}
     filter {"system:linux or bsd or macosx"}
         links {"glfw", "GLEW", "GL"}
