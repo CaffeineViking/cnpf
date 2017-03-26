@@ -38,4 +38,16 @@ public:
 	Cube(float, float, float);
 	void render();
 };
+
+class Plane: public Shape{
+private:
+	float _width;
+	float _height;
+	GLuint _id; 
+	GLuint _uvId;
+public:
+	~Plane();
+	Plane(float, float);
+	void render();
+};
 #endif

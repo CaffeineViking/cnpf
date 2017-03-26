@@ -32,6 +32,7 @@ Shader::Shader(const std::string& path, const GLuint& type){
 	const char *source = readFile(path).c_str();
 	glShaderSource(_shaderID, 1, &source, NULL);
 }
+
 bool Shader::compile(){
 	glCompileShader(_shaderID);
 	GLint success;

@@ -15,7 +15,7 @@
 #include "Shader.hpp"
 #include "ShaderProgram.hpp"
 #include "Locator.hpp"
-#include "Camera.hpp"
+#include "Texture.hpp"
 const GLuint WIDTH = 800, HEIGHT = 800;
 
 int main()
@@ -62,8 +62,15 @@ int main()
 
     // Setup Z-buffer and Viewport
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS); 
+
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);  
+
+    GLuint VertexArrayID;
+    glGenVertexArrays(1,&VertexArrayID);
+    glBindVertexArray(VertexArrayID);
+
     glViewport(0, 0, width, height);
 
     //====================================
@@ -71,7 +78,7 @@ int main()
     //====================================
 
     // Shapes are placed at origin
-    Cube cube = Cube{1.0f,1.0f,1.0f};
+    Plane plane = Plane{1.0f,1.0f};
     
     // Use default vertex and fragment shader. Fragment makes suff orange and
     // vertrex draw vertecies with camera taken into account.
@@ -86,26 +93,33 @@ int main()
     program.attach(vertexShader);
 
     Camera _camera = Camera(45,800,800);
+     _camera.translate(glm::vec3(0.0f,0.0f,2.0f));
 
+    GLuint samplerId  = glGetUniformLocation(program.getId(), "myTextureSampler");
+    glUniform1i(samplerId, 0);
+
+    Texture texture = Texture{};
     // Main loop
     while (!glfwWindowShouldClose(window))
     {
         // Poll input
         glfwPollEvents();
-        _camera.rotate(0.1f);
-        _camera.translate(glm::vec3(0.0f,0.0f,0.0f));
+        _camera.rotate(0.3f);
         _camera.update(program.getId());
         // Start of per-frame GL render
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT |GL_DEPTH_BUFFER_BIT);
 
         program.begin();
-        cube.render();
-      
+        texture.begin();
+        plane.render();
+        texture.end();
+        
         // Swap the render buffer to display
         glfwSwapBuffers(window);
     }
 
+    glDeleteVertexArrays(1, &VertexArrayID);
     glfwTerminate();
     return 0;
 }

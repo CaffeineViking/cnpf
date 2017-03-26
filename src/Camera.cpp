@@ -3,7 +3,7 @@
 #include <glm/gtx/rotate_vector.hpp>
 
 Camera::Camera(float FOV, float width, float height):
-_cameraPosition{2.0f,2.0f,2.0f},
+_cameraPosition{0.0f,0.0f,0.0f},
 _cameraTarget{0.0f,0.0f,0.0f},
 _angle{0.0f},
 _FOV{FOV},
@@ -19,6 +19,7 @@ void Camera::rotate(float deg){
 	glm::vec3 v2 = _cameraPosition - _cameraTarget;
 	glm::vec3 v3 = glm::rotate(v2,glm::radians(deg), glm::vec3(0.0f,1.0f,0.0f));
 	_cameraPosition = v3 + _cameraTarget;
+	translate(glm::vec3(0.0f,0.0f,0.0f));
 }
 
 void Camera::translate(const glm::vec3& pos){
