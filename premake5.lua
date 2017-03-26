@@ -21,9 +21,11 @@ project (name)
     targetdir "bin"
     kind "WindowedApp"
     files {"src/**.cc"}
+    files {"src/**.cpp"}
     includedirs {"include"}
     filter {"system:windows"} -- Inconsistent...
-        links {"glfw3dll", "glew32", "opengl32"}
+        links {"glew32", "glfw3dll", "opengl32"}
+        buildoptions { " -static -static-libgcc -static-libstdc++", "-mwindows", "-mconsole" }
     filter {"system:linux or bsd or macosx"}
         links {"glfw", "GLEW", "GL"}
 
@@ -49,6 +51,7 @@ project (name.."-tests")
     removefiles {"src/main.cc"}
     includedirs {"include"}
     filter {"system:windows"} -- Inconsistent...
-        links {"glfw3dll", "glew32", "opengl32"}
+        links {"glew32", "glfw3dll", "opengl32"}
+        buildoptions { " -static -static-libgcc -static-libstdc++", "-mwindows", "-mconsole"}
     filter {"system:linux or bsd or macosx"}
         links {"glfw", "GLEW", "GL"}
