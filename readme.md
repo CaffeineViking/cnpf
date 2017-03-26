@@ -1,7 +1,18 @@
 Curl Noise Particle Flow
 ========================
 
-Building
+Dependencies
+--------
+
+### For windows:
+
+* Install [mingw](http://www.mingw.org/) with everything except ADA and Fortan under `C:\MinGW` (should be default location).
+* Download the pre-compiled [GLFW)[https://github.com/glfw/glfw/releases/download/3.2.1/glfw-3.2.1.bin.WIN32.zip] binaries.
+  * Copy the `include` directory into `C:\MinGW\include`.
+  * Copy the content of `lib-mingw` into `C:\MinGW\lib` except the `glfw3.dll`which you will place under `C:\Windows\System32`.
+* Download the source for [GLEW](https://sourceforge.net/projects/glew/files/glew/2.0.0/glew-2.0.0.zip/download) and copy the `compile_glew.bat` from the `misc` folder provided with this repo to the root of the glew source folder.
+  * Run the bat and copy the libraries from `lib` into `C:\MinGW\lib`. Copy the `glew32.dll` into the `bin` folder of this repo. 
+
 --------
 
 1. Make sure library dependencies are in your path.
