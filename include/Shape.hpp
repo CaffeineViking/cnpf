@@ -4,7 +4,10 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <stdio.h>
+
+#ifdef WINDOWS
 #include <windows.h>
+#endif
 
 //==============================================================================================
 // Super simple class-system for shapes. Ideally used to define vertecies and geometry at once.

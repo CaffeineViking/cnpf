@@ -1,7 +1,9 @@
 
 
 // third-party libraries
+#ifdef WINDOWS
 #include <windows.h>
+#endif
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>

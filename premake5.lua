@@ -24,10 +24,12 @@ project (name)
     files {"src/**.cpp"}
     includedirs {"include"}
     filter {"system:windows"} -- Inconsistent...
+        defines {"WINDOWS"}
         links {"glew32", "glfw3dll", "opengl32"}
         buildoptions { " -static -static-libgcc -static-libstdc++", "-mwindows", "-mconsole" }
     filter {"system:linux or bsd or macosx"}
         links {"glfw", "GLEW", "GL"}
+        defines {"UNIX"}
 
 -- ------ Library
 -- project (name)
@@ -51,7 +53,9 @@ project (name.."-tests")
     removefiles {"src/main.cc"}
     includedirs {"include"}
     filter {"system:windows"} -- Inconsistent...
+        defines {"WINDOWS"}
         links {"glew32", "glfw3dll", "opengl32"}
         buildoptions { " -static -static-libgcc -static-libstdc++", "-mwindows", "-mconsole"}
     filter {"system:linux or bsd or macosx"}
         links {"glfw", "GLEW", "GL"}
+        defines {"UNIX"}
