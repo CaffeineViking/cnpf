@@ -48,9 +48,9 @@ project (name)
 project (name.."-tests")
     targetdir "bin"
     kind "ConsoleApp"
-    files {"src/**.cc"}
-    files {"tests/main.cc"}
-    removefiles {"src/main.cc"}
+    files {"src/**.cpp"}
+    files {"tests/**.cpp"}
+    removefiles {"src/main.cpp"}
     includedirs {"include"}
     filter {"system:windows"} -- Inconsistent...
         defines {"WINDOWS"}

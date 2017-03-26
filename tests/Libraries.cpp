@@ -1,10 +1,6 @@
-#define   CATCH_CONFIG_MAIN
 #include "foreign/catch.hpp"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-
-#define ASSERT( expression ) std::cout<<( (expression) ? "OK" : "NOT OK" )<<std::endl;
-
 
 bool checkInitGLFW(){
 
@@ -30,7 +26,7 @@ bool checkInitGLFW(){
 
 bool checkInitGLEW(){
 
-	glewExperimental = GL_TRUE;
+    glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK)
     {
         return false;
@@ -39,9 +35,9 @@ bool checkInitGLEW(){
 }
 
 TEST_CASE("Check GLFW init") {
-	REQUIRE( checkInitGLFW() == true);
+    REQUIRE( checkInitGLFW() == true);
 }
 
 TEST_CASE("Check GLEW init") {
-	REQUIRE( checkInitGLEW() == true);
+    REQUIRE( checkInitGLEW() == true);
 }
