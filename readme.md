@@ -14,6 +14,8 @@ Dependencies
 * Download the source for [GLEW](https://sourceforge.net/projects/glew/files/glew/2.0.0/glew-2.0.0.zip/download) and copy the `compile_glew.bat` from the `misc` folder provided with this repo to the root of the glew source folder.
   * Run the bat and copy the libraries from `lib` into `C:\MinGW\lib`. Copy the `glew32.dll` into the `C:\Windows` folder. 
 
+If you encounter a run-time error about some basic_string funcitonallity, it's caused by the wrong libstdc++-6.dll is first in the path. The easiest solution is to copy it from C:\MinGW\bin to C:\Windows, or to the folder where the binaries are run from.
+
 ### For linux or bsd:
 
 * Using your favorite package manager, install:
