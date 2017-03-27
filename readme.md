@@ -6,6 +6,7 @@ Dependencies
 
 ### For windows:
 
+* Download and place [premake5](https://premake.github.io/download.html) in your path.
 * Install [MinGW](http://www.mingw.org/) with everything except ADA and Fortan under `C:\MinGW` (should be default location).
 * Download [GLM](http://glm.g-truc.net/0.9.8/index.html) and place the `glm` folder with all includes into `C:\MinGW\include`. 
 * Download the pre-compiled [GLFW](https://github.com/glfw/glfw/releases/download/3.2.1/glfw-3.2.1.bin.WIN32.zip) binaries.
