@@ -8,7 +8,8 @@ Dependencies
 
 * Download and place [premake5](https://premake.github.io/download.html) in your path.
 * Install [MinGW](http://www.mingw.org/) with everything except ADA and Fortan under `C:\MinGW` (should be default location).
-* Download [GLM](http://glm.g-truc.net/0.9.8/index.html) and place the `glm` folder with all includes into `C:\MinGW\include`. 
+* Download [GLM](http://glm.g-truc.net/0.9.8/index.html) and place the `glm` folder with all includes into `C:\MinGW\include`.
+* Fetch the latest [OpenCL](https://www.khronos.org/registry/OpenCL/) headers and find your runtimes (usually the drivers).
 * Download the pre-compiled [GLFW](https://github.com/glfw/glfw/releases/download/3.2.1/glfw-3.2.1.bin.WIN32.zip) binaries.
   * Copy the `include` directory into `C:\MinGW\include`.
   * Copy the content of `lib-mingw` into `C:\MinGW\lib` except the `glfw3.dll`which you will place under the `bin` folder for this repo.
@@ -22,6 +23,8 @@ If you encounter a run-time error about some basic_string funcitonallity, it's c
 * Using your favorite package manager, install:
     * GLFW with development packages.
     * GLEW with development packages.
+    * Maybe OpenCL hardware runtimes.
+    * Oh yea, the OpenCL headers too.
     * The standard MESA schenanigans.
     * The Premake5 build system.
 * If it doesn't work, ask Erik!!
