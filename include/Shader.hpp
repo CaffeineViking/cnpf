@@ -23,7 +23,7 @@ public:
 	Shader& operator=(Shader&&) = default;
 
 	bool compile();
-	const GLuint getID() const;
+	GLuint getID() const;
 };
 
 #endif

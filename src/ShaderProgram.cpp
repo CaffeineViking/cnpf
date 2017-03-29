@@ -38,7 +38,7 @@ void ShaderProgram::begin(){
 void ShaderProgram::end(){
 	glUseProgram(0);
 }
-const GLuint ShaderProgram::getId(){
+GLuint ShaderProgram::getId(){
 	return _programId;
 }
 

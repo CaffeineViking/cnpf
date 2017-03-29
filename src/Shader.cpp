@@ -48,6 +48,6 @@ bool Shader::compile(){
 	return true;
 }
 
-const GLuint Shader::getID() const{
+GLuint Shader::getID() const{
 	return _shaderID;
 }

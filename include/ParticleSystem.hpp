@@ -3,11 +3,11 @@
 
 #include <string>
 #include <fstream>
-
+#include <CL/cl.hpp>
 class ParticleSystem {
 private:
 	 int _numParticles;
-	 cl::Device _gpuDevice
+	 cl::Device _gpuDevice;
  	 cl::Context _clContext;
      cl::Program::Sources _clSources;
 	 cl::Program _clProgram;
@@ -16,6 +16,9 @@ private:
 public:	
 	~ParticleSystem();
 	ParticleSystem();
+
+	bool init(const std::string&);
+	void compute();
 
 	ParticleSystem(const ParticleSystem&) = default;
 	ParticleSystem& operator=(const ParticleSystem&) = default;

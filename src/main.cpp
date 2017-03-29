@@ -2,14 +2,13 @@
 
 // third-party libraries
 #ifdef WINDOWS
-#include <windows.h>
+//#include <windows.h>
 #endif
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
-#include <cassert>
 #include <iostream>
-#include <stdexcept>
 
 #include "Shape.hpp"
 #include "Shader.hpp"
@@ -103,21 +102,23 @@ int main()
     Texture texture = Texture{};
 
     ParticleSystem system = ParticleSystem();
+    system.init("share/kernels/simple_add.cl");
+    system.compute();
     // Main loop
     while (!glfwWindowShouldClose(window))
     {
         // Poll input
         glfwPollEvents();
-        _camera.rotate(0.3f);
-        _camera.update(program.getId());
+        //_camera.rotate(0.3f);
+        //_camera.update(program.getId());
         // Start of per-frame GL render
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT |GL_DEPTH_BUFFER_BIT);
 
-        // program.begin();
-        // texture.begin();
-        // plane.render();
-        // texture.end();
+         program.begin();
+         texture.begin();
+         plane.render();
+         texture.end();
         
         // Swap the render buffer to display
         glfwSwapBuffers(window);
