@@ -16,6 +16,8 @@
 #include "ShaderProgram.hpp"
 #include "Locator.hpp"
 #include "Texture.hpp"
+#include "ParticleSystem.hpp"
+
 const GLuint WIDTH = 800, HEIGHT = 800;
 
 int main()
@@ -99,6 +101,8 @@ int main()
     glUniform1i(samplerId, 0);
 
     Texture texture = Texture{};
+
+    ParticleSystem system = ParticleSystem();
     // Main loop
     while (!glfwWindowShouldClose(window))
     {
@@ -110,10 +114,10 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT |GL_DEPTH_BUFFER_BIT);
 
-        program.begin();
-        texture.begin();
-        plane.render();
-        texture.end();
+        // program.begin();
+        // texture.begin();
+        // plane.render();
+        // texture.end();
         
         // Swap the render buffer to display
         glfwSwapBuffers(window);
