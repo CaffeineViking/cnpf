@@ -1,11 +1,8 @@
 #version 410 core
 
-
-in vec2 UV;
 out vec4 color;
-uniform sampler2D myTextureSampler;
 
 void main()
 {
-    color =texture( myTextureSampler, UV ).rgba;
+    color =vec4(0.4,0.2,1.0,1.0);
 } 

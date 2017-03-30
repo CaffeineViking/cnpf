@@ -8,7 +8,17 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <CL/cl.hpp>
 #include <iostream>
+
+#include <cstdlib>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <random>
+#include <cmath>
+#include <algorithm>
 
 #include "Shape.hpp"
 #include "Shader.hpp"
@@ -17,7 +27,15 @@
 #include "Texture.hpp"
 #include "ParticleSystem.hpp"
 
+#include "OpenCLUtils.hpp"
+#include "OpenGLUtils.hpp"
+
 const GLuint WIDTH = 800, HEIGHT = 800;
+
+inline unsigned divup(unsigned a, unsigned b)
+{
+    return (a+b-1)/b;
+}
 
 int main()
 {
@@ -68,18 +86,15 @@ int main()
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);  
 
-    GLuint VertexArrayID;
-    glGenVertexArrays(1,&VertexArrayID);
-    glBindVertexArray(VertexArrayID);
+    //GLuint VertexArrayID;
+    //glGenVertexArrays(1,&VertexArrayID);
+    //glBindVertexArray(VertexArrayID);
 
     glViewport(0, 0, width, height);
 
     //====================================
     //  Init for Shaders and Scenes
     //====================================
-
-    // Shapes are placed at origin
-    Plane plane = Plane{1.0f,1.0f};
     
     // Use default vertex and fragment shader. Fragment makes suff orange and
     // vertrex draw vertecies with camera taken into account.
@@ -93,38 +108,127 @@ int main()
     program.attach(fragmentShader);
     program.attach(vertexShader);
 
+    // Create camera to change to MV projection matrix for the vertex shader
     Camera _camera = Camera(45,800,800);
-     _camera.translate(glm::vec3(0.0f,0.0f,2.0f));
+     _camera.translate(glm::vec3(0.0f,0.0f,1.0f));
 
-    GLuint samplerId  = glGetUniformLocation(program.getId(), "myTextureSampler");
-    glUniform1i(samplerId, 0);
+     // Init random kernel with my NVIDIA card. You need to change
+     std::cout << "Init OpenCL with device NVIDIA hardcoded" << std::endl; 
+    clParameters clParams = OpenCLUtils::initCL("share/kernels/random.cl", "random", "NVIDIA");
 
-    Texture texture = Texture{};
+    const int PARTICLE_COUNT = 1000000;
+        std::random_device rd;
+        std::mt19937 eng(rd());
+        std::normal_distribution<> dist(10, 100);
+        std::vector<float> data(3*PARTICLE_COUNT);
+        for(int n=0; n<PARTICLE_COUNT; ++n) {
+            data[3*n+0] = std::fmod(dist(eng), 800)/800;
+            data[3*n+1] = std::fmod(dist(eng), 800)/800;
+            data[3*n+2] = std::fmod(dist(eng), 800)/800;
+        }
+    // Create Vertex buffer for the positions
+    cl::Buffer buffer = cl::Buffer(clParams.context, CL_MEM_READ_WRITE, sizeof(float)*3*PARTICLE_COUNT);
 
-    ParticleSystem system = ParticleSystem();
-    system.init("share/kernels/simple_add.cl");
-    system.compute();
+    // Same but for OpenGL
+    GLuint vbo = OpenGLUtils::createBuffer(3*PARTICLE_COUNT, data.data(), GL_STATIC_DRAW);
+
+    // Tmp buffer to do some copying on
+    cl::BufferGL tmp = cl::BufferGL(clParams.context, CL_MEM_READ_WRITE, vbo, NULL);
+
+    // The "Generic" vertex array object which is used to render everyting
+    GLuint vao;
+    glGenVertexArrays(1,&vao);
+    glBindVertexArray(vao);
+
+    // Bind buffer to shader
+    glBindBuffer(GL_ARRAY_BUFFER,vbo);
+    GLint position_attribute = glGetAttribLocation(program.getId(), "position");
+    glVertexAttribPointer(position_attribute, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(position_attribute);
+    glBindVertexArray(0);
+
+    // Write position data to buffer
+    clParams.queue.enqueueWriteBuffer(buffer, CL_TRUE, 0, sizeof(float)*3*PARTICLE_COUNT, data.data());
+
+    cl::size_t<3> dimensions;
+    dimensions[0] = PARTICLE_COUNT;
+    dimensions[1] = 1;
+    dimensions[2] = 1;
+
     // Main loop
     while (!glfwWindowShouldClose(window))
     {
+        // std::cout << "Hello World " << std::endl;
         // Poll input
         glfwPollEvents();
-        //_camera.rotate(0.3f);
-        //_camera.update(program.getId());
-        // Start of per-frame GL render
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT |GL_DEPTH_BUFFER_BIT);
+     
+        // CL event used to wait for kernel osv...
+        cl::Event ev;
+        // Something number of particles something...
+        cl::NDRange local(16);
+        cl::NDRange global(16 *  divup(dimensions[0],16));
 
-         program.begin();
-         texture.begin();
-         plane.render();
-         texture.end();
-        
+        // set kernel arguments
+        //======================================================
+        // Vertex array object buffer with coords interleaved
+        //======================================================
+        clParams.kernel.setArg(0,buffer);
+        // Width
+        clParams.kernel.setArg(1,800);
+        // Height
+        clParams.kernel.setArg(2,800);
+
+        //Random seed for GLSL psuedo random generator
+        clParams.kernel.setArg(3,std::abs(std::rand()));
+
+        // Equeue kernel
+        clParams.queue.enqueueNDRangeKernel(clParams.kernel,cl::NullRange,global,local);
+        // Wait for kernel
+        glFinish();
+
+        std::vector<cl::Memory> objs;
+        objs.clear();
+        objs.push_back(tmp);
+
+        // Aqquire GL Object ( ͡° ͜ʖ ͡°)
+        cl_int res = clParams.queue.enqueueAcquireGLObjects(&objs,NULL,&ev);
+        ev.wait();
+
+        if (res!=CL_SUCCESS) {
+            std::cout<<"Failed acquiring GL object: "<<res<<std::endl;
+            exit(248);
+        }
+
+        // Copy from OpenCL to OpenGL 
+        clParams.queue.enqueueCopyBuffer(buffer, tmp, 0, 0, 3*PARTICLE_COUNT*sizeof(float), NULL, NULL);
+        res = clParams.queue.enqueueReleaseGLObjects(&objs);
+        ev.wait();
+        if (res!=CL_SUCCESS) {
+            std::cout<<"Failed releasing GL object: "<<res<<std::endl;
+            exit(247);
+        }
+
+        // Wait for copy to be done
+        clParams.queue.finish();
+
+        // Render vertecies
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+         _camera.translate(glm::vec3(0.0f,0.0f,0.0f));
+         _camera.rotate(0.3f);
+        _camera.update(program.getId());
+       
+        program.begin();
+
+        glPointSize(2);
+        glBindVertexArray(vao);
+        glDrawArrays(GL_POINTS,0,PARTICLE_COUNT);
+        glBindVertexArray(0);
         // Swap the render buffer to display
         glfwSwapBuffers(window);
     }
 
-    glDeleteVertexArrays(1, &VertexArrayID);
+    //glDeleteVertexArrays(1, &VertexArrayID);
     glfwTerminate();
     return 0;
 }

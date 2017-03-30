@@ -3,7 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <CL/cl.hpp>
-
+#include "OpenCLUtils.hpp"
 bool checkInitGLFW(){
 
     const int MAJOR_VERSION = 2;
@@ -43,71 +43,28 @@ bool checkInitGLEW(){
 }
 
 bool checkInitOpenCL() {
-    std::vector<cl::Platform> platforms;
-    cl::Platform::get(&platforms);
-    if (platforms.empty()) return false;
+    //OpenCLUtils::dumpInfo();
+    clParameters clParams = OpenCLUtils::initCL("share/kernels/simple_add.cl", "simple_add", "NVIDIA");
 
-    std::cerr << "Number of platforms found: " << platforms.size() << std::endl;
-    for (auto platform : platforms) {
-        std::string platformInfo;
-        platform.getInfo(CL_PLATFORM_PROFILE, &platformInfo);
-        std::cerr << "Platform profile: " << platformInfo << std::endl;
-        platform.getInfo(CL_PLATFORM_VENDOR, &platformInfo);
-        std::cerr << "Platform vendor: " << platformInfo << std::endl;
-        platform.getInfo(CL_PLATFORM_NAME, &platformInfo);
-        std::cerr << "Platform name: " << platformInfo << std::endl;
-        platform.getInfo(CL_PLATFORM_VERSION, &platformInfo);
-        std::cerr << "Platform version: " << platformInfo << std::endl;
-        platform.getInfo(CL_PLATFORM_EXTENSIONS, &platformInfo);
-        std::cerr << "Platform extensions: " << platformInfo << std::endl;
-        std::cout << std::endl;
+    cl::Buffer buffer_A(clParams.context,CL_MEM_READ_WRITE,sizeof(int)*10);
+    cl::Buffer buffer_B(clParams.context,CL_MEM_READ_WRITE,sizeof(int)*10);
+    cl::Buffer buffer_C(clParams.context,CL_MEM_READ_WRITE,sizeof(int)*10);
+    int A[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    int B[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
-        std::vector<cl::Device> devices;
-        platform.getDevices(CL_DEVICE_TYPE_CPU, &devices);
-        std::cout << "Devices of type CPU:" << std::endl;
-        for (auto device : devices) {
-            std::string deviceInfo;
-            device.getInfo(CL_DEVICE_MAX_WORK_ITEM_SIZES, &deviceInfo);
-            std::cerr << "Device max work items: " << deviceInfo << std::endl;
-            device.getInfo(CL_DEVICE_NAME, &deviceInfo);
-            std::cerr << "Device name: " << deviceInfo << std::endl;
-            device.getInfo(CL_DEVICE_VERSION, &deviceInfo);
-            std::cerr << "Device version: " << deviceInfo << std::endl;
-            device.getInfo(CL_DEVICE_PROFILE, &deviceInfo);
-            std::cerr << "Device profile: " << deviceInfo << std::endl;
-            device.getInfo(CL_DEVICE_VERSION, &deviceInfo);
-            std::cerr << "Device version: " << deviceInfo << std::endl;
-            device.getInfo(CL_DRIVER_VERSION, &deviceInfo);
-            std::cerr << "Driver version: " << deviceInfo << std::endl;
-            device.getInfo(CL_DEVICE_OPENCL_C_VERSION, &deviceInfo);
-            std::cerr << "Device OpenCL version: " << deviceInfo << std::endl;
-            device.getInfo(CL_DEVICE_EXTENSIONS, &deviceInfo);
-            std::cerr << "Device extensions: " << deviceInfo << std::endl;
-        } std::cerr << std::endl;
+    clParams.queue.enqueueWriteBuffer(buffer_A,CL_TRUE,0,sizeof(int)*10,A);
+    clParams.queue.enqueueWriteBuffer(buffer_B,CL_TRUE,0,sizeof(int)*10,B);
+    clParams.kernel.setArg(0, buffer_A);
+    clParams.kernel.setArg(1, buffer_B);
+    clParams.kernel.setArg(2, buffer_C);
+    clParams.queue.enqueueNDRangeKernel(clParams.kernel, cl::NullRange,cl::NDRange(10), cl::NullRange);
+    int C[10];
+    clParams.queue.enqueueReadBuffer(buffer_C,CL_TRUE,0,sizeof(int)*10,C);
 
-        platform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
-        std::cout << "Devices of type GPU:" << std::endl;
-        for (auto device : devices) {
-            std::string deviceInfo;
-            device.getInfo(CL_DEVICE_MAX_WORK_ITEM_SIZES, &deviceInfo);
-            std::cerr << "Device max work items: " << deviceInfo << std::endl;
-            device.getInfo(CL_DEVICE_NAME, &deviceInfo);
-            std::cerr << "Device name: " << deviceInfo << std::endl;
-            device.getInfo(CL_DEVICE_VERSION, &deviceInfo);
-            std::cerr << "Device version: " << deviceInfo << std::endl;
-            device.getInfo(CL_DEVICE_PROFILE, &deviceInfo);
-            std::cerr << "Device profile: " << deviceInfo << std::endl;
-            device.getInfo(CL_DEVICE_VERSION, &deviceInfo);
-            std::cerr << "Device version: " << deviceInfo << std::endl;
-            device.getInfo(CL_DRIVER_VERSION, &deviceInfo);
-            std::cerr << "Driver version: " << deviceInfo << std::endl;
-            device.getInfo(CL_DEVICE_OPENCL_C_VERSION, &deviceInfo);
-            std::cerr << "Device OpenCL version: " << deviceInfo << std::endl;
-            device.getInfo(CL_DEVICE_EXTENSIONS, &deviceInfo);
-            std::cerr << "Device extensions: " << deviceInfo << std::endl;
-        } std::cerr << std::endl;
-
-        if (devices.empty()) return false;
+    int expectedResult[] = {0,2,4,6,8,10,12,14,16,18};
+    for(int i=0;i<10;i++){
+       if(expectedResult[i] != C[i])
+        return false;
     }
 
     return true;
