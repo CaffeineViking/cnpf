@@ -110,7 +110,7 @@ int main()
 
     // Create camera to change to MV projection matrix for the vertex shader
     Camera _camera = Camera(45,800,800);
-     _camera.translate(glm::vec3(0.0f,0.0f,1.0f));
+     _camera.translate(glm::vec3(0.0f,0.5f,1.0f));
 
      // Init random kernel with my NVIDIA card. You need to change
      std::cout << "Init OpenCL with device NVIDIA hardcoded" << std::endl; 
@@ -119,12 +119,14 @@ int main()
     const int PARTICLE_COUNT = 1000000;
         std::random_device rd;
         std::mt19937 eng(rd());
-        std::normal_distribution<> dist(10, 100);
+        std::normal_distribution<> dist(1, 100);
         std::vector<float> data(3*PARTICLE_COUNT);
         for(int n=0; n<PARTICLE_COUNT; ++n) {
-            data[3*n+0] = std::fmod(dist(eng), 800)/800;
-            data[3*n+1] = std::fmod(dist(eng), 800)/800;
-            data[3*n+2] = std::fmod(dist(eng), 800)/800;
+            float x = n %  1000 - 500;
+            float y = n/ 1000 - 500;
+            data[3*n+0] = x / 1000;
+            data[3*n+1] = 0.0f;
+            data[3*n+2] = y / 1000;
         }
     // Create Vertex buffer for the positions
     cl::Buffer buffer = cl::Buffer(clParams.context, CL_MEM_READ_WRITE, sizeof(float)*3*PARTICLE_COUNT);
@@ -155,9 +157,21 @@ int main()
     dimensions[1] = 1;
     dimensions[2] = 1;
 
+    // For FPS counter
+     double lastTime = glfwGetTime();
+     int nbFrames = 0;
+     int counter = 0;
     // Main loop
     while (!glfwWindowShouldClose(window))
-    {
+    {   
+         double currentTime = glfwGetTime();
+         nbFrames++;
+         if ( currentTime - lastTime >= 1.0 ){ // If last prinf() was more than 1 sec ago
+             // printf and reset timer
+            std::cout << "FPS: " << double(nbFrames) << std::endl;
+             nbFrames = 0;
+             lastTime += 1.0;
+         }
         // std::cout << "Hello World " << std::endl;
         // Poll input
         glfwPollEvents();
@@ -165,8 +179,8 @@ int main()
         // CL event used to wait for kernel osv...
         cl::Event ev;
         // Something number of particles something...
-        cl::NDRange local(16);
-        cl::NDRange global(16 *  divup(dimensions[0],16));
+        cl::NDRange local(1);
+        cl::NDRange global(1 *  divup(dimensions[0],1));
 
         // set kernel arguments
         //======================================================
@@ -179,7 +193,7 @@ int main()
         clParams.kernel.setArg(2,800);
 
         //Random seed for GLSL psuedo random generator
-        clParams.kernel.setArg(3,std::abs(std::rand()));
+        clParams.kernel.setArg(3,counter++);
 
         // Equeue kernel
         clParams.queue.enqueueNDRangeKernel(clParams.kernel,cl::NullRange,global,local);
@@ -220,7 +234,7 @@ int main()
        
         program.begin();
 
-        glPointSize(2);
+        glPointSize(1);
         glBindVertexArray(vao);
         glDrawArrays(GL_POINTS,0,PARTICLE_COUNT);
         glBindVertexArray(0);
