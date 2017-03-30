@@ -5,7 +5,6 @@
 #include <GLFW/glfw3.h>
 
 std::string Shader::readFile(const std::string& filePath) {
-	std::string content;
 	std::ifstream fileStream(filePath, std::ios::in);
 
 	if(!fileStream.is_open()) {
@@ -13,14 +12,8 @@ std::string Shader::readFile(const std::string& filePath) {
 		return "";
 	}
 
-	std::string line = "";
-	while(!fileStream.eof()) {
-		std::getline(fileStream, line);
-		content.append(line + "\n");
-	}
-
-	fileStream.close();
-	return content;
+	std::string content { std::istreambuf_iterator<char>{fileStream}, {} };
+	return content; // Loading line-by-line will *not* work on some GPUs...
 }
 
 Shader::~Shader(){

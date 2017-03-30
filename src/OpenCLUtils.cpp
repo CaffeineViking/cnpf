@@ -3,9 +3,11 @@
 #include <fstream>
 #include <CL/cl.hpp>
 
-#ifdef _WIN32
+#ifdef WINDOWS
 #include <windows.h>
 #include <Wingdi.h>
+#elif UNIX
+#include <GL/glx.h>
 #endif
 
 void OpenCLUtils::dumpInfo(){
@@ -149,14 +151,19 @@ clParameters OpenCLUtils::initCL(const std::string& filePath, const std::string&
 	cl::Platform platform = getPlatform(platformName);
 
 	// Construct properties, platform dependent
-	#ifdef _WIN32
 	cl_context_properties cps[] = {
-      CL_GL_CONTEXT_KHR, (cl_context_properties)wglGetCurrentContext(),
-      CL_WGL_HDC_KHR, (cl_context_properties)wglGetCurrentDC(),
-      CL_CONTEXT_PLATFORM, (cl_context_properties)platform(),
+	#ifdef WINDOWS
+		CL_GL_CONTEXT_KHR, (cl_context_properties)wglGetCurrentContext(),
+		CL_WGL_HDC_KHR, (cl_context_properties)wglGetCurrentDC(),
+		CL_CONTEXT_PLATFORM, (cl_context_properties)platform(),
 		0
-	};
+	#elif UNIX
+		CL_GL_CONTEXT_KHR,   (cl_context_properties)glXGetCurrentContext(),
+		CL_GLX_DISPLAY_KHR,  (cl_context_properties)glXGetCurrentDisplay(),
+		CL_CONTEXT_PLATFORM, (cl_context_properties)platform(),
+		0
 	#endif
+	};
 
 	// Make sure we find platform with device that supports GL_SHARING
 	std::vector<cl::Device> devices{};
@@ -180,6 +187,5 @@ clParameters OpenCLUtils::initCL(const std::string& filePath, const std::string&
 	}
 
 	clParams.kernel = cl::Kernel{clParams.program, kernelName.c_str()};
-
 	return clParams;
 }
