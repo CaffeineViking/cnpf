@@ -99,7 +99,7 @@ int main()
 
     // Create camera to change to MV projection matrix for the vertex shader
     Camera _camera = Camera(45,800,800);
-     _camera.translate(glm::vec3(0.0f,8.5f,4.0f));
+     _camera.translate(glm::vec3(0.0f,12.5f,6.0f));
 
 
 
@@ -140,7 +140,7 @@ int main()
        
         program.begin();
 
-        glPointSize(2);
+        glPointSize(1);
         glBindVertexArray(vao);
         glDrawArrays(GL_POINTS,0,system.getParticleCount());
         glBindVertexArray(0);
