@@ -5,7 +5,7 @@
 bool checkInitGLFW(){
 
     const int MAJOR_VERSION = 4;
-    const int MINOR_VERSION = 3;
+    const int MINOR_VERSION = 0;
 
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, MAJOR_VERSION);

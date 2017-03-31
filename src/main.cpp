@@ -25,7 +25,7 @@ int main()
     //  Init for GLFW
     //====================================
     const int MAJOR_VERSION = 4;
-    const int MINOR_VERSION = 3;
+    const int MINOR_VERSION = 0;
     std::cout << "Starting GLFW context, OpenGL " << MAJOR_VERSION << "." << MINOR_VERSION << std::endl;
 
     glfwInit();
