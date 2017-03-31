@@ -20,14 +20,14 @@
 
 
 
-const GLuint WIDTH = 800, HEIGHT = 800;
+const GLuint WIDTH = 1000, HEIGHT = 1000;
 
 inline unsigned divup(unsigned a, unsigned b)
 {
     return (a+b-1)/b;
 }
 
-int main()
+int main(int argc, char**argv)
 {
 
     //====================================
