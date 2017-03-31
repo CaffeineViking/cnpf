@@ -53,7 +53,7 @@ bool ParticleSystem::init(const std::string& path, const std::string& kernel, co
    glEnableVertexAttribArray(position_attribute);
    glBindVertexArray(0);
 
-    // Create velocity buffer, this is not of interest to the renderer at the moment
+// Create velocity buffer, this is not of interest to the renderer at the moment
    for(int n = 0; n < PARTICLE_COUNT; ++n) {
       int x = n % width;
       int y = n / width;
@@ -61,9 +61,9 @@ bool ParticleSystem::init(const std::string& path, const std::string& kernel, co
       data[3*n+1] = 0.0f;
       data[3*n+2] = 0.0f;
    }
-// Create Vertex buffer for the positions
+// Create Vertex buffer for the velocities
    _velocityBuffer = cl::Buffer(_params.context, CL_MEM_READ_WRITE, sizeof(float)*3*PARTICLE_COUNT);
-// Write position data to buffer
+// Write velocities data to buffer
    _params.queue.enqueueWriteBuffer(_velocityBuffer, CL_TRUE, 0, sizeof(float)*3*PARTICLE_COUNT, data.data());
    return true;
 }
@@ -71,23 +71,23 @@ bool ParticleSystem::init(const std::string& path, const std::string& kernel, co
 void ParticleSystem::compute(const float time){
 // CL event used to wait for kernel osv...
    cl::Event ev;
-     // set kernel arguments
-     //======================================================
-    // Vertex array object buffer with coords interleaved
-    //======================================================
+// set kernel arguments
+//======================================================
+// Vertex array object buffer with coords interleaved
+//======================================================
    _params.kernel.setArg(0,_vertexBuffer);
    _params.kernel.setArg(1,_velocityBuffer);
    _params.kernel.setArg(2,time);
-     // Equeue kernel
+// Equeue kernel
    _params.queue.enqueueNDRangeKernel(_params.kernel,cl::NullRange,cl::NDRange(PARTICLE_COUNT),cl::NDRange(1));
-     // Wait for kernel
+// Wait for kernel
    glFinish();
 
    std::vector<cl::Memory> objs;
    objs.clear();
    objs.push_back(_tmp);
 
-     // Aqquire GL Object ( ͡° ͜ʖ ͡°)
+// Aquire GL Object ( ͡° ͜ʖ ͡°)
    cl_int res = _params.queue.enqueueAcquireGLObjects(&objs,NULL,&ev);
    ev.wait();
 
@@ -96,7 +96,7 @@ void ParticleSystem::compute(const float time){
       return;
    }
 
-     // Copy from OpenCL to OpenGL 
+// Copy from OpenCL to OpenGL 
    _params.queue.enqueueCopyBuffer(_vertexBuffer, _tmp, 0, 0, 3*PARTICLE_COUNT*sizeof(float), NULL, NULL);
    res = _params.queue.enqueueReleaseGLObjects(&objs);
    ev.wait();
@@ -105,7 +105,7 @@ void ParticleSystem::compute(const float time){
       return;
    }
 
-     // Wait for copy to be done
+// Wait for copy to be done
    _params.queue.finish();
 }
 
