@@ -4,26 +4,29 @@
 #include <string>
 #include <fstream>
 #include <CL/cl.hpp>
+#include "OpenCLUtils.hpp"
+#include "OpenGLUtils.hpp"
+#include "ShaderProgram.hpp"
 class ParticleSystem {
 private:
-	 int _numParticles;
-	 cl::Device _gpuDevice;
- 	 cl::Context _clContext;
-     cl::Program::Sources _clSources;
-	 cl::Program _clProgram;
-
+	 const int PARTICLE_COUNT;
+	 clParameters _params;
+	 cl::BufferGL _tmp;
+	 cl::Buffer _vertexBuffer;
+	 cl::Buffer _velocityBuffer;
 	std::string readKernelFile(const std::string&);
 public:	
 	~ParticleSystem();
-	ParticleSystem();
+	ParticleSystem(const int);
 
-	bool init(const std::string&);
-	void compute();
-
+	bool init(const std::string&, const std::string&, const std::string&, const ShaderProgram&);
+	void compute(const float);
+	int getParticleCount() const;
 	ParticleSystem(const ParticleSystem&) = default;
 	ParticleSystem& operator=(const ParticleSystem&) = default;
 
 	ParticleSystem(ParticleSystem&&) = default;
 	ParticleSystem& operator=(ParticleSystem&&) = default;
+
 };
 #endif

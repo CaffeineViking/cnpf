@@ -5,6 +5,5 @@ out vec4 color;
 
 void main()
 {	
-
-    color =vec4(0.0,vertex_position.y*2, 0.2,1.0);
+    color =vec4(abs(vertex_position.x+0.1),abs(vertex_position.x),abs(vertex_position.z),1.0);
 } 

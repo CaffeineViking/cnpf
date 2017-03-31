@@ -23,6 +23,6 @@ public:
 	bool link();
 	void begin();
 	void end();
-	GLuint getId();
+	GLuint getId() const;
 };
 #endif
