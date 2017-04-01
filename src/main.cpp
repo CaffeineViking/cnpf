@@ -16,6 +16,10 @@
 #include "ShaderProgram.hpp"
 #include "Locator.hpp"
 #include "Texture.hpp"
+
+#include "VectorField2D.hpp"
+#include <glm/ext.hpp>
+
 const GLuint WIDTH = 800, HEIGHT = 800;
 
 int main()
@@ -24,7 +28,7 @@ int main()
     //====================================
     //  Init for GLFW
     //====================================
-    const int MAJOR_VERSION = 4;
+    /*const int MAJOR_VERSION = 4;
     const int MINOR_VERSION = 0;
     std::cout << "Starting GLFW context, OpenGL " << MAJOR_VERSION << "." << MINOR_VERSION << std::endl;
 
@@ -120,7 +124,16 @@ int main()
     }
 
     glDeleteVertexArrays(1, &VertexArrayID);
-    glfwTerminate();
+    glfwTerminate();*/
+
+  VectorField2D* vectorField = new VectorField2D(glm::vec2(0,0), glm::vec2(1,1));
+
+  auto field = dynamic_cast<VectorField2D*>(vectorField->curl())->getField();
+  for(auto v : field)
+    std::cout << glm::to_string(v) << std::endl;
+
+  std::cout << field.size() << std::endl;
+  delete vectorField;
     return 0;
 }
 
