@@ -4,9 +4,9 @@
 #include <CL/cl.hpp>
 #include <GL/glew.h>
 #include <algorithm>
+
 #ifdef WINDOWS
 #include <windows.h>
-#include <Wingdi.h>
 #endif
 
 ParticleSystem::~ParticleSystem(){
@@ -25,25 +25,27 @@ bool ParticleSystem::init(const std::string& path, const std::string& kernel, co
    std::cout << "Init OpenCL with device " << device <<  std::endl; 
    _params = OpenCLUtils::initCL(path, kernel, device);
 
-   unsigned width,height;
+// Load texture and place in GPU
    std::vector<float> textureData;
-   OpenGLUtils::loadPNG("share/textures/red.png", width, height, textureData);
+   OpenGLUtils::loadPNG("share/textures/noise.png", _width, _height, textureData);
 
-   GLuint glTexture = OpenGLUtils::createTexture(width, height, textureData.data());
+   GLuint glTexture = OpenGLUtils::createTexture(_width, _height, textureData.data());
    int errCode;
    _texture = cl::ImageGL(_params.context,CL_MEM_READ_ONLY,GL_TEXTURE_2D,0,glTexture,&errCode);
-        if (errCode!=CL_SUCCESS) {
-            std::cout<<"Failed to create OpenGL texture refrence: "<<errCode<<std::endl;
-            return 250;
-        }
+   if (errCode!=CL_SUCCESS) {
+      std::cout<<"Failed to create OpenGL texture refrence: "<<errCode<<std::endl;
+      return 250;
+    }
+
+
    std::default_random_engine generator{};
    std::uniform_int_distribution<int> distribution_int(0,_emitters.size()-1);
    std::normal_distribution<float> distribution_float(0.0f,1.0f);
    std::vector<float> data(3*PARTICLE_COUNT);
    for(int n = 0; n < PARTICLE_COUNT; ++n) {
-   	  auto emitter = _emitters.at(distribution_int(generator));
-   	  glm::vec3 min = emitter.first - (emitter.second/2.0f);
-   	  glm::vec3 max = emitter.first + (emitter.second/2.0f);
+   	auto emitter = _emitters.at(distribution_int(generator));
+   	glm::vec3 min = emitter.first - (emitter.second/2.0f);
+   	glm::vec3 max = emitter.first + (emitter.second/2.0f);
       float x = min.x + ((float)abs(max.x - min.x))*distribution_float(generator);
       float y = min.y + ((float)abs(max.y - min.y))*distribution_float(generator);
       float z = min.z + ((float)abs(max.z - min.z))*distribution_float(generator);
@@ -70,9 +72,9 @@ bool ParticleSystem::init(const std::string& path, const std::string& kernel, co
 
 // Create velocity buffer, this is not of interest to the renderer at the moment
    for(int n = 0; n < PARTICLE_COUNT; ++n) {
-      data[3*n+0] = 0.0f;//(distribution_float(generator) - 0.5f) * 0.01f;
-      data[3*n+1] = 0.0f;//(distribution_float(generator) - 0.5f) * 0.01f;
-      data[3*n+2] = 0.0f;// distribution_float(generator) - 0.5f) * 0.01f;
+      data[3*n+0] = (distribution_float(generator) - 0.5f);
+      data[3*n+1] = 0.0f; // (distribution_float(generator) - 0.5f);
+      data[3*n+2] = (distribution_float(generator) - 0.5f);
    }
 // Create Vertex buffer for the velocities
    _velocityBuffer = cl::Buffer(_params.context, CL_MEM_READ_WRITE, sizeof(float)*3*PARTICLE_COUNT);
@@ -107,10 +109,14 @@ void ParticleSystem::compute(const float time){
       std::cout<<"Failed acquiring GL object: "<<res<<std::endl;
       return;
    }
+   
    _params.kernel.setArg(0,_vertexBuffer);
    _params.kernel.setArg(1,_velocityBuffer);
    _params.kernel.setArg(2,_texture);
-   _params.kernel.setArg(3,time);
+   _params.kernel.setArg(3,_width);
+   _params.kernel.setArg(4,_height);
+   _params.kernel.setArg(5,time);
+
 // Equeue kernel
    _params.queue.enqueueNDRangeKernel(_params.kernel,cl::NullRange,cl::NDRange(getParticleCount(time)),cl::NDRange(1));
 
