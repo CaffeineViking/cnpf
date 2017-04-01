@@ -9,6 +9,7 @@ typedef struct {
     cl::Program program;
 	cl::Kernel kernel;
 	cl::Context context;
+
 } clParameters;
 
 class OpenCLUtils{

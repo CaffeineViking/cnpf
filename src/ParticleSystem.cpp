@@ -3,7 +3,7 @@
 #include <iostream>
 #include <CL/cl.hpp>
 #include <GL/glew.h>
-
+#include <algorithm>
 #ifdef WINDOWS
 #include <windows.h>
 #include <Wingdi.h>
@@ -13,7 +13,7 @@ ParticleSystem::~ParticleSystem(){
 
 }
 
-ParticleSystem::ParticleSystem(const int particles): PARTICLE_COUNT{particles}{
+ParticleSystem::ParticleSystem(const int particles, const float time): PARTICLE_COUNT{particles}, maxTime{time}{
 
 }
 
@@ -25,16 +25,31 @@ bool ParticleSystem::init(const std::string& path, const std::string& kernel, co
    std::cout << "Init OpenCL with device " << device <<  std::endl; 
    _params = OpenCLUtils::initCL(path, kernel, device);
 
-   int width = sqrt(PARTICLE_COUNT);
-   int height = width ;
-   std::cout << width << " " << height << std::endl;
+   unsigned width,height;
+   std::vector<float> textureData;
+   OpenGLUtils::loadPNG("share/textures/red.png", width, height, textureData);
+
+   GLuint glTexture = OpenGLUtils::createTexture(width, height, textureData.data());
+   int errCode;
+   _texture = cl::ImageGL(_params.context,CL_MEM_READ_ONLY,GL_TEXTURE_2D,0,glTexture,&errCode);
+        if (errCode!=CL_SUCCESS) {
+            std::cout<<"Failed to create OpenGL texture refrence: "<<errCode<<std::endl;
+            return 250;
+        }
+   std::default_random_engine generator{};
+   std::uniform_int_distribution<int> distribution_int(0,_emitters.size()-1);
+   std::normal_distribution<float> distribution_float(0.0f,1.0f);
    std::vector<float> data(3*PARTICLE_COUNT);
    for(int n = 0; n < PARTICLE_COUNT; ++n) {
-      int x = n % width;
-      int y = n / width;
-      data[3*n+0] = (x - width/2) / 100.0f;
-      data[3*n+1] = 0.0f;
-      data[3*n+2] = (y - height/2) / 100.0f;
+   	  auto emitter = _emitters.at(distribution_int(generator));
+   	  glm::vec3 min = emitter.first - (emitter.second/2.0f);
+   	  glm::vec3 max = emitter.first + (emitter.second/2.0f);
+      float x = min.x + ((float)abs(max.x - min.x))*distribution_float(generator);
+      float y = min.y + ((float)abs(max.y - min.y))*distribution_float(generator);
+      float z = min.z + ((float)abs(max.z - min.z))*distribution_float(generator);
+      data[3*n+0] = x;
+      data[3*n+1] = y;
+      data[3*n+2] = z;
    }
 
 // Same but for OpenGL
@@ -55,17 +70,19 @@ bool ParticleSystem::init(const std::string& path, const std::string& kernel, co
 
 // Create velocity buffer, this is not of interest to the renderer at the moment
    for(int n = 0; n < PARTICLE_COUNT; ++n) {
-      int x = n % width;
-      int y = n / width;
-      data[3*n+0] = 0.0f;
-      data[3*n+1] = 0.0f;
-      data[3*n+2] = 0.0f;
+      data[3*n+0] = 0.0f;//(distribution_float(generator) - 0.5f) * 0.01f;
+      data[3*n+1] = 0.0f;//(distribution_float(generator) - 0.5f) * 0.01f;
+      data[3*n+2] = 0.0f;// distribution_float(generator) - 0.5f) * 0.01f;
    }
 // Create Vertex buffer for the velocities
    _velocityBuffer = cl::Buffer(_params.context, CL_MEM_READ_WRITE, sizeof(float)*3*PARTICLE_COUNT);
 // Write velocities data to buffer
    _params.queue.enqueueWriteBuffer(_velocityBuffer, CL_TRUE, 0, sizeof(float)*3*PARTICLE_COUNT, data.data());
    return true;
+}
+
+void ParticleSystem::addEmitter(const glm::vec3& position, const glm::vec3& dimensions){
+	_emitters.push_back(std::make_pair(position, dimensions));
 }
 
 void ParticleSystem::compute(const float time){
@@ -75,18 +92,13 @@ void ParticleSystem::compute(const float time){
 //======================================================
 // Vertex array object buffer with coords interleaved
 //======================================================
-   _params.kernel.setArg(0,_vertexBuffer);
-   _params.kernel.setArg(1,_velocityBuffer);
-   _params.kernel.setArg(2,time);
-// Equeue kernel
-   _params.queue.enqueueNDRangeKernel(_params.kernel,cl::NullRange,cl::NDRange(PARTICLE_COUNT),cl::NDRange(1));
 // Wait for kernel
    glFinish();
 
    std::vector<cl::Memory> objs;
    objs.clear();
    objs.push_back(_tmp);
-
+   objs.push_back(_texture);
 // Aquire GL Object ( ͡° ͜ʖ ͡°)
    cl_int res = _params.queue.enqueueAcquireGLObjects(&objs,NULL,&ev);
    ev.wait();
@@ -95,6 +107,12 @@ void ParticleSystem::compute(const float time){
       std::cout<<"Failed acquiring GL object: "<<res<<std::endl;
       return;
    }
+   _params.kernel.setArg(0,_vertexBuffer);
+   _params.kernel.setArg(1,_velocityBuffer);
+   _params.kernel.setArg(2,_texture);
+   _params.kernel.setArg(3,time);
+// Equeue kernel
+   _params.queue.enqueueNDRangeKernel(_params.kernel,cl::NullRange,cl::NDRange(getParticleCount(time)),cl::NDRange(1));
 
 // Copy from OpenCL to OpenGL 
    _params.queue.enqueueCopyBuffer(_vertexBuffer, _tmp, 0, 0, 3*PARTICLE_COUNT*sizeof(float), NULL, NULL);
@@ -109,7 +127,7 @@ void ParticleSystem::compute(const float time){
    _params.queue.finish();
 }
 
-int ParticleSystem::getParticleCount() const {
-   return PARTICLE_COUNT;
+int ParticleSystem::getParticleCount(const float time) const {
+   return std::min(time/maxTime,1.0f)*PARTICLE_COUNT;
 }
 

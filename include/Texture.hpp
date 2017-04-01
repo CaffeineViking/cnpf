@@ -5,9 +5,11 @@
 class Texture{
 private:
 	GLuint _id;
+	const int _width;
+	const int _height;
 public:
 	~Texture();
-	Texture();
+	Texture(const int, const int, const float*);
 
 	Texture(const Texture&) = default;
 	Texture& operator=(const Texture&) = default;
