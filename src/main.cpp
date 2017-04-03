@@ -56,7 +56,7 @@ int main(int argc, char**argv)
     glfwSetCursorPosCallback(window, GLFWInputLocator::cursor_callback);
     glfwSetMouseButtonCallback(window, GLFWInputLocator::mouse_callback);
     glfwSetKeyCallback(window, GLFWInputLocator::keyboard_callback);
-    glfwSwapInterval(1);
+    glfwSwapInterval(0);
     Locator::setInput(input);
     //====================================
     //  Init for GLEW
@@ -99,7 +99,7 @@ int main(int argc, char**argv)
 
     // Create camera to change to MV projection matrix for the vertex shader
     Camera _camera = Camera(45,WIDTH,HEIGHT);
-     _camera.translate(glm::vec3(0.0f,200.5f,155.0f));
+     _camera.translate(glm::vec3(0.0f,800.5f,155.0f));
 
 
 
@@ -109,10 +109,10 @@ int main(int argc, char**argv)
     glBindVertexArray(vao);
 
      ParticleSystem system = ParticleSystem(2000000, 10.0f);
-     system.addEmitter(glm::vec3(0.0f,0.0f,0.0f), glm::vec3(64.0f,0.0f,64.0f));
+     system.addEmitter(glm::vec3(0.0f,0.0f,0.0f), glm::vec3(256.0f,0.0f,256.0f));
     //system.addEmitter(glm::vec3(100.0f,0.0f,0.0f), glm::vec3(50.0f));
 
-     system.init("share/kernels/simple_particle.cl", "simple_particle", "NVIDIA", program);
+     system.init("share/kernels/particles.cl", "particles", "NVIDIA", program);
     // For FPS counter
      double lastTime = glfwGetTime();
      int nbFrames = 0;
@@ -137,7 +137,7 @@ int main(int argc, char**argv)
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         // _camera.translate(glm::vec3(0.0f,-1.0f,0.0f));
-         _camera.rotate(0.1f);
+        // _camera.rotate(0.1f);
         _camera.update(program.getId());
        
         program.begin();

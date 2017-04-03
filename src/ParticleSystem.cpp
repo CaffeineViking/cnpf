@@ -72,9 +72,9 @@ bool ParticleSystem::init(const std::string& path, const std::string& kernel, co
 
 // Create velocity buffer, this is not of interest to the renderer at the moment
    for(int n = 0; n < PARTICLE_COUNT; ++n) {
-      data[3*n+0] = (distribution_float(generator) - 0.5f);
+      data[3*n+0] = 0.0f; //(distribution_float(generator) - 0.5f);
       data[3*n+1] = 0.0f; // (distribution_float(generator) - 0.5f);
-      data[3*n+2] = (distribution_float(generator) - 0.5f);
+      data[3*n+2] = 0.0f;//(distribution_float(generator) - 0.5f);
    }
 // Create Vertex buffer for the velocities
    _velocityBuffer = cl::Buffer(_params.context, CL_MEM_READ_WRITE, sizeof(float)*3*PARTICLE_COUNT);
