@@ -18,6 +18,7 @@
 #include "Texture.hpp"
 
 #include "VectorField2D.hpp"
+#include "VectorField3D.hpp"
 #include <glm/ext.hpp>
 
 const GLuint WIDTH = 800, HEIGHT = 800;
@@ -25,116 +26,132 @@ const GLuint WIDTH = 800, HEIGHT = 800;
 int main()
 {
 
-    //====================================
-    //  Init for GLFW
-    //====================================
-    /*const int MAJOR_VERSION = 4;
-    const int MINOR_VERSION = 0;
-    std::cout << "Starting GLFW context, OpenGL " << MAJOR_VERSION << "." << MINOR_VERSION << std::endl;
+  VectorField2D vectorField2D(glm::vec2(0,0), glm::vec2(1,1));
+  auto field2D = vectorField2D.curl().getField();
+  for(auto v : field2D)
+    std::cerr << glm::to_string(v) << std::endl;
 
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, MAJOR_VERSION);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, MINOR_VERSION);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+  std::cerr << "2D field size: " << vectorField2D.getSize() << std::endl;
 
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Default", nullptr, nullptr);    
-    if (window == nullptr)
+  VectorField3D vectorField3D(glm::vec3(0,0,0), glm::vec3(1,1,1));
+  auto field3D = vectorField3D.curl().getField();
+  for(auto v : field3D)
+    std::cerr << glm::to_string(v) << std::endl;
+
+  std::cerr << "3D field size: " << vectorField3D.getSize() << std::endl;
+
+
+
+  //====================================
+  //  Init for GLFW
+  //====================================
+  const int MAJOR_VERSION = 4;
+  const int MINOR_VERSION = 0;
+  std::cout << "Starting GLFW context, OpenGL " << MAJOR_VERSION << "." << MINOR_VERSION << std::endl;
+
+  glfwInit();
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, MAJOR_VERSION);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, MINOR_VERSION);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+
+  GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Default", nullptr, nullptr);    
+  if (window == nullptr)
     {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
+      std::cout << "Failed to create GLFW window" << std::endl;
+      glfwTerminate();
+      return -1;
     }
-    glfwMakeContextCurrent(window);
+  glfwMakeContextCurrent(window);
 
-    // Set input locators
-    GLFWInputLocator* input = new GLFWInputLocator();
-    glfwSetCursorPosCallback(window, GLFWInputLocator::cursor_callback);
-    glfwSetMouseButtonCallback(window, GLFWInputLocator::mouse_callback);
-    glfwSetKeyCallback(window, GLFWInputLocator::keyboard_callback);
+  // Set input locators
+  GLFWInputLocator* input = new GLFWInputLocator();
+  glfwSetCursorPosCallback(window, GLFWInputLocator::cursor_callback);
+  glfwSetMouseButtonCallback(window, GLFWInputLocator::mouse_callback);
+  glfwSetKeyCallback(window, GLFWInputLocator::keyboard_callback);
 
-    Locator::setInput(input);
-    //====================================
-    //  Init for GLEW
-    //====================================
-    glewExperimental = GL_TRUE;
-    if (glewInit() != GLEW_OK)
+  Locator::setInput(input);
+  //====================================
+  //  Init for GLEW
+  //====================================
+  glewExperimental = GL_TRUE;
+  if (glewInit() != GLEW_OK)
     {
-        std::cout << "Failed to initialize GLEW" << std::endl;
-        return -1;
+      std::cout << "Failed to initialize GLEW" << std::endl;
+      return -1;
     }    
 
-    // Setup Z-buffer and Viewport
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS); 
+  // Setup Z-buffer and Viewport
+  glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_LESS); 
 
-    int width, height;
-    glfwGetFramebufferSize(window, &width, &height);  
+  int width, height;
+  glfwGetFramebufferSize(window, &width, &height);  
 
-    GLuint VertexArrayID;
-    glGenVertexArrays(1,&VertexArrayID);
-    glBindVertexArray(VertexArrayID);
+  GLuint VertexArrayID;
+  glGenVertexArrays(1,&VertexArrayID);
+  glBindVertexArray(VertexArrayID);
 
-    glViewport(0, 0, width, height);
+  glViewport(0, 0, width, height);
 
-    //====================================
-    //  Init for Shaders and Scenes
-    //====================================
+  //====================================
+  //  Init for Shaders and Scenes
+  //====================================
 
-    // Shapes are placed at origin
-    Plane plane = Plane{1.0f,1.0f};
+  // Shapes are placed at origin
+  float w = 1.0f;
+  float h = 1.0f;
+  Plane plane = Plane{w,h};
     
-    // Use default vertex and fragment shader. Fragment makes suff orange and
-    // vertrex draw vertecies with camera taken into account.
-    Shader vertexShader = Shader("share/shaders/default.vert",GL_VERTEX_SHADER);
-    Shader fragmentShader = Shader("share/shaders/default.frag",GL_FRAGMENT_SHADER);
-    fragmentShader.compile();
-    vertexShader.compile();
+  // Use default vertex and fragment shader. Fragment makes suff orange and
+  // vertrex draw vertecies with camera taken into account.
+  Shader vertexShader = Shader("share/shaders/default.vert",GL_VERTEX_SHADER);
+  Shader fragmentShader = Shader("share/shaders/default.frag",GL_FRAGMENT_SHADER);
+  fragmentShader.compile();
+  vertexShader.compile();
 
-    ShaderProgram program = ShaderProgram{};
+  ShaderProgram program = ShaderProgram{};
 
-    program.attach(fragmentShader);
-    program.attach(vertexShader);
+  program.attach(fragmentShader);
+  program.attach(vertexShader);
 
-    Camera _camera = Camera(45,800,800);
-     _camera.translate(glm::vec3(0.0f,0.0f,2.0f));
+  Camera _camera = Camera(45,800,800);
+  _camera.translate(glm::vec3(0.0f,0.0f,2.0f));
 
-    GLuint samplerId  = glGetUniformLocation(program.getId(), "myTextureSampler");
-    glUniform1i(samplerId, 0);
+  GLuint samplerId  = glGetUniformLocation(program.getId(), "myTextureSampler");
+  glUniform1i(samplerId, 0);
 
-    Texture texture = Texture{};
-    // Main loop
-    while (!glfwWindowShouldClose(window))
+  Texture texture = Texture{};
+  // Main loop
+
+  while (!glfwWindowShouldClose(window))
     {
-        // Poll input
-        glfwPollEvents();
-        _camera.rotate(0.3f);
-        _camera.update(program.getId());
-        // Start of per-frame GL render
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT |GL_DEPTH_BUFFER_BIT);
+      // Poll input
+      glfwPollEvents();
+      //_camera.rotate(0.3f);
+      _camera.update(program.getId());
+      // Start of per-frame GL render
+      glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+      glClear(GL_COLOR_BUFFER_BIT |GL_DEPTH_BUFFER_BIT);
 
-        program.begin();
-        texture.begin();
-        plane.render();
-        texture.end();
-        
-        // Swap the render buffer to display
-        glfwSwapBuffers(window);
+      program.begin();
+      texture.begin();
+
+      glPushMatrix();
+      glTranslatef(1000.0f, .0f, .0f);
+      plane.render();
+      glPopMatrix();
+
+      texture.end();
+
+      // Swap the render buffer to display
+      glfwSwapBuffers(window);
     }
 
-    glDeleteVertexArrays(1, &VertexArrayID);
-    glfwTerminate();*/
+  glDeleteVertexArrays(1, &VertexArrayID);
+  glfwTerminate();
 
-  VectorField2D* vectorField = new VectorField2D(glm::vec2(0,0), glm::vec2(1,1));
-
-  auto field = dynamic_cast<VectorField2D*>(vectorField->curl())->getField();
-  for(auto v : field)
-    std::cout << glm::to_string(v) << std::endl;
-
-  std::cout << field.size() << std::endl;
-  delete vectorField;
-    return 0;
+  return 0;
 }
 
 // Kyboard callback for GLFW
