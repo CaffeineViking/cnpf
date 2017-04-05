@@ -4,18 +4,15 @@
 #include <CL/cl.hpp>
 #include <GL/glew.h>
 #include <algorithm>
-#include "VectorField2D.hpp"
+#include "VectorField3D.hpp"
 
 #ifdef WINDOWS
 #include <windows.h>
 #endif
 
-ParticleSystem::~ParticleSystem(){
-
-}
+ParticleSystem::~ParticleSystem(){}
 
 ParticleSystem::ParticleSystem(const int particles, const float time): PARTICLE_COUNT{particles}, maxTime{time}{
-
 }
 
 // =====================================
@@ -27,22 +24,25 @@ bool ParticleSystem::init(const std::string& path, const std::string& kernel, co
    _params = OpenCLUtils::initCL(path, kernel, device);
 
 // Load texture and place in GPU
-      _width = 2048;
-      _height = 2048;
-   std::vector<float> textureData(_width*_height*4);
+      _width = 32;
+      _height = 32;
+      _depth = 32;
 
-   VectorField2D field(glm::vec2(0,0), glm::vec2(_width,_height));
-   std::vector<glm::vec2> curled = field.curl().normalize().getField();
-   for(int i = 0; i < _width*_height; i++){
+   std::vector<float> textureData(3*_width*_height*_depth);
+
+   VectorField3D field(glm::vec3(0,0,0), glm::vec3(_width,_height,_depth));
+   std::vector<glm::vec3> curled = field.curl().normalize().getField();
+   std::cout << curled.size() << std::endl;
+   for(int i = 0; i < _width*_height*_depth; i++){
       auto p = curled.at(i) * 0.5f;
-      textureData.at((i*4)+0) = p.x + 0.5f;
-      textureData.at((i*4)+1) = 0.0f;
-      textureData.at((i*4)+2) = p.y + 0.5f;
+      textureData.at((i*3)+0) = p.x + 0.5f;
+      textureData.at((i*3)+1) = p.y + 0.5f;
+      textureData.at((i*3)+2) = p.z + 0.5f;
    }
 
-   GLuint glTexture = OpenGLUtils::createTexture(_width, _height, textureData.data());
+   GLuint glTexture = OpenGLUtils::createTexture3D(_width, _height,_depth, textureData.data());
    int errCode;
-   _texture = cl::ImageGL(_params.context,CL_MEM_READ_ONLY,GL_TEXTURE_2D,0,glTexture,&errCode);
+   _texture = cl::ImageGL(_params.context,CL_MEM_READ_ONLY,GL_TEXTURE_3D,0,glTexture,&errCode);
    if (errCode!=CL_SUCCESS) {
       std::cout<<"Failed to create OpenGL texture refrence: "<<errCode<<std::endl;
       return 250;
@@ -126,7 +126,8 @@ void ParticleSystem::compute(const float time){
    _params.kernel.setArg(2,_texture);
    _params.kernel.setArg(3,_width);
    _params.kernel.setArg(4,_height);
-   _params.kernel.setArg(5,time);
+   _params.kernel.setArg(5,_depth);
+   _params.kernel.setArg(6,time);
 
 // Equeue kernel
    _params.queue.enqueueNDRangeKernel(_params.kernel,cl::NullRange,cl::NDRange(getParticleCount(time)),cl::NDRange(1));

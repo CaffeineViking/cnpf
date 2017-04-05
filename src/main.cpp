@@ -21,7 +21,8 @@
 #include "VectorField3D.hpp"
 #include <glm/ext.hpp>
 
-const GLuint WIDTH = 800, HEIGHT = 800;
+const GLuint WIDTH = 1000, HEIGHT = 1000;
+
 
 inline unsigned divup(unsigned a, unsigned b)
 {
@@ -101,8 +102,8 @@ int main(int argc, char**argv)
   program.attach(vertexShader);
 
     // Create camera to change to MV projection matrix for the vertex shader
-    Camera _camera = Camera(45,WIDTH,HEIGHT);
-     _camera.translate(glm::vec3(0.0f,100.5f,155.0f));
+    Camera _camera = Camera(60,WIDTH,HEIGHT);
+     _camera.translate(glm::vec3(2.0f,2.5f,2.0f));
 
 
 
@@ -111,8 +112,8 @@ int main(int argc, char**argv)
     glGenVertexArrays(1,&vao);
     glBindVertexArray(vao);
 
-     ParticleSystem system = ParticleSystem(2000000, 30.0f);
-     system.addEmitter(glm::vec3(0.0f,0.0f,0.0f), glm::vec3(64.0f,0.0f,64.0f));
+     ParticleSystem system = ParticleSystem(3000000, 5.0f);
+     system.addEmitter(glm::vec3(0.0f,0.0f,0.0f), glm::vec3(16.0f,16.0f,16.0f));
     //system.addEmitter(glm::vec3(100.0f,0.0f,0.0f), glm::vec3(50.0f));
 
      system.init("share/kernels/particles.cl", "particles", "NVIDIA", program);
