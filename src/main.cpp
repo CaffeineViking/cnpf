@@ -17,10 +17,11 @@
 #include "Locator.hpp"
 #include "Texture.hpp"
 #include "ParticleSystem.hpp"
+#include "VectorField2D.hpp"
+#include "VectorField3D.hpp"
+#include <glm/ext.hpp>
 
-
-
-const GLuint WIDTH = 1000, HEIGHT = 1000;
+const GLuint WIDTH = 800, HEIGHT = 800;
 
 inline unsigned divup(unsigned a, unsigned b)
 {
@@ -33,7 +34,7 @@ int main(int argc, char**argv)
     //====================================
     //  Init for GLFW
     //====================================
-    const int MAJOR_VERSION = 2;
+    const int MAJOR_VERSION = 3;
     const int MINOR_VERSION = 1;
     std::cout << "Starting GLFW context, OpenGL " << MAJOR_VERSION << "." << MINOR_VERSION << std::endl;
 
@@ -43,12 +44,13 @@ int main(int argc, char**argv)
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
     GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Default", nullptr, nullptr);    
-    if (window == nullptr)
+ if (window == nullptr)
     {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
+      std::cout << "Failed to create GLFW window" << std::endl;
+      glfwTerminate();
+      return -1;
     }
+
     glfwMakeContextCurrent(window);
 
     // Set input locators
@@ -56,7 +58,7 @@ int main(int argc, char**argv)
     glfwSetCursorPosCallback(window, GLFWInputLocator::cursor_callback);
     glfwSetMouseButtonCallback(window, GLFWInputLocator::mouse_callback);
     glfwSetKeyCallback(window, GLFWInputLocator::keyboard_callback);
-    glfwSwapInterval(0);
+    glfwSwapInterval(1);
     Locator::setInput(input);
     //====================================
     //  Init for GLEW
@@ -64,42 +66,43 @@ int main(int argc, char**argv)
     glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK)
     {
-        std::cout << "Failed to initialize GLEW" << std::endl;
-        return -1;
+      std::cout << "Failed to initialize GLEW" << std::endl;
+      return -1;
     }    
 
-    // Setup Z-buffer and Viewport
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS); 
+  // Setup Z-buffer and Viewport
+  glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_LESS); 
 
-    int width, height;
-    glfwGetFramebufferSize(window, &width, &height);  
+  int width, height;
+  glfwGetFramebufferSize(window, &width, &height);  
 
     //GLuint VertexArrayID;
     //glGenVertexArrays(1,&VertexArrayID);
     //glBindVertexArray(VertexArrayID);
 
-    glViewport(0, 0, width, height);
+  glViewport(0, 0, width, height);
 
-    //====================================
-    //  Init for Shaders and Scenes
-    //====================================
+  //====================================
+  //  Init for Shaders and Scenes
+  //====================================
+
     
-    // Use default vertex and fragment shader. Fragment makes suff orange and
-    // vertrex draw vertecies with camera taken into account.
-    Shader vertexShader = Shader("share/shaders/default.vert",GL_VERTEX_SHADER);
-    Shader fragmentShader = Shader("share/shaders/default.frag",GL_FRAGMENT_SHADER);
-    fragmentShader.compile();
-    vertexShader.compile();
+  // Use default vertex and fragment shader. Fragment makes suff orange and
+  // vertrex draw vertecies with camera taken into account.
+  Shader vertexShader = Shader("share/shaders/default.vert",GL_VERTEX_SHADER);
+  Shader fragmentShader = Shader("share/shaders/default.frag",GL_FRAGMENT_SHADER);
+  fragmentShader.compile();
+  vertexShader.compile();
 
     ShaderProgram program{};
 
-    program.attach(fragmentShader);
-    program.attach(vertexShader);
+  program.attach(fragmentShader);
+  program.attach(vertexShader);
 
     // Create camera to change to MV projection matrix for the vertex shader
     Camera _camera = Camera(45,WIDTH,HEIGHT);
-     _camera.translate(glm::vec3(0.0f,800.5f,155.0f));
+     _camera.translate(glm::vec3(0.0f,100.5f,155.0f));
 
 
 
@@ -108,8 +111,8 @@ int main(int argc, char**argv)
     glGenVertexArrays(1,&vao);
     glBindVertexArray(vao);
 
-     ParticleSystem system = ParticleSystem(2000000, 10.0f);
-     system.addEmitter(glm::vec3(0.0f,0.0f,0.0f), glm::vec3(256.0f,0.0f,256.0f));
+     ParticleSystem system = ParticleSystem(2000000, 30.0f);
+     system.addEmitter(glm::vec3(0.0f,0.0f,0.0f), glm::vec3(64.0f,0.0f,64.0f));
     //system.addEmitter(glm::vec3(100.0f,0.0f,0.0f), glm::vec3(50.0f));
 
      system.init("share/kernels/particles.cl", "particles", "NVIDIA", program);
@@ -136,8 +139,10 @@ int main(int argc, char**argv)
         // Render vertecies
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        // _camera.translate(glm::vec3(0.0f,-1.0f,0.0f));
-        // _camera.rotate(0.1f);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        // _camera.translate(glm::vec3(0.0f,0.1f,0.0f));
+         _camera.rotate(0.1f);
         _camera.update(program.getId());
        
         program.begin();

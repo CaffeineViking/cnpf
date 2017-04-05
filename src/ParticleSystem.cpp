@@ -4,6 +4,7 @@
 #include <CL/cl.hpp>
 #include <GL/glew.h>
 #include <algorithm>
+#include "VectorField2D.hpp"
 
 #ifdef WINDOWS
 #include <windows.h>
@@ -26,8 +27,18 @@ bool ParticleSystem::init(const std::string& path, const std::string& kernel, co
    _params = OpenCLUtils::initCL(path, kernel, device);
 
 // Load texture and place in GPU
-   std::vector<float> textureData;
-   OpenGLUtils::loadPNG("share/textures/noise.png", _width, _height, textureData);
+      _width = 2048;
+      _height = 2048;
+   std::vector<float> textureData(_width*_height*4);
+
+   VectorField2D field(glm::vec2(0,0), glm::vec2(_width,_height));
+   std::vector<glm::vec2> curled = field.curl().normalize().getField();
+   for(int i = 0; i < _width*_height; i++){
+      auto p = curled.at(i) * 0.5f;
+      textureData.at((i*4)+0) = p.x + 0.5f;
+      textureData.at((i*4)+1) = 0.0f;
+      textureData.at((i*4)+2) = p.y + 0.5f;
+   }
 
    GLuint glTexture = OpenGLUtils::createTexture(_width, _height, textureData.data());
    int errCode;

@@ -9,6 +9,7 @@ private:
 	const int _height;
 public:
 	~Texture();
+	Texture();
 	Texture(const int, const int, const float*);
 
 	Texture(const Texture&) = default;
