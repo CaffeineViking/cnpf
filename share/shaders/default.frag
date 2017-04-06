@@ -5,5 +5,5 @@ out vec4 color;
 
 void main()
 {	
-    color = vec4(abs(normalize(vertex_position)),0.9);
+    color = vec4(abs(normalize(vertex_position)),0.6);
 } 

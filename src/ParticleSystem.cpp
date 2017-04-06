@@ -24,9 +24,9 @@ bool ParticleSystem::init(const std::string& path, const std::string& kernel, co
    _params = OpenCLUtils::initCL(path, kernel, device);
 
 // Load texture and place in GPU
-      _width = 32;
-      _height = 32;
-      _depth = 32;
+      _width  = 8;
+      _height = 8;
+      _depth  = 8;
 
    std::vector<float> textureData(3*_width*_height*_depth);
 
@@ -51,15 +51,15 @@ bool ParticleSystem::init(const std::string& path, const std::string& kernel, co
 
    std::default_random_engine generator{};
    std::uniform_int_distribution<int> distribution_int(0,_emitters.size()-1);
-   std::normal_distribution<float> distribution_float(0.0f,1.0f);
+   std::uniform_real_distribution<float> distribution_float(0.0f,1.0f);
    std::vector<float> data(3*PARTICLE_COUNT);
    for(int n = 0; n < PARTICLE_COUNT; ++n) {
    	auto emitter = _emitters.at(distribution_int(generator));
    	glm::vec3 min = emitter.first - (emitter.second/2.0f);
    	glm::vec3 max = emitter.first + (emitter.second/2.0f);
-      float x = min.x + ((float)abs(max.x - min.x))*distribution_float(generator);
-      float y = min.y + ((float)abs(max.y - min.y))*distribution_float(generator);
-      float z = min.z + ((float)abs(max.z - min.z))*distribution_float(generator);
+      float x = min.x + std::abs(max.x - min.x)*distribution_float(generator);
+      float y = min.y + std::abs(max.y - min.y)*distribution_float(generator);
+      float z = min.z + std::abs(max.z - min.z)*distribution_float(generator);
       data[3*n+0] = x;
       data[3*n+1] = y;
       data[3*n+2] = z;

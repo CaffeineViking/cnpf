@@ -6,7 +6,7 @@
 
 class Curl {
 private:
-  float _eps = 0.001;
+  float _eps = 0.00003f;
 
 public:
   Curl() = default;
