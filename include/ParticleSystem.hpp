@@ -28,7 +28,7 @@ public:
 	ParticleSystem(const int,const float);
 
 	bool init(const std::string&, const std::string&, const std::string&, const ShaderProgram&);
-	void compute(const float);
+	void compute(const float, const float);
 	void addEmitter(const glm::vec3&, const glm::vec3&);
 	int getParticleCount(const float) const;
 	ParticleSystem(const ParticleSystem&) = default;

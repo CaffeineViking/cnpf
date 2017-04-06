@@ -30,7 +30,7 @@ bool ParticleSystem::init(const std::string& path, const std::string& kernel, co
 
    std::vector<float> textureData(3*_width*_height*_depth);
 
-   VectorField3D field(glm::vec3(0,0,0), glm::vec3(_width,_height,_depth));
+   VectorField3D field(glm::vec3(0), glm::vec3(_width,_height,_depth));
    std::vector<glm::vec3> curled = field.curl().normalize().getField();
    std::cout << curled.size() << std::endl;
    for(int i = 0; i < _width*_height*_depth; i++){
@@ -98,7 +98,7 @@ void ParticleSystem::addEmitter(const glm::vec3& position, const glm::vec3& dime
 	_emitters.push_back(std::make_pair(position, dimensions));
 }
 
-void ParticleSystem::compute(const float time){
+void ParticleSystem::compute(const float time, const float timeDelta){
 // CL event used to wait for kernel osv...
    cl::Event ev;
 // set kernel arguments
@@ -120,14 +120,14 @@ void ParticleSystem::compute(const float time){
       std::cout<<"Failed acquiring GL object: "<<res<<std::endl;
       return;
    }
-   
+
    _params.kernel.setArg(0,_vertexBuffer);
    _params.kernel.setArg(1,_velocityBuffer);
    _params.kernel.setArg(2,_texture);
    _params.kernel.setArg(3,_width);
    _params.kernel.setArg(4,_height);
    _params.kernel.setArg(5,_depth);
-   _params.kernel.setArg(6,time);
+   _params.kernel.setArg(6,timeDelta);
 
 // Equeue kernel
    _params.queue.enqueueNDRangeKernel(_params.kernel,cl::NullRange,cl::NDRange(getParticleCount(time)),cl::NDRange(1));
