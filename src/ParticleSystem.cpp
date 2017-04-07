@@ -4,18 +4,15 @@
 #include <CL/cl.hpp>
 #include <GL/glew.h>
 #include <algorithm>
-#include "VectorField2D.hpp"
+#include "VectorField3D.hpp"
 
 #ifdef WINDOWS
 #include <windows.h>
 #endif
 
-ParticleSystem::~ParticleSystem(){
-
-}
+ParticleSystem::~ParticleSystem(){}
 
 ParticleSystem::ParticleSystem(const int particles, const float time): PARTICLE_COUNT{particles}, maxTime{time}{
-
 }
 
 // =====================================
@@ -27,22 +24,25 @@ bool ParticleSystem::init(const std::string& path, const std::string& kernel, co
    _params = OpenCLUtils::initCL(path, kernel, device);
 
 // Load texture and place in GPU
-      _width = 2048;
-      _height = 2048;
-   std::vector<float> textureData(_width*_height*4);
+      _width  = 8;
+      _height = 8;
+      _depth  = 8;
 
-   VectorField2D field(glm::vec2(0,0), glm::vec2(_width,_height));
-   std::vector<glm::vec2> curled = field.curl().normalize().getField();
-   for(int i = 0; i < _width*_height; i++){
+   std::vector<float> textureData(3*_width*_height*_depth);
+
+   VectorField3D field(glm::vec3(0), glm::vec3(_width,_height,_depth));
+   std::vector<glm::vec3> curled = field.curl().normalize().getField();
+   std::cout << curled.size() << std::endl;
+   for(int i = 0; i < _width*_height*_depth; i++){
       auto p = curled.at(i) * 0.5f;
-      textureData.at((i*4)+0) = p.x + 0.5f;
-      textureData.at((i*4)+1) = 0.0f;
-      textureData.at((i*4)+2) = p.y + 0.5f;
+      textureData.at((i*3)+0) = p.x + 0.5f;
+      textureData.at((i*3)+1) = p.y + 0.5f;
+      textureData.at((i*3)+2) = p.z + 0.5f;
    }
 
-   GLuint glTexture = OpenGLUtils::createTexture(_width, _height, textureData.data());
+   GLuint glTexture = OpenGLUtils::createTexture3D(_width, _height,_depth, textureData.data());
    int errCode;
-   _texture = cl::ImageGL(_params.context,CL_MEM_READ_ONLY,GL_TEXTURE_2D,0,glTexture,&errCode);
+   _texture = cl::ImageGL(_params.context,CL_MEM_READ_ONLY,GL_TEXTURE_3D,0,glTexture,&errCode);
    if (errCode!=CL_SUCCESS) {
       std::cout<<"Failed to create OpenGL texture refrence: "<<errCode<<std::endl;
       return 250;
@@ -51,15 +51,15 @@ bool ParticleSystem::init(const std::string& path, const std::string& kernel, co
 
    std::default_random_engine generator{};
    std::uniform_int_distribution<int> distribution_int(0,_emitters.size()-1);
-   std::normal_distribution<float> distribution_float(0.0f,1.0f);
+   std::uniform_real_distribution<float> distribution_float(0.0f,1.0f);
    std::vector<float> data(3*PARTICLE_COUNT);
    for(int n = 0; n < PARTICLE_COUNT; ++n) {
    	auto emitter = _emitters.at(distribution_int(generator));
    	glm::vec3 min = emitter.first - (emitter.second/2.0f);
    	glm::vec3 max = emitter.first + (emitter.second/2.0f);
-      float x = min.x + ((float)abs(max.x - min.x))*distribution_float(generator);
-      float y = min.y + ((float)abs(max.y - min.y))*distribution_float(generator);
-      float z = min.z + ((float)abs(max.z - min.z))*distribution_float(generator);
+      float x = min.x + std::abs(max.x - min.x)*distribution_float(generator);
+      float y = min.y + std::abs(max.y - min.y)*distribution_float(generator);
+      float z = min.z + std::abs(max.z - min.z)*distribution_float(generator);
       data[3*n+0] = x;
       data[3*n+1] = y;
       data[3*n+2] = z;
@@ -98,7 +98,7 @@ void ParticleSystem::addEmitter(const glm::vec3& position, const glm::vec3& dime
 	_emitters.push_back(std::make_pair(position, dimensions));
 }
 
-void ParticleSystem::compute(const float time){
+void ParticleSystem::compute(const float time, const float timeDelta){
 // CL event used to wait for kernel osv...
    cl::Event ev;
 // set kernel arguments
@@ -120,13 +120,14 @@ void ParticleSystem::compute(const float time){
       std::cout<<"Failed acquiring GL object: "<<res<<std::endl;
       return;
    }
-   
+
    _params.kernel.setArg(0,_vertexBuffer);
    _params.kernel.setArg(1,_velocityBuffer);
    _params.kernel.setArg(2,_texture);
    _params.kernel.setArg(3,_width);
    _params.kernel.setArg(4,_height);
-   _params.kernel.setArg(5,time);
+   _params.kernel.setArg(5,_depth);
+   _params.kernel.setArg(6,timeDelta);
 
 // Equeue kernel
    _params.queue.enqueueNDRangeKernel(_params.kernel,cl::NullRange,cl::NDRange(getParticleCount(time)),cl::NDRange(1));

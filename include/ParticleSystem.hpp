@@ -19,7 +19,8 @@ private:
 	 cl::Buffer _vertexBuffer;
 	 cl::Buffer _velocityBuffer;
 	 cl::ImageGL _texture;
-	 unsigned _width,_height;
+	 cl::Buffer _noise;
+	 unsigned _width,_height,_depth;
 	std::string readKernelFile(const std::string&);
 	std::vector<std::pair<glm::vec3, glm::vec3>> _emitters;
 public:	
@@ -27,7 +28,7 @@ public:
 	ParticleSystem(const int,const float);
 
 	bool init(const std::string&, const std::string&, const std::string&, const ShaderProgram&);
-	void compute(const float);
+	void compute(const float, const float);
 	void addEmitter(const glm::vec3&, const glm::vec3&);
 	int getParticleCount(const float) const;
 	ParticleSystem(const ParticleSystem&) = default;

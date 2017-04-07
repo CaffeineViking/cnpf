@@ -21,6 +21,17 @@ GLuint OpenGLUtils::createTexture(unsigned width,unsigned height, const float* d
     return ret_val;
 }
 
+GLuint OpenGLUtils::createTexture3D(unsigned width,unsigned height,unsigned depth, const float* data ){
+  GLuint ret_val = 0;
+    glGenTextures(1,&ret_val);
+    glBindTexture(GL_TEXTURE_3D,ret_val);
+    glTexImage3D(GL_TEXTURE_3D,0,GL_RGBA,width,height,depth,0,GL_RGBA,GL_FLOAT,data);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    return ret_val;
+}
+
+
 bool OpenGLUtils::loadPNG(const std::string& filePath, unsigned& width, unsigned& height, std::vector<float>& data){
 
   std::vector<unsigned char> image; //the raw pixels

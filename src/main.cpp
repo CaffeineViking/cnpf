@@ -21,7 +21,8 @@
 #include "VectorField3D.hpp"
 #include <glm/ext.hpp>
 
-const GLuint WIDTH = 800, HEIGHT = 800;
+const GLuint WIDTH = 1000, HEIGHT = 1000;
+
 
 inline unsigned divup(unsigned a, unsigned b)
 {
@@ -58,7 +59,7 @@ int main(int argc, char**argv)
     glfwSetCursorPosCallback(window, GLFWInputLocator::cursor_callback);
     glfwSetMouseButtonCallback(window, GLFWInputLocator::mouse_callback);
     glfwSetKeyCallback(window, GLFWInputLocator::keyboard_callback);
-    glfwSwapInterval(1);
+    glfwSwapInterval(0);
     Locator::setInput(input);
     //====================================
     //  Init for GLEW
@@ -76,33 +77,25 @@ int main(int argc, char**argv)
 
   int width, height;
   glfwGetFramebufferSize(window, &width, &height);  
-
-    //GLuint VertexArrayID;
-    //glGenVertexArrays(1,&VertexArrayID);
-    //glBindVertexArray(VertexArrayID);
-
   glViewport(0, 0, width, height);
 
   //====================================
   //  Init for Shaders and Scenes
   //====================================
 
-    
-  // Use default vertex and fragment shader. Fragment makes suff orange and
-  // vertrex draw vertecies with camera taken into account.
   Shader vertexShader = Shader("share/shaders/default.vert",GL_VERTEX_SHADER);
   Shader fragmentShader = Shader("share/shaders/default.frag",GL_FRAGMENT_SHADER);
   fragmentShader.compile();
   vertexShader.compile();
 
-    ShaderProgram program{};
+  ShaderProgram program{};
 
   program.attach(fragmentShader);
   program.attach(vertexShader);
 
     // Create camera to change to MV projection matrix for the vertex shader
-    Camera _camera = Camera(45,WIDTH,HEIGHT);
-     _camera.translate(glm::vec3(0.0f,100.5f,155.0f));
+    Camera _camera = Camera(60,WIDTH,HEIGHT);
+     _camera.translate(glm::vec3(0.0f,0.5f,2.0f));
 
 
 
@@ -111,38 +104,37 @@ int main(int argc, char**argv)
     glGenVertexArrays(1,&vao);
     glBindVertexArray(vao);
 
-     ParticleSystem system = ParticleSystem(2000000, 30.0f);
-     system.addEmitter(glm::vec3(0.0f,0.0f,0.0f), glm::vec3(64.0f,0.0f,64.0f));
-    //system.addEmitter(glm::vec3(100.0f,0.0f,0.0f), glm::vec3(50.0f));
+     ParticleSystem system = ParticleSystem(2000000, 1.0f);
+     system.addEmitter(glm::vec3(0.0f,1.0f,0.0f), glm::vec3(4.0f,4.0f,4.0f));
 
      system.init("share/kernels/particles.cl", "particles", "NVIDIA", program);
-    // For FPS counter
-     double lastTime = glfwGetTime();
-     int nbFrames = 0;
 
+    // For FPS counter
+     float currentTime = glfwGetTime();
+     float lastFrame = 0.0f;
+     float deltaTime = 0.0f;
+     float accumulatedTime = 0.0f;
     // Main loop
     while (!glfwWindowShouldClose(window))
     {   
-         double currentTime = glfwGetTime();
-         nbFrames++;
-         if ( currentTime - lastTime >= 1.0 ){ // If last prinf() was more than 1 sec ago
-             // printf and reset timer
-            std::cout << "FPS: " << double(nbFrames) << std::endl;
-             nbFrames = 0;
-             lastTime += 1.0;
-         }
-         //std::cout << currentTime << std::endl;
+        currentTime = glfwGetTime();
+        deltaTime = currentTime - lastFrame;
+        lastFrame = currentTime;
+        accumulatedTime += deltaTime;
         // Poll input
         glfwPollEvents();
-     
-        system.compute(currentTime);
+        
+        system.compute(accumulatedTime, deltaTime);
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
         // Render vertecies
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
         // _camera.translate(glm::vec3(0.0f,0.1f,0.0f));
-         _camera.rotate(0.1f);
+         _camera.rotate(30.0f * deltaTime);
         _camera.update(program.getId());
        
         program.begin();
