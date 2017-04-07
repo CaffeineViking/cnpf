@@ -1,46 +1,57 @@
-
-
 // third-party libraries
 #ifdef WINDOWS
-#include <windows.h>
+//#include <windows.h>
 #endif
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
-#include <cassert>
+#include <CL/cl.hpp>
 #include <iostream>
-#include <stdexcept>
+
+#include <iostream>
 
 #include "Shape.hpp"
 #include "Shader.hpp"
 #include "ShaderProgram.hpp"
 #include "Locator.hpp"
 #include "Texture.hpp"
-const GLuint WIDTH = 800, HEIGHT = 800;
+#include "ParticleSystem.hpp"
+#include "VectorField2D.hpp"
+#include "VectorField3D.hpp"
+#include <glm/ext.hpp>
 
-int main()
+const GLuint WIDTH = 1000, HEIGHT = 1000;
+
+
+inline unsigned divup(unsigned a, unsigned b)
+{
+    return (a+b-1)/b;
+}
+
+int main(int argc, char**argv)
 {
 
     //====================================
     //  Init for GLFW
     //====================================
-    const int MAJOR_VERSION = 4;
-    const int MINOR_VERSION = 3;
+    const int MAJOR_VERSION = 3;
+    const int MINOR_VERSION = 1;
     std::cout << "Starting GLFW context, OpenGL " << MAJOR_VERSION << "." << MINOR_VERSION << std::endl;
 
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, MAJOR_VERSION);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, MINOR_VERSION);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
     GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Default", nullptr, nullptr);    
-    if (window == nullptr)
+ if (window == nullptr)
     {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
+      std::cout << "Failed to create GLFW window" << std::endl;
+      glfwTerminate();
+      return -1;
     }
+
     glfwMakeContextCurrent(window);
 
     // Set input locators
@@ -48,7 +59,7 @@ int main()
     glfwSetCursorPosCallback(window, GLFWInputLocator::cursor_callback);
     glfwSetMouseButtonCallback(window, GLFWInputLocator::mouse_callback);
     glfwSetKeyCallback(window, GLFWInputLocator::keyboard_callback);
-
+    glfwSwapInterval(0);
     Locator::setInput(input);
     //====================================
     //  Init for GLEW
@@ -56,70 +67,86 @@ int main()
     glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK)
     {
-        std::cout << "Failed to initialize GLEW" << std::endl;
-        return -1;
+      std::cout << "Failed to initialize GLEW" << std::endl;
+      return -1;
     }    
 
-    // Setup Z-buffer and Viewport
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS); 
+  // Setup Z-buffer and Viewport
+  glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_LESS); 
 
-    int width, height;
-    glfwGetFramebufferSize(window, &width, &height);  
+  int width, height;
+  glfwGetFramebufferSize(window, &width, &height);  
+  glViewport(0, 0, width, height);
 
-    GLuint VertexArrayID;
-    glGenVertexArrays(1,&VertexArrayID);
-    glBindVertexArray(VertexArrayID);
+  //====================================
+  //  Init for Shaders and Scenes
+  //====================================
 
-    glViewport(0, 0, width, height);
+  Shader vertexShader = Shader("share/shaders/default.vert",GL_VERTEX_SHADER);
+  Shader fragmentShader = Shader("share/shaders/default.frag",GL_FRAGMENT_SHADER);
+  fragmentShader.compile();
+  vertexShader.compile();
 
-    //====================================
-    //  Init for Shaders and Scenes
-    //====================================
+  ShaderProgram program{};
 
-    // Shapes are placed at origin
-    Plane plane = Plane{1.0f,1.0f};
-    
-    // Use default vertex and fragment shader. Fragment makes suff orange and
-    // vertrex draw vertecies with camera taken into account.
-    Shader vertexShader = Shader("share/shaders/default.vert",GL_VERTEX_SHADER);
-    Shader fragmentShader = Shader("share/shaders/default.frag",GL_FRAGMENT_SHADER);
-    fragmentShader.compile();
-    vertexShader.compile();
+  program.attach(fragmentShader);
+  program.attach(vertexShader);
 
-    ShaderProgram program = ShaderProgram{};
+    // Create camera to change to MV projection matrix for the vertex shader
+    Camera _camera = Camera(60,WIDTH,HEIGHT);
+     _camera.translate(glm::vec3(0.0f,0.5f,2.0f));
 
-    program.attach(fragmentShader);
-    program.attach(vertexShader);
 
-    Camera _camera = Camera(45,800,800);
-     _camera.translate(glm::vec3(0.0f,0.0f,2.0f));
 
-    GLuint samplerId  = glGetUniformLocation(program.getId(), "myTextureSampler");
-    glUniform1i(samplerId, 0);
+    // The "Generic" vertex array object which is used to render everyting
+    GLuint vao;
+    glGenVertexArrays(1,&vao);
+    glBindVertexArray(vao);
 
-    Texture texture = Texture{};
+     ParticleSystem system = ParticleSystem(2000000, 1.0f);
+     system.addEmitter(glm::vec3(0.0f,1.0f,0.0f), glm::vec3(4.0f,4.0f,4.0f));
+
+     system.init("share/kernels/particles.cl", "particles", "NVIDIA", program);
+
+    // For FPS counter
+     float currentTime = glfwGetTime();
+     float lastFrame = 0.0f;
+     float deltaTime = 0.0f;
+     float accumulatedTime = 0.0f;
     // Main loop
     while (!glfwWindowShouldClose(window))
-    {
+    {   
+        currentTime = glfwGetTime();
+        deltaTime = currentTime - lastFrame;
+        lastFrame = currentTime;
+        accumulatedTime += deltaTime;
         // Poll input
         glfwPollEvents();
-        _camera.rotate(0.3f);
-        _camera.update(program.getId());
-        // Start of per-frame GL render
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT |GL_DEPTH_BUFFER_BIT);
-
-        program.begin();
-        texture.begin();
-        plane.render();
-        texture.end();
         
+        system.compute(accumulatedTime, deltaTime);
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
+        // Render vertecies
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // _camera.translate(glm::vec3(0.0f,0.1f,0.0f));
+         _camera.rotate(30.0f * deltaTime);
+        _camera.update(program.getId());
+       
+        program.begin();
+        glPointSize(1);
+        glBindVertexArray(vao);
+        glDrawArrays(GL_POINTS,0,system.getParticleCount(currentTime));
+        glBindVertexArray(0);
         // Swap the render buffer to display
         glfwSwapBuffers(window);
     }
 
-    glDeleteVertexArrays(1, &VertexArrayID);
+    //glDeleteVertexArrays(1, &VertexArrayID);
     glfwTerminate();
     return 0;
 }

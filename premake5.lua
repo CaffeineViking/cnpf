@@ -22,6 +22,7 @@ project (name)
     kind "WindowedApp"
     files {"src/**.cc"}
     files {"src/**.cpp"}
+    files {"src/**.c"}
     includedirs {"include"}
     filter {"system:windows"} -- Inconsistent...
         defines {"WINDOWS"}
@@ -49,6 +50,7 @@ project (name.."-tests")
     targetdir "bin"
     kind "ConsoleApp"
     files {"src/**.cpp"}
+    files {"src/**.c"}
     files {"tests/**.cpp"}
     removefiles {"src/main.cpp"}
     includedirs {"include"}

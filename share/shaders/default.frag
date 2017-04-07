@@ -1,11 +1,9 @@
 #version 410 core
 
-
-in vec2 UV;
+in vec3 vertex_position;
 out vec4 color;
-uniform sampler2D myTextureSampler;
 
 void main()
-{
-    color =texture( myTextureSampler, UV ).rgba;
+{	
+    color = vec4(abs(normalize(vertex_position)),0.6);
 } 

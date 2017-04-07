@@ -1,16 +1,21 @@
 #include "Locator.hpp"
 #include <iostream>
 #include <utility>
+
 // Locator for naughty developers
 const glm::vec2 DummyInputLocator::getMousePos(){
 	return glm::vec2(0.0f,0.0f);
 }
 
+// Unused since we don't want a response
 bool DummyInputLocator::isButtonPressed(int button){
+	(void)button;
 	return false;
 }
 
+// Unused since we don't want a response
 bool DummyInputLocator::isKeyPressed(int key){
+	(void)key;
 	return false;
 }
 
@@ -20,10 +25,18 @@ glm::vec2 GLFWInputLocator::_mousePos = glm::vec2(0.0f,0.0f);
 
 void GLFWInputLocator::cursor_callback(GLFWwindow* window, double x, double y)
 {
+	// Supress unised warning
+	(void)window;
+	
 	_mousePos  = glm::vec2(x,y);
 }
 
 void GLFWInputLocator::mouse_callback(GLFWwindow* window, int button, int action, int mods){
+
+	// Supress unised warning
+	(void)window;
+	(void)mods;
+
 	if(action == GLFW_RELEASE){
 		_buttons[button] = false;
 	}else if(action == GLFW_PRESS){
@@ -34,6 +47,11 @@ void GLFWInputLocator::mouse_callback(GLFWwindow* window, int button, int action
 
 void GLFWInputLocator::keyboard_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
+	// Supress unised warning
+	(void)scancode;
+	(void)mode;
+
+
 	if(action == GLFW_RELEASE){
 		_keys[key] = false;
 	}else if(action == GLFW_PRESS){
