@@ -105,7 +105,7 @@ int main(int argc, char**argv)
     glBindVertexArray(vao);
 
      ParticleSystem system = ParticleSystem(2000000, 1.0f);
-     system.addEmitter(glm::vec3(0.0f,1.0f,0.0f), glm::vec3(4.0f,4.0f,4.0f));
+     system.addEmitter(glm::vec3(0.0f,0.0f,0.0f), glm::vec3(16.0f,16.0f,16.0f));
 
      system.init("share/kernels/particles.cl", "particles", "NVIDIA", program);
 
@@ -114,6 +114,8 @@ int main(int argc, char**argv)
      float lastFrame = 0.0f;
      float deltaTime = 0.0f;
      float accumulatedTime = 0.0f;
+
+     float lookZ = 0.0f;
     // Main loop
     while (!glfwWindowShouldClose(window))
     {   
@@ -124,8 +126,18 @@ int main(int argc, char**argv)
         // Poll input
         glfwPollEvents();
         
-        system.compute(accumulatedTime, deltaTime);
-
+        if(Locator::input()->isKeyPressed(GLFW_KEY_UP))
+          system.compute(accumulatedTime, deltaTime);
+        if(Locator::input()->isKeyPressed(GLFW_KEY_DOWN))
+          system.compute(accumulatedTime, -deltaTime);
+        if(Locator::input()->isKeyPressed(GLFW_KEY_A))
+          _camera.rotate(-30.0f * deltaTime);
+        if(Locator::input()->isKeyPressed(GLFW_KEY_D))
+          _camera.rotate(30.0f  * deltaTime);
+        if(Locator::input()->isKeyPressed(GLFW_KEY_W))
+          _camera.translate(glm::vec3(0.0f,0.01f,0.0f));
+        if(Locator::input()->isKeyPressed(GLFW_KEY_S))
+          _camera.translate(glm::vec3(0.0f,-0.01f,0.0f));
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
@@ -134,7 +146,7 @@ int main(int argc, char**argv)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // _camera.translate(glm::vec3(0.0f,0.1f,0.0f));
-         _camera.rotate(30.0f * deltaTime);
+         //_camera.rotate(30.0f * deltaTime);
         _camera.update(program.getId());
        
         program.begin();

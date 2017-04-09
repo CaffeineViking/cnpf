@@ -5,6 +5,7 @@
 #include <GL/glew.h>
 #include <algorithm>
 #include "VectorField3D.hpp"
+#include <sstream>
 
 #ifdef WINDOWS
 #include <windows.h>
@@ -24,21 +25,26 @@ bool ParticleSystem::init(const std::string& path, const std::string& kernel, co
    _params = OpenCLUtils::initCL(path, kernel, device);
 
 // Load texture and place in GPU
-      _width  = 8;
-      _height = 8;
-      _depth  = 8;
+      _width  = 128;
+      _height = 128;
+      _depth  = 128;
 
    std::vector<float> textureData(3*_width*_height*_depth);
 
-   VectorField3D field(glm::vec3(0), glm::vec3(_width,_height,_depth));
+   VectorField3D field(glm::vec3(0), glm::vec3(_width-1,_height-1,_depth-1));
    std::vector<glm::vec3> curled = field.curl().normalize().getField();
    std::cout << curled.size() << std::endl;
-   for(int i = 0; i < _width*_height*_depth; i++){
-      auto p = curled.at(i) * 0.5f;
-      textureData.at((i*3)+0) = p.x + 0.5f;
-      textureData.at((i*3)+1) = p.y + 0.5f;
-      textureData.at((i*3)+2) = p.z + 0.5f;
-   }
+   for(int j = 0; j < _width; j++){
+      int i = 0;
+      for(; i < _height*_depth; i++){
+         //std::cout << i + (j * _height*_depth) << std::endl;
+         auto p = curled.at(i + (j * _height*_depth)) * 0.5f;
+         textureData.at((i + (j * _height*_depth)) * 3 + 0) = p.x + 0.5f;
+         textureData.at((i + (j * _height*_depth)) * 3 + 1) = p.y + 0.5f;
+         textureData.at((i + (j * _height*_depth)) * 3 + 2) = p.z + 0.5f;
+      }
+      //std::cout << i + (j * _height*_depth) << std::endl;
+   }  
 
    GLuint glTexture = OpenGLUtils::createTexture3D(_width, _height,_depth, textureData.data());
    int errCode;
@@ -47,7 +53,18 @@ bool ParticleSystem::init(const std::string& path, const std::string& kernel, co
       std::cout<<"Failed to create OpenGL texture refrence: "<<errCode<<std::endl;
       return 250;
     }
-
+   //  for(int j = 0; j < _width; j++){
+   //    std::vector<float> crossSection(_width*_depth * 3);
+   //     for(int i = 0; i < _height* _depth; i++){
+   //       crossSection[(i*3) + 0 ] = textureData.at((i + (j * _height*_depth)) * 3  + 0);
+   //       crossSection[(i*3) + 1 ] = textureData.at((i + (j * _height*_depth)) * 3  + 1);
+   //       crossSection[(i*3) + 2 ] = textureData.at((i + (j * _height*_depth)) * 3  + 2);
+   //     }
+   //    std::ostringstream oss;
+   //    oss << "test_" << (j+1) << ".png";
+   //    std::cout << oss.str() << std::endl;
+   //    OpenGLUtils::writePNG(oss.str(), _width, _depth, crossSection);
+   // }
 
    std::default_random_engine generator{};
    std::uniform_int_distribution<int> distribution_int(0,_emitters.size()-1);
@@ -80,12 +97,12 @@ bool ParticleSystem::init(const std::string& path, const std::string& kernel, co
    glVertexAttribPointer(position_attribute, 3, GL_FLOAT, GL_FALSE, 0, 0);
    glEnableVertexAttribArray(position_attribute);
    glBindVertexArray(0);
-
+    std::normal_distribution<float> distribution(1.0f,0.2f);
 // Create velocity buffer, this is not of interest to the renderer at the moment
    for(int n = 0; n < PARTICLE_COUNT; ++n) {
-      data[3*n+0] = 0.0f; //(distribution_float(generator) - 0.5f);
-      data[3*n+1] = 0.0f; // (distribution_float(generator) - 0.5f);
-      data[3*n+2] = 0.0f;//(distribution_float(generator) - 0.5f);
+      data[3*n+0] = distribution(generator); //(distribution_float(generator) - 0.5f);
+      data[3*n+1] = distribution(generator); // (distribution_float(generator) - 0.5f);
+      data[3*n+2] = distribution(generator);//(distribution_float(generator) - 0.5f);
    }
 // Create Vertex buffer for the velocities
    _velocityBuffer = cl::Buffer(_params.context, CL_MEM_READ_WRITE, sizeof(float)*3*PARTICLE_COUNT);

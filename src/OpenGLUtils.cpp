@@ -15,7 +15,7 @@ GLuint OpenGLUtils::createTexture(unsigned width,unsigned height, const float* d
  	GLuint ret_val = 0;
     glGenTextures(1,&ret_val);
     glBindTexture(GL_TEXTURE_2D,ret_val);
-    glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,width,height,0,GL_RGBA,GL_FLOAT,data);
+    glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,width,height,0,GL_RGB,GL_FLOAT,data);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     return ret_val;
@@ -25,12 +25,28 @@ GLuint OpenGLUtils::createTexture3D(unsigned width,unsigned height,unsigned dept
   GLuint ret_val = 0;
     glGenTextures(1,&ret_val);
     glBindTexture(GL_TEXTURE_3D,ret_val);
-    glTexImage3D(GL_TEXTURE_3D,0,GL_RGBA,width,height,depth,0,GL_RGBA,GL_FLOAT,data);
+    glTexImage3D(GL_TEXTURE_3D,0,GL_RGB,width,height,depth,0,GL_RGB,GL_FLOAT,data);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     return ret_val;
 }
 
+// Assumes RGB values interleaved in the data vector on the form 0.0f - 1.0f for each channel 
+bool OpenGLUtils::writePNG(const std::string& filePath, const unsigned width, const unsigned height, const std::vector<float>& data){
+    std::vector<unsigned char> image;
+    for(int i = 0; i < width*height; i++){
+      image.push_back((unsigned char)(data.at(i*3 + 0)*255.0f));
+      image.push_back((unsigned char)(data.at(i*3 + 1)*255.0f));
+      image.push_back((unsigned char)(data.at(i*3 + 2)*255.0f));
+      image.push_back((unsigned char)255);
+    }
+
+   //Encode the image
+  unsigned error = lodepng::encode(filePath, image, width, height);
+  //if there's an error, display it
+  if(error) std::cout << "encoder error " << error << ": "<< lodepng_error_text(error) << std::endl;
+   return true;
+}
 
 bool OpenGLUtils::loadPNG(const std::string& filePath, unsigned& width, unsigned& height, std::vector<float>& data){
 
