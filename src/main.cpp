@@ -23,12 +23,6 @@
 
 const GLuint WIDTH = 1000, HEIGHT = 1000;
 
-
-inline unsigned divup(unsigned a, unsigned b)
-{
-    return (a+b-1)/b;
-}
-
 int main(int argc, char**argv)
 {
 
@@ -45,7 +39,7 @@ int main(int argc, char**argv)
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
     GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Default", nullptr, nullptr);    
- if (window == nullptr)
+    if (window == nullptr)
     {
       std::cout << "Failed to create GLFW window" << std::endl;
       glfwTerminate();
@@ -104,8 +98,8 @@ int main(int argc, char**argv)
     glGenVertexArrays(1,&vao);
     glBindVertexArray(vao);
 
-     ParticleSystem system = ParticleSystem(2000000, 1.0f);
-     system.addEmitter(glm::vec3(0.0f,0.0f,0.0f), glm::vec3(16.0f,16.0f,16.0f));
+     ParticleSystem system = ParticleSystem(1000000, 1.0f);
+     system.addEmitter(glm::vec3(0.0f,0.0f,0.0f), glm::vec3( 128.0f,64.0f,128.0f));
 
      system.init("share/kernels/particles.cl", "particles", "NVIDIA", program);
 
@@ -116,6 +110,11 @@ int main(int argc, char**argv)
      float accumulatedTime = 0.0f;
 
      float lookZ = 0.0f;
+
+            // glEnable(GL_BLEND);
+        //glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+       glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // Main loop
     while (!glfwWindowShouldClose(window))
     {   
@@ -138,12 +137,16 @@ int main(int argc, char**argv)
           _camera.translate(glm::vec3(0.0f,0.01f,0.0f));
         if(Locator::input()->isKeyPressed(GLFW_KEY_S))
           _camera.translate(glm::vec3(0.0f,-0.01f,0.0f));
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        if(Locator::input()->isKeyPressed(GLFW_KEY_C)){
 
+         //       glEnable(GL_BLEND);
+        //glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        }
+           glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+           glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         // Render vertecies
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+       // glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+       //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // _camera.translate(glm::vec3(0.0f,0.1f,0.0f));
          //_camera.rotate(30.0f * deltaTime);

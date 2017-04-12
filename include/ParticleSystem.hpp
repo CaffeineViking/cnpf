@@ -20,7 +20,7 @@ private:
 	 cl::Buffer _velocityBuffer;
 	 cl::ImageGL _texture;
 	 cl::Buffer _noise;
-	 unsigned _width,_height,_depth;
+	 int _width,_height,_depth;
 	std::string readKernelFile(const std::string&);
 	std::vector<std::pair<glm::vec3, glm::vec3>> _emitters;
 public:	
