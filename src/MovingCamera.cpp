@@ -2,6 +2,7 @@
 #include "Locator.hpp"
 #include <iostream>
 #include <glm/ext.hpp>
+#include <cassert>
 
 MovingCamera::MovingCamera(const float& fov, const float& width, const float& height)
   : _width(width), _height(height), _mouseLocked(false)
@@ -18,18 +19,13 @@ MovingCamera::~MovingCamera(){
 }
 
 void MovingCamera::handleInput(const float& delta){
-  // unused for the moment
-  (void)delta;
-  
-  float sensitivity = 0.001f;
+  float SENS = 0.001f;
   int lockMouseKey = GLFW_MOUSE_BUTTON_LEFT;
   
-  glm::vec2 center(_width/2.0f, _height/2.0f);
-
   GLFWInputLocator* input = dynamic_cast<GLFWInputLocator*>(Locator::input());
-  //input->setInput(new GLFWInputLocator());
+  assert(input != nullptr);
   GLFWwindow* window = input->getWindow();
-
+  
   //============================
   // Rotate camera
   //============================
@@ -56,15 +52,13 @@ void MovingCamera::handleInput(const float& delta){
     
     _lastMousePos = input->getMousePos();
 
-    //std::cout << "pitch: " << rotY*sensitivity << "\tyaw: " << rotX*sensitivity << std::endl;
-
     // Rotate around local x-axis (vector pointing to the right of the object)
     if(rotY != 0)
-      getTransform()->rotate(rotY * sensitivity, getTransform()->getRight());
+      getTransform()->rotate(rotY * SENS, getTransform()->getRight());
 
     // Rotate around y-axis
     if(rotX != 0)
-      getTransform()->rotate((-rotX) * sensitivity, glm::vec3(0,1,0));
+      getTransform()->rotate((-rotX) * SENS, glm::vec3(0,1,0));
   }
 
   //============================
@@ -95,8 +89,6 @@ void MovingCamera::handleInput(const float& delta){
     translation *= SPEED_MOD;
   
   getTransform()->translate(translation);
-  
-  
 }
 
 Transform* MovingCamera::getTransform(){
@@ -110,14 +102,28 @@ glm::mat4 MovingCamera::getViewProjection(){
   return _projection * glm::lookAt(eye, center, up);
 }
 
+glm::mat4 MovingCamera::getView(){
+  glm::vec3 eye = _transform->getPos();
+  glm::vec3 center = _transform->getPos() + _transform->getForward();
+  glm::vec3 up = _transform->getUp();
+  return glm::lookAt(eye, center, up);
+}
+
 glm::mat4 MovingCamera::getMVP() {
   return getViewProjection() * getTransform()->getModel();;
 }
 
 void MovingCamera::update(const GLuint& programId){
-  //glm::mat4 mvp = getMVP();
-  glm::mat4 vp = getViewProjection();
+  // glm::mat4 vp = getViewProjection();
+  // GLuint vpId = glGetUniformLocation(programId, "viewProjection");
+  // glUniformMatrix4fv(vpId, 1, GL_FALSE, &(vp[0][0]));
 
-  GLuint vpId = glGetUniformLocation(programId, "viewProjection");
-  glUniformMatrix4fv(vpId, 1, GL_FALSE, &(vp[0][0]));
+  glm::mat4 v = getView();
+  GLuint vId = glGetUniformLocation(programId, "view");
+  glUniformMatrix4fv(vId, 1, GL_FALSE, &(v[0][0]));
+
+  glm::mat4 p = _projection;
+  GLuint pId = glGetUniformLocation(programId, "projection");
+  glUniformMatrix4fv(pId, 1, GL_FALSE, &(p[0][0]));
+  
 }

@@ -22,43 +22,49 @@
 
 const GLuint WIDTH = 1000, HEIGHT = 1000;
 
-int main(int, char**)
+
+inline unsigned divup(unsigned a, unsigned b)
+{
+  return (a+b-1)/b;
+}
+
+int main(int argc, char**argv)
 {
 
-    //====================================
-    //  Init for GLFW
-    //====================================
-    const int MAJOR_VERSION = 3;
-    const int MINOR_VERSION = 1;
-    std::cout << "Starting GLFW context, OpenGL " << MAJOR_VERSION << "." << MINOR_VERSION << std::endl;
+  //====================================
+  //  Init for GLFW
+  //====================================
+  const int MAJOR_VERSION = 3;
+  const int MINOR_VERSION = 1;
+  std::cout << "Starting GLFW context, OpenGL " << MAJOR_VERSION << "." << MINOR_VERSION << std::endl;
 
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, MAJOR_VERSION);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, MINOR_VERSION);
-    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+  glfwInit();
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, MAJOR_VERSION);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, MINOR_VERSION);
+  glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Default", nullptr, nullptr);    
-    if (window == nullptr)
+  GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Default", nullptr, nullptr);    
+  if (window == nullptr)
     {
       std::cout << "Failed to create GLFW window" << std::endl;
       glfwTerminate();
       return -1;
     }
 
-    glfwMakeContextCurrent(window);
+  glfwMakeContextCurrent(window);
 
-    // Set input locators
-    GLFWInputLocator* input = new GLFWInputLocator();
-    glfwSetCursorPosCallback(window, GLFWInputLocator::cursor_callback);
-    glfwSetMouseButtonCallback(window, GLFWInputLocator::mouse_callback);
-    glfwSetKeyCallback(window, GLFWInputLocator::keyboard_callback);
-    glfwSwapInterval(0);
-    Locator::setInput(input);
-    //====================================
-    //  Init for GLEW
-    //====================================
-    glewExperimental = GL_TRUE;
-    if (glewInit() != GLEW_OK)
+  // Set input locators
+  GLFWInputLocator* input = new GLFWInputLocator();
+  glfwSetCursorPosCallback(window, GLFWInputLocator::cursor_callback);
+  glfwSetMouseButtonCallback(window, GLFWInputLocator::mouse_callback);
+  glfwSetKeyCallback(window, GLFWInputLocator::keyboard_callback);
+  glfwSwapInterval(0);
+  Locator::setInput(input);
+  //====================================
+  //  Init for GLEW
+  //====================================
+  glewExperimental = GL_TRUE;
+  if (glewInit() != GLEW_OK)
     {
       std::cout << "Failed to initialize GLEW" << std::endl;
       return -1;
@@ -78,92 +84,73 @@ int main(int, char**)
 
   Shader vertexShader = Shader("share/shaders/default.vert",GL_VERTEX_SHADER);
   Shader fragmentShader = Shader("share/shaders/default.frag",GL_FRAGMENT_SHADER);
+  Shader geometryShader = Shader("share/shaders/default.geo",GL_GEOMETRY_SHADER);
   fragmentShader.compile();
   vertexShader.compile();
+  geometryShader.compile();
 
   ShaderProgram program{};
 
   program.attach(vertexShader);
+  program.attach(geometryShader);
   program.attach(fragmentShader);
 
-    // Create camera to change to MV projection matrix for the vertex shader
-    MovingCamera _camera = MovingCamera(40,WIDTH,HEIGHT);
-    _camera.getTransform()->translate(glm::vec3(0.0f,0.5f,2.0f));
+  // Create camera to change to MV projection matrix for the vertex shader
+  MovingCamera _camera = MovingCamera(glm::radians(100.0f),WIDTH,HEIGHT);
+  _camera.getTransform()->translate(glm::vec3(0.0f,0.5f,2.0f));
     
 
-    // The "Generic" vertex array object which is used to render everyting
-    GLuint vao;
-    glGenVertexArrays(1,&vao);
-    glBindVertexArray(vao);
+  // The "Generic" vertex array object which is used to render everyting
+  GLuint vao;
+  glGenVertexArrays(1,&vao);
+  glBindVertexArray(vao);
 
-      BackwakeScenario backwakeScenario(32,32,32);
-      backwakeScenario.generate();
-     ParticleSystem system = ParticleSystem(100000, 20.0f);
-     system.addEmitter(glm::vec3(0.0f,0.0f,0.0f), glm::vec3( 32.0f,2.0f,32.0f));
+  ParticleSystem system = ParticleSystem(200000, 1.0f);
+  system.addEmitter(glm::vec3(0.0f,1.0f,0.0f), glm::vec3(4.0f,4.0f,4.0f));
 
-     system.init("share/kernels/particles.cl", "particles", "NVIDIA", program);
-      system.setScenario(backwakeScenario);
+  system.init("share/kernels/particles.cl", "particles", "Intel", program);
 
-    // For FPS counter
-     float currentTime = glfwGetTime();
-     float lastFrame = 0.0f;
-     float deltaTime = 0.0f;
-     float accumulatedTime = 0.0f;
-
-     // glEnable(GL_BLEND);
-     //glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-       glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    // Main loop
-    while (!glfwWindowShouldClose(window))
+  // For FPS counter
+  float currentTime = glfwGetTime();
+  float lastFrame = 0.0f;
+  float deltaTime = 0.0f;
+  float accumulatedTime = 0.0f;
+  // Main loop
+  while (!glfwWindowShouldClose(window))
     {   
-        currentTime = glfwGetTime();
-        deltaTime = currentTime - lastFrame;
-        lastFrame = currentTime;
-        accumulatedTime += deltaTime;
-        // Poll input
-        glfwPollEvents();
+      currentTime = glfwGetTime();
+      deltaTime = currentTime - lastFrame;
+      lastFrame = currentTime;
+      accumulatedTime += deltaTime;
+      // Poll input
+      glfwPollEvents();
         
-        if(Locator::input()->isKeyPressed(GLFW_KEY_UP))
-          system.compute(accumulatedTime, deltaTime);
-        if(Locator::input()->isKeyPressed(GLFW_KEY_DOWN))
-          system.compute(accumulatedTime, -deltaTime);
-        if(Locator::input()->isKeyPressed(GLFW_KEY_A))
-          _camera.rotate(-30.0f * deltaTime);
-        if(Locator::input()->isKeyPressed(GLFW_KEY_D))
-          _camera.rotate(30.0f  * deltaTime);
-        if(Locator::input()->isKeyPressed(GLFW_KEY_W))
-          _camera.translate(glm::vec3(0.0f,20.0f*deltaTime,0.0f));
-        if(Locator::input()->isKeyPressed(GLFW_KEY_S))
-          _camera.translate(glm::vec3(0.0f,-20.0f*deltaTime,0.0f));
-        if(Locator::input()->isKeyPressed(GLFW_KEY_C)){
+      system.compute(accumulatedTime, deltaTime);
 
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-        }
-           glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-           glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        // Render vertecies
-       // glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-       //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      glEnable(GL_BLEND);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
-        // _camera.translate(glm::vec3(0.0f,0.1f,0.0f));
-        // _camera.rotate(30.0f * deltaTime);
-	_camera.handleInput(deltaTime);
-        _camera.update(program.getId());
+      // Render vertecies
+      glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+      // _camera.translate(glm::vec3(0.0f,0.1f,0.0f));
+      // _camera.rotate(30.0f * deltaTime);
+      _camera.handleInput(deltaTime);
+      _camera.update(program.getId());
        
-        program.begin();
-        glPointSize(1);
-        glBindVertexArray(vao);
-        glDrawArrays(GL_POINTS,0,system.getParticleCount(currentTime));
-        glBindVertexArray(0);
-        // Swap the render buffer to display
-        glfwSwapBuffers(window);
+      program.begin();
+      glPointSize(1);
+      glBindVertexArray(vao);
+      glDrawArrays(GL_POINTS,0,system.getParticleCount(currentTime));
+      glBindVertexArray(0);
+      // Swap the render buffer to display
+      glfwSwapBuffers(window);
     }
 
-    //glDeleteVertexArrays(1, &VertexArrayID);
-    glfwTerminate();
-    return 0;
+  //glDeleteVertexArrays(1, &VertexArrayID);
+  glfwTerminate();
+  return 0;
 }
 
 // Kyboard callback for GLFW

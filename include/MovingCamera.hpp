@@ -29,6 +29,7 @@ public:
   
   Transform* getTransform();
   glm::mat4 getViewProjection();
+  glm::mat4 getView();
   glm::mat4 getMVP();
 
 };
