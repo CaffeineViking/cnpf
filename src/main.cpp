@@ -99,7 +99,7 @@ int main(int argc, char**argv)
     glBindVertexArray(vao);
 
      ParticleSystem system = ParticleSystem(1000000, 1.0f);
-     system.addEmitter(glm::vec3(0.0f,0.0f,0.0f), glm::vec3( 128.0f,64.0f,128.0f));
+     system.addEmitter(glm::vec3(0.0f,0.0f,0.0f), glm::vec3( 128.0f,0.0f,128.0f));
 
      system.init("share/kernels/particles.cl", "particles", "NVIDIA", program);
 
@@ -134,9 +134,9 @@ int main(int argc, char**argv)
         if(Locator::input()->isKeyPressed(GLFW_KEY_D))
           _camera.rotate(30.0f  * deltaTime);
         if(Locator::input()->isKeyPressed(GLFW_KEY_W))
-          _camera.translate(glm::vec3(0.0f,0.01f,0.0f));
+          _camera.translate(glm::vec3(0.0f,8.0f*deltaTime,0.0f));
         if(Locator::input()->isKeyPressed(GLFW_KEY_S))
-          _camera.translate(glm::vec3(0.0f,-0.01f,0.0f));
+          _camera.translate(glm::vec3(0.0f,-8.0f*deltaTime,0.0f));
         if(Locator::input()->isKeyPressed(GLFW_KEY_C)){
 
          //       glEnable(GL_BLEND);

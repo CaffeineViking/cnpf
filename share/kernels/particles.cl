@@ -12,7 +12,7 @@ void kernel particles(		global float* positions,
     float y = positions[3*id+1] + height/2.0f;
     float z = positions[3*id+2] + depth/2.0f ;
 	float4 values = read_imagef(texture, smp, (float4)(x,y,z,0.0f));
-   	positions[3*id+0] += (values.x - 0.5f) * frameDelta * 20 * velocities[3*id+0];
-	positions[3*id+1] += (values.y - 0.5f) * frameDelta * 20 * velocities[3*id+1];
-    positions[3*id+2] += (values.z - 0.5f) * frameDelta * 20 * velocities[3*id+2];
+   	positions[3*id+0] += (values.x - 0.5f) * frameDelta * 2 * velocities[3*id+0];
+	positions[3*id+1] += (values.y - 0.5f) * frameDelta * 2 * velocities[3*id+1];
+    positions[3*id+2] += (values.z - 0.5f) * frameDelta * 2 * velocities[3*id+2];
 }

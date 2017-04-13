@@ -35,7 +35,10 @@ public:
   VectorField3D operator* (const float);
 
   VectorField3D operator+ (const VectorField3D&);
+  VectorField3D operator+ (const glm::vec3&);
   VectorField3D operator+ (const float);
+
+  VectorField3D gradient();
 
   glm::vec3& operator[] (const int);
 

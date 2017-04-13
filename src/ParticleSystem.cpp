@@ -35,6 +35,17 @@ ParticleSystem::~ParticleSystem(){}
 ParticleSystem::ParticleSystem(const int particles, const float time): PARTICLE_COUNT{particles}, maxTime{time}{
 }
 
+
+float ramp(float d){
+      if( d >= 1.0f){
+         return 1.0f;
+      }
+      else if( d < 1.0f && d > -1.0f){
+         return (15.0f/8.0f * d) - (10.0f/3.0f * (d*d*d)) + (3.0f/8.0f * (d*d*d*d*d));
+      }else{
+         return -1.0f;
+      }
+}
 // =====================================
 // Setup devices and kernel for OpenCL  ( ͡° ͜ʖ ͡°).
 // =====================================
@@ -44,13 +55,13 @@ bool ParticleSystem::init(const std::string& path, const std::string& kernel, co
    _params = OpenCLUtils::initCL(path, kernel, device);
 
 // Load texture and place in GPU
-      _width  = 128;
-      _height = 128;
-      _depth  = 128;
+      _width  = 64;
+      _height = 64;
+      _depth  = 64;
 
       // Construct 
       glm::vec3 center(_width/2.0f,_height/2.0f,_width/2.0f);
-      float maskRadius = glm::distance(center, glm::vec3(0.0f,0.0f,0.0f)) / 8.0f;
+      float maskRadius = glm::distance(center, glm::vec3(0.0f,0.0f,0.0f)) / 3.0f;
    VectorField3D obstacle(_width,_height,_depth);
 
    // Calculate distance field
@@ -77,38 +88,58 @@ bool ParticleSystem::init(const std::string& path, const std::string& kernel, co
             if(d < maskRadius)
                distanceField[index] = glm::vec3(0.0f);
             else
-               distanceField[index] = glm::vec3(d);
+               distanceField[index] = glm::vec3(d) - maskRadius;
          }
       }
    }
    distanceField = distanceField.selfNormalize();
    bufferToPNG("debug/distanceField", distanceField.getData() , _width, _height, _depth);
 
-   VectorField3D distanceGradient(_width,_height,_depth);
+   VectorField3D distanceGradient = distanceField.gradient().normalize();
 
    // Callculate distance gradient
-    for(int x = 0; x < _width; x++) {
+
+   bufferToPNG("debug/distanceGradient", (distanceGradient * 0.5f + 0.5f).getData() , _width, _height, _depth);
+
+   VectorField3D normalField(_width,_height,_depth);
+   for(int x = 0; x < _width; x++) {
       for(int y = 0; y < _height; y++) {
          for(int z = 0; z < _depth; z++) {
-            const glm::vec3 position = glm::vec3(x,y,z);
-            const float eps = 0.01f;
-            const glm::vec3 dx(eps, 0.0f, 0.0f);
-            const glm::vec3 dy(0.0f, eps, 0.0f);
-            const glm::vec3 dz(0.0f, 0.0f, eps);
+            glm::vec3 position = glm::vec3(x,y,z);
+            glm::vec3 fieldValue = distanceField.get(position);
+            
+            float distance = glm::distance(position, center);
+            float alpha = glm::abs(ramp(distance / ((float)_width)));
+            glm::vec3 normal =  glm::normalize(position - center);
 
-            glm::vec3 d = distanceField.get(position);
-      
-            float dfdx = distanceField.get(position + dx).x - d.x;
-            float dfdy = distanceField.get(position + dy).y - d.y;
-            float dfdz = distanceField.get(position + dz).z - d.z;
-            //std::cout << dfdx << " " << dfdy << " " << dfdz << std::endl;
             int index = (x * _height * _depth) + (y * _depth) + z;
-            distanceGradient[index] = glm::normalize(glm::vec3(dfdx,dfdy,dfdz));
-            //std::cout << field.at(index).x << " " << field.at(index).y << " " << field.at(index).z << std::endl;
+            normalField[index] = alpha * fieldValue + (1-alpha)*normal*(glm::dot(normal,fieldValue));
          }
       }
    }
-   bufferToPNG("debug/distanceGradient", (distanceGradient * 0.5f + 0.5f).getData() , _width, _height, _depth);
+   bufferToPNG("debug/normalField", (normalField.normalize() * 0.5f + 0.5f).getData() , _width, _height, _depth);
+
+   VectorField3D noiseField(_width,_height,_depth);
+
+    for(int x = 0; x < _width; x++) {
+      for(int y = 0; y < _height; y++) {
+         for(int z = 0; z < _depth; z++) {
+
+            float noise1 = glm::simplex(glm::vec3(x * 0.01f + 10.0f,y *  0.01f + 10.0f,z *  0.01f + 10.0f));
+            float noise2 = glm::simplex(glm::vec3(x * 0.03f,y *  0.03f,z *  0.03f));
+            float noise3 = glm::simplex(glm::vec3(x * 0.06f,y *  0.06f,z *  0.06f));
+            float noise = noise1 + noise2 + noise3;
+            int index = (x * _height * _depth) + (y * _depth) + z;
+            noiseField[index] =glm::vec3(noise,noise,noise);
+         }
+      }
+   }
+
+   noiseField = noiseField.selfNormalize() * distanceField;
+   bufferToPNG("debug/noiseField", (noiseField.selfNormalize() * 0.5f + 0.5f).getData() , _width, _height, _depth);
+
+   VectorField3D potentialField = normalField;
+   bufferToPNG("debug/potentialField", (potentialField.selfNormalize() * 0.5f + 0.5f).getData() , _width, _height, _depth);
 
    VectorField3D curlField(_width, _height, _depth);
    // Callculate curl
@@ -120,32 +151,32 @@ bool ParticleSystem::init(const std::string& path, const std::string& kernel, co
            float n1,n2,a,b;
            glm::vec3 curl(0.0f);
 
-           n1 = distanceGradient.get(glm::vec3(x,y + eps,z)).y;
-           n2 = distanceGradient.get(glm::vec3(x,y - eps,z)).y;
+           n1 = potentialField.get(glm::vec3(x,y + eps,z)).y;
+           n2 = potentialField.get(glm::vec3(x,y - eps,z)).y;
            a = (n1 - n2) / (2.0f * eps);
 
-           n1 = distanceGradient.get(glm::vec3(x,y,z + eps)).z;
-           n2 = distanceGradient.get(glm::vec3(x,y,z - eps)).z;
+           n1 = potentialField.get(glm::vec3(x,y,z + eps)).z;
+           n2 = potentialField.get(glm::vec3(x,y,z - eps)).z;
            b = (n1 - n2) / (2.0f * eps);
 
            curl.x = a - b;
 
-           n1 = distanceGradient.get(glm::vec3(x,y,z + eps)).z;
-           n2 = distanceGradient.get(glm::vec3(x,y,z - eps)).z;
+           n1 = potentialField.get(glm::vec3(x,y,z + eps)).z;
+           n2 = potentialField.get(glm::vec3(x,y,z - eps)).z;
            a = (n1 - n2) / (2.0f * eps);
 
-           n1 = distanceGradient.get(glm::vec3(x + eps,y,z)).x;
-           n2 = distanceGradient.get(glm::vec3(x - eps,y,z)).x;
+           n1 = potentialField.get(glm::vec3(x + eps,y,z)).x;
+           n2 = potentialField.get(glm::vec3(x - eps,y,z)).x;
            b = (n1 - n2) / (2.0f * eps);
 
            curl.y = a - b;
 
-           n1 = distanceGradient.get(glm::vec3(x + eps,y,z)).x;
-           n2 = distanceGradient.get(glm::vec3(x - eps,y,z)).x;
+           n1 = potentialField.get(glm::vec3(x + eps,y,z)).x;
+           n2 = potentialField.get(glm::vec3(x - eps,y,z)).x;
            a = (n1 - n2) / (2.0f * eps);
 
-           n1 = distanceGradient.get(glm::vec3(x,y + eps,z)).y;
-           n2 = distanceGradient.get(glm::vec3(x,y - eps,z)).y;
+           n1 = potentialField.get(glm::vec3(x,y + eps,z)).y;
+           n2 = potentialField.get(glm::vec3(x,y - eps,z)).y;
            b = (n1 - n2) / (2.0f * eps);
 
            curl.z = a - b;
@@ -156,9 +187,10 @@ bool ParticleSystem::init(const std::string& path, const std::string& kernel, co
          }
       }
    }
+
    std::vector<float> textureData = (curlField * 0.5f + 0.5f).getData();
 
-   bufferToPNG("debug/potentialField", textureData , _width, _height, _depth);
+   bufferToPNG("debug/curl", textureData , _width, _height, _depth);
 
 
    GLuint glTexture = OpenGLUtils::createTexture3D(_width, _height,_depth, textureData.data());

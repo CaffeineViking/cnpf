@@ -199,6 +199,14 @@ VectorField3D VectorField3D::selfNormalize() {
   return result;
   }
 
+  VectorField3D VectorField3D::operator+ (const glm::vec3& v){
+    VectorField3D result(_width,_height,_depth);
+    for(int i = 0; i < _width*_height*_depth;i++) {
+     result[i] = _field.at(i) + v;
+    }
+    return result;
+  }
+
   VectorField3D VectorField3D::operator+ (const VectorField3D& f){
   if(f.getWidth() != _width || f.getHeight() != _height || f.getDepth() != _depth) {
     std::cerr << "Missmatch between field sizes" << std::endl;
@@ -257,6 +265,33 @@ glm::vec3 VectorField3D::get(const glm::vec3& position){
   float dz = glm::mix(c.z, zValueOffset.z, eps.z);
 
   return glm::vec3(dx,dy,dz);
+}
+
+VectorField3D VectorField3D::gradient() {
+    VectorField3D result(_width,_height,_depth);
+    for(int x = 0; x < _width; x++) {
+      for(int y = 0; y < _height; y++) {
+         for(int z = 0; z < _depth; z++) {
+            const glm::vec3 position = glm::vec3(x,y,z);
+            const float eps = 0.01f;
+            const glm::vec3 dx(eps, 0.0f, 0.0f);
+            const glm::vec3 dy(0.0f, eps, 0.0f);
+            const glm::vec3 dz(0.0f, 0.0f, eps);
+
+            glm::vec3 d = get(position);
+            
+           //glm::vec3 sign = glm::sign(glm::vec3(x,y,z) - glm::vec3(_width/2.0f, _height/2.0f, _depth/2.0f));
+            float dfdx = (get(position + dx).x - d.x);
+            float dfdy = (get(position + dy).y - d.y);
+            float dfdz = (get(position + dz).z - d.z);
+            //std::cout << dfdx << " " << dfdy << " " << dfdz << std::endl;
+            int index = (x * _height * _depth) + (y * _depth) + z;
+            result[index] = glm::vec3(dfdx,dfdy,dfdz);
+            //std::cout << field.at(index).x << " " << field.at(index).y << " " << field.at(index).z << std::endl;
+         }
+      }
+   }
+   return result;
 }
 
 glm::vec3 VectorField3D::at(const int index) const {
