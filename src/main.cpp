@@ -9,8 +9,6 @@
 #include <CL/cl.hpp>
 #include <iostream>
 
-#include <iostream>
-
 #include "Shape.hpp"
 #include "Shader.hpp"
 #include "ShaderProgram.hpp"
@@ -19,6 +17,7 @@
 #include "ParticleSystem.hpp"
 #include "VectorField2D.hpp"
 #include "VectorField3D.hpp"
+#include "MovingCamera.hpp"
 #include <glm/ext.hpp>
 
 const GLuint WIDTH = 1000, HEIGHT = 1000;
@@ -84,14 +83,13 @@ int main(int, char**)
 
   ShaderProgram program{};
 
-  program.attach(fragmentShader);
   program.attach(vertexShader);
+  program.attach(fragmentShader);
 
     // Create camera to change to MV projection matrix for the vertex shader
-    Camera _camera = Camera(60,WIDTH,HEIGHT);
-     _camera.translate(glm::vec3(0.0f,0.5f,2.0f));
-
-
+    MovingCamera _camera = MovingCamera(40,WIDTH,HEIGHT);
+    _camera.getTransform()->translate(glm::vec3(0.0f,0.5f,2.0f));
+    
 
     // The "Generic" vertex array object which is used to render everyting
     GLuint vao;
@@ -150,7 +148,8 @@ int main(int, char**)
        //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // _camera.translate(glm::vec3(0.0f,0.1f,0.0f));
-         //_camera.rotate(30.0f * deltaTime);
+        // _camera.rotate(30.0f * deltaTime);
+	_camera.handleInput(deltaTime);
         _camera.update(program.getId());
        
         program.begin();
