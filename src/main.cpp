@@ -19,6 +19,9 @@
 #include "VectorField3D.hpp"
 #include "MovingCamera.hpp"
 #include <glm/ext.hpp>
+#include "OpenGLUtils.hpp"
+
+#include "stringPatch.hpp"
 
 const GLuint WIDTH = 1000, HEIGHT = 1000;
 
@@ -97,7 +100,7 @@ int main(int argc, char**argv)
 
   // Create camera to change to MV projection matrix for the vertex shader
   MovingCamera _camera = MovingCamera(glm::radians(100.0f),WIDTH,HEIGHT);
-  _camera.getTransform()->translate(glm::vec3(0.0f,0.5f,2.0f));
+  _camera.getTransform()->translate(glm::vec3(0.0f,0.5f,-10.0f));
     
 
   // The "Generic" vertex array object which is used to render everyting
@@ -110,11 +113,21 @@ int main(int argc, char**argv)
 
   system.init("share/kernels/particles.cl", "particles", "Intel", program);
 
+  // unsigned w,h;
+  // std::vector<float> diffuseData;
+  // if(OpenGLUtils::loadPNG("share/textures/noise.png", w, h, diffuseData)){
+  //   Texture diffuse(w, h, diffuseData.data());
+  //   diffuse.begin();
+  //   GLuint location = glGetUniformLocation(program.getId(), "diffuse");
+  //   glUniform1i(location, diffuse.getId());
+  //   std::cout << "location: " << location << " id: " << diffuse.getId() << std::endl;  
+  // }
   // For FPS counter
   float currentTime = glfwGetTime();
   float lastFrame = 0.0f;
   float deltaTime = 0.0f;
   float accumulatedTime = 0.0f;
+  float frames = 0.0f;
   // Main loop
   while (!glfwWindowShouldClose(window))
     {   
@@ -122,6 +135,8 @@ int main(int argc, char**argv)
       deltaTime = currentTime - lastFrame;
       lastFrame = currentTime;
       accumulatedTime += deltaTime;
+      glfwSetWindowTitle(window, patch::to_string(floor((float)1 / deltaTime)).c_str());
+      
       // Poll input
       glfwPollEvents();
         
@@ -134,8 +149,6 @@ int main(int argc, char**argv)
       glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-      // _camera.translate(glm::vec3(0.0f,0.1f,0.0f));
-      // _camera.rotate(30.0f * deltaTime);
       _camera.handleInput(deltaTime);
       _camera.update(program.getId());
        
