@@ -1,6 +1,7 @@
 #include "OpenGLUtils.hpp"
 #include "foreign/lodepng.h"
 #include <iostream>
+#include <sstream>
 GLuint OpenGLUtils::createBuffer(int size, const float* data, GLenum usage)
 {
     GLuint ret_val = 0;
@@ -63,4 +64,39 @@ bool OpenGLUtils::loadPNG(const std::string& filePath, unsigned& width, unsigned
   	data[i] = ((float)image[i]/255.0f);
   }
   return true;
+}
+
+void OpenGLUtils::bufferToPNG_X(const std::string& name, const std::vector<float>& data, int width, int height, int depth){
+      for(int x = 0; x < width; x++) {
+      std::vector<float> crossSection(height * depth * 3);
+      for(int y = 0; y < height; y++) {
+         for(int z = 0; z < depth; z++) {
+          int globalIndex = (x * height * depth) + (y * depth) + z;
+          int subIndex = (y * depth) + z;
+          crossSection[subIndex * 3 + 0] = data.at(globalIndex * 3 + 0);
+          crossSection[subIndex * 3 + 1] = data.at(globalIndex * 3 + 1);
+          crossSection[subIndex * 3 + 2] = data.at(globalIndex * 3 + 2);
+        }
+     }
+       std::ostringstream oss;
+       oss << name << (x + 1) << ".png";
+       OpenGLUtils::writePNG(oss.str(), height, depth, crossSection);
+   }
+}
+void OpenGLUtils::bufferToPNG_Y(const std::string& name, const std::vector<float>& data, int width, int height, int depth){
+      for(int y = 0; y< height; y++) {
+      std::vector<float> crossSection(width * depth * 3);
+      for(int x = 0; x < width; x++) {
+         for(int z = 0; z < depth; z++) {
+          int globalIndex = (x * height * depth) + (y * depth) + z;
+          int subIndex = (x * depth) + z;
+          crossSection[subIndex * 3 + 0] = data.at(globalIndex * 3 + 0);
+          crossSection[subIndex * 3 + 1] = data.at(globalIndex * 3 + 1);
+          crossSection[subIndex * 3 + 2] = data.at(globalIndex * 3 + 2);
+        }
+     }
+       std::ostringstream oss;
+       oss << name << (y + 1) << ".png";
+       OpenGLUtils::writePNG(oss.str(), width, depth, crossSection);
+   }
 }

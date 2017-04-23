@@ -39,6 +39,7 @@ public:
   VectorField3D operator+ (const float);
 
   VectorField3D gradient();
+  VectorField3D curl(const float);
 
   glm::vec3& operator[] (const int);
 

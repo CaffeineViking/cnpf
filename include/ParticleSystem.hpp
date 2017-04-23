@@ -8,19 +8,20 @@
 #include "OpenCLUtils.hpp"
 #include "OpenGLUtils.hpp"
 #include "ShaderProgram.hpp"
+#include "VectorField3D.hpp"
+#include "Scenario.hpp"
 #include <vector>
 #include <utility>
 class ParticleSystem {
 private:
 	 const int PARTICLE_COUNT;
 	 float maxTime;
+	 int _width, _height, _depth;
+	 cl::ImageGL _texture;
 	 clParameters _params;
 	 cl::BufferGL _tmp;
 	 cl::Buffer _vertexBuffer;
 	 cl::Buffer _velocityBuffer;
-	 cl::ImageGL _texture;
-	 cl::Buffer _noise;
-	 int _width,_height,_depth;
 	std::string readKernelFile(const std::string&);
 	std::vector<std::pair<glm::vec3, glm::vec3>> _emitters;
 public:	
@@ -28,6 +29,7 @@ public:
 	ParticleSystem(const int,const float);
 
 	bool init(const std::string&, const std::string&, const std::string&, const ShaderProgram&);
+	bool setScenario(const Scenario&);
 	void compute(const float, const float);
 	void addEmitter(const glm::vec3&, const glm::vec3&);
 	int getParticleCount(const float) const;

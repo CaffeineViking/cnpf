@@ -98,10 +98,13 @@ int main(int argc, char**argv)
     glGenVertexArrays(1,&vao);
     glBindVertexArray(vao);
 
+      BackwakeScenario backwakeScenario(128,1,128);
+      backwakeScenario.generate();
      ParticleSystem system = ParticleSystem(1000000, 1.0f);
      system.addEmitter(glm::vec3(0.0f,0.0f,0.0f), glm::vec3( 128.0f,0.0f,128.0f));
 
      system.init("share/kernels/particles.cl", "particles", "NVIDIA", program);
+     system.setScenario(backwakeScenario);
 
     // For FPS counter
      float currentTime = glfwGetTime();
@@ -109,10 +112,8 @@ int main(int argc, char**argv)
      float deltaTime = 0.0f;
      float accumulatedTime = 0.0f;
 
-     float lookZ = 0.0f;
-
-            // glEnable(GL_BLEND);
-        //glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+     // glEnable(GL_BLEND);
+     //glBlendFunc(GL_SRC_ALPHA, GL_ONE);
        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // Main loop
@@ -134,9 +135,9 @@ int main(int argc, char**argv)
         if(Locator::input()->isKeyPressed(GLFW_KEY_D))
           _camera.rotate(30.0f  * deltaTime);
         if(Locator::input()->isKeyPressed(GLFW_KEY_W))
-          _camera.translate(glm::vec3(0.0f,8.0f*deltaTime,0.0f));
+          _camera.translate(glm::vec3(0.0f,20.0f*deltaTime,0.0f));
         if(Locator::input()->isKeyPressed(GLFW_KEY_S))
-          _camera.translate(glm::vec3(0.0f,-8.0f*deltaTime,0.0f));
+          _camera.translate(glm::vec3(0.0f,-20.0f*deltaTime,0.0f));
         if(Locator::input()->isKeyPressed(GLFW_KEY_C)){
 
          //       glEnable(GL_BLEND);
