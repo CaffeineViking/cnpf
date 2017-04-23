@@ -3,6 +3,7 @@
 
 #include <string>
 #include <fstream>
+#include <GL/glew.h>
 #include <CL/cl.hpp>
 #include <glm/glm.hpp>
 #include "OpenCLUtils.hpp"

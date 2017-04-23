@@ -19,6 +19,7 @@ public:
 	Texture& operator=(Texture&&) = default;
 
 	void begin();
+	GLuint getId() const { return _id; }
 	void end();
 };
 #endif

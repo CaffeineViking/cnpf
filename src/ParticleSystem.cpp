@@ -2,8 +2,8 @@
 
 #include <random>
 #include <iostream>
-#include <CL/cl.hpp>
 #include <GL/glew.h>
+#include <CL/cl.hpp>
 #include <algorithm>
 #include "VectorField3D.hpp"
 #include "simplexnoise1234.hpp"

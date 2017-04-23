@@ -113,15 +113,17 @@ int main(int argc, char**argv)
 
   system.init("share/kernels/particles.cl", "particles", "Intel", program);
 
-  // unsigned w,h;
-  // std::vector<float> diffuseData;
-  // if(OpenGLUtils::loadPNG("share/textures/noise.png", w, h, diffuseData)){
-  //   Texture diffuse(w, h, diffuseData.data());
-  //   diffuse.begin();
-  //   GLuint location = glGetUniformLocation(program.getId(), "diffuse");
-  //   glUniform1i(location, diffuse.getId());
-  //   std::cout << "location: " << location << " id: " << diffuse.getId() << std::endl;  
-  // }
+  unsigned w, h;
+  std::vector<float> diffuseData;
+  if(!OpenGLUtils::loadPNG("share/textures/noise.png", w, h, diffuseData)){
+    std::cerr << "Failed to load image..." << std::endl;
+    return 1;
+  }
+
+  Texture diffuse(w, h, diffuseData.data()); diffuse.begin();
+  GLuint location = glGetUniformLocation(program.getId(), "diffuse");
+  glUniform1i(location, diffuse.getId());
+
   // For FPS counter
   float currentTime = glfwGetTime();
   float lastFrame = 0.0f;
