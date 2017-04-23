@@ -155,4 +155,3 @@ void ParticleSystem::compute(const float time, const float timeDelta){
 int ParticleSystem::getParticleCount(const float time) const {
    return std::min(time/maxTime,1.0f)*PARTICLE_COUNT;
 }
-

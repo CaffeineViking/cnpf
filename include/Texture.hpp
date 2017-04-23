@@ -1,12 +1,15 @@
 #ifndef TEXTURE_HPP
 #define TEXTURE_HPP
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+
 class Texture{
 private:
 	GLuint _id;
 	const int _width;
 	const int _height;
+
 public:
 	~Texture();
 	Texture();
@@ -17,9 +20,10 @@ public:
 
 	Texture(Texture&&) = default;
 	Texture& operator=(Texture&&) = default;
-
-	void begin();
 	GLuint getId() const { return _id; }
+
+	void begin(int);
 	void end();
 };
+
 #endif
