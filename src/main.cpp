@@ -41,7 +41,7 @@ int main(int argc, char**argv)
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, MINOR_VERSION);
   glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-  GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, TITLE, nullptr, nullptr);
+  GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, TITLE.c_str(), nullptr, nullptr);
   if (window == nullptr)
     {
       std::cout << "Failed to create GLFW window" << std::endl;
