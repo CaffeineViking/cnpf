@@ -10,6 +10,8 @@ inline float smooth_step(float r)
 inline float ramp(float r)
 { return smooth_step((r+1)/2)*2-1; }
 
+inline float smooth_step_p(float r, float r_lower, float r_upper, float value_lower, float value_upper)
+{ return value_lower + smooth_step((r-r_lower)/(r_upper-r_lower)) * (value_upper-value_lower); }
 
 float distance_and_normal(float3 p, float3 sphere, float radius, float3* normal){
 	float phi = p.y;
@@ -25,40 +27,35 @@ float distance_and_normal(float3 p, float3 sphere, float radius, float3* normal)
 }
 
 float3 match_boundrary(float3 psi, float d, float lengthscale, float3 normal){
-	float alpha = ramp(fabs(d)/lengthscale);
-	return alpha * psi +(( 1.0f - alpha) * dot(psi, normal)) * normal;
+	float alpha = fabs(ramp(d));
+	return alpha * psi +(( 1.0f - alpha) * dot(normal, psi)) * normal;
 }
 
 float3 potential(float3 p, float3 np, read_only image3d_t t){
 	const float3 sphere_centre = (float3)(0.0f,0.0f,0.0f);
 	const float sphere_radius = 16.0f;
-	const float plume_height = 32.0f;
-	const float ring_speed = 2.0f;
-	const float ring_magnitude = 2.9f;
-	const float ring_radius = 8.0f;
+	const float3 field_direction = (float3)(-1.0f,-1.0f,0.0f);
+	const float field_magnitude = 4.0f;
+	const float noise_ratio = 0.99f;
 	const sampler_t smp = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_MIRRORED_REPEAT |CLK_FILTER_LINEAR;
 	float4 noise = (read_imagef(t, smp, (float4)(np.x, np.y, np.z ,0.0f)) - 0.5f) * 2.0f;
 
     float3 psi = (float3)(0.0f,0.0f,0.0f);
-    float3 normal;
-    float d = distance_and_normal(p,sphere_centre, sphere_radius, &normal);
-    float height_factor = ramp(p.y/plume_height);
 
+    // Add Noise
     float3 psi_i = (float3)(noise.x, noise.y, noise.z);
-    psi_i = match_boundrary(psi_i,d,0.2f,normal);
-    psi += height_factor * psi_i;
+    psi = psi_i * noise_ratio;
+    float3 parallel = dot(field_direction,p) * field_direction;
+    float3 ortho = p - parallel;
+    float3 directional = cross(ortho, field_magnitude);
+    psi += (1.0f - noise_ratio) * directional ;
 
-    float ring_y = ring_speed;
-    while(ring_y > 0.0f) {    	
-    	float ry = p.y - ring_y;    	
-    	float rr = sqrt(p.x*p.x + p.z*p.z);
-    	float rmag = ring_magnitude;
-    	float3 rpsi = rmag * (float3)(p.z,0.0f,-p.x);
-    	rpsi = match_boundrary(rpsi,d,ring_radius, normal);
-    	psi += rpsi;
-		ring_y -=ring_speed;
-    }
-    return psi;
+    float3 normal;
+    float d = length(p - sphere_centre);
+
+    float alpha = fabs(smooth_step((d - sphere_radius)/(sphere_radius + 1.0f - sphere_radius)));
+    float3 n = normalize(p);
+    return (alpha) * psi + (1.0f - alpha) * n * dot(n, psi);
 }
 
 float3 curl(float3 p, float3 np, read_only image3d_t t){
@@ -95,7 +92,7 @@ void __kernel particles(	__global float* positions,
   	float3 psi = curl(position,noise_p, texture);
 
 
-   	positions[3*id+0] += psi.x  * frameDelta * 2.0f;//(values.x - 0.5f) * 2.0f * frameDelta  * velocities[3*id+0];
-	positions[3*id+1] += psi.y  * frameDelta * 2.0f;//(values.y - 0.5f) * 2.0f * frameDelta  * velocities[3*id+1];
-    positions[3*id+2] += psi.z  * frameDelta * 2.0f;//(values.z - 0.5f) * 2.0f * frameDelta  * velocities[3*id+2];
+   	positions[3*id+0] += psi.x  * frameDelta;//(values.x - 0.5f) * 2.0f * frameDelta  * velocities[3*id+0];
+	positions[3*id+1] += psi.y  * frameDelta;//(values.y - 0.5f) * 2.0f * frameDelta  * velocities[3*id+1];
+    positions[3*id+2] += psi.z  * frameDelta;//(values.z - 0.5f) * 2.0f * frameDelta  * velocities[3*id+2];
 }

@@ -32,16 +32,19 @@ bool ParticleSystem::init(const std::string& path, const std::string& kernel, co
    std::uniform_int_distribution<int> distribution_int(0,_emitters.size()-1);
    std::uniform_real_distribution<float> distribution_float(0.0f,1.0f);
    std::vector<float> data(3*PARTICLE_COUNT);
-   for(int n = 0; n < PARTICLE_COUNT; ++n) {
+   for(int n = 0; n < PARTICLE_COUNT; ) {
       auto emitter = _emitters.at(distribution_int(generator));
       glm::vec3 min = emitter.first - (emitter.second/2.0f);
       glm::vec3 max = emitter.first + (emitter.second/2.0f);
       float x = min.x + std::abs(max.x - min.x)*distribution_float(generator);
       float y = min.y + std::abs(max.y - min.y)*distribution_float(generator);
       float z = min.z + std::abs(max.z - min.z)*distribution_float(generator);
+      if(glm::length(glm::vec3(x,y,z)) < 16.0f)
+         continue;
          data[3*n+0] = x;
          data[3*n+1] = y;
          data[3*n+2] = z;
+         ++n;
    }
 
 // Same but for OpenGL
