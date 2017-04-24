@@ -140,8 +140,8 @@ int main(int argc, char**argv)
           _camera.translate(glm::vec3(0.0f,-20.0f*deltaTime,0.0f));
         if(Locator::input()->isKeyPressed(GLFW_KEY_C)){
 
-         //       glEnable(GL_BLEND);
-        //glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
         }
            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
