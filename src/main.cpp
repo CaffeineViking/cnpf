@@ -10,6 +10,7 @@
 #include "Locator.hpp"
 #include "Texture.hpp"
 #include "ParticleSystem.hpp"
+#include "ParticleRenderer.hpp"
 #include "VectorField2D.hpp"
 #include "VectorField3D.hpp"
 #include "MovingCamera.hpp"
@@ -101,7 +102,6 @@ int main(int argc, char**argv)
     // Create camera to change to MV projection matrix for the vertex shader
     MovingCamera _camera = MovingCamera(glm::radians(100.0f),WIDTH,HEIGHT);
     _camera.getTransform()->translate(glm::vec3(0.0f,0.5f,-10.0f));
-
 
     // The "Generic" vertex array object which is used to render everyting
     GLuint vao;
