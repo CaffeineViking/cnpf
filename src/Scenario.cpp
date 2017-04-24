@@ -115,21 +115,14 @@ void BackwakeScenario::generate(){
    noise.addNoise(glm::vec3(0.0f),  glm::vec3(0.03f));
    noise.addNoise(glm::vec3(0.0f),  glm::vec3(0.09f));
 
-   const float eps = 0.001f;
-   const glm::vec3 epsX(eps,  0.0f, 0.0f);
-   const glm::vec3 epsY(0.0f, eps,  0.0f);
-   const glm::vec3 epsZ(0.0f, 0.0f, eps);
-  
     for(int x = 0; x < _width; x++) {
       for(int y = 0; y < _height; y++) {
          for(int z = 0; z < _depth; z++) {
             glm::vec3 position(x,y,z);
-            glm::vec3 v(0.0f);
-            float dx =-(potential(position + epsZ,noise).z - potential(position - epsZ,noise).z)/(2*eps);
-            float dz = (potential(position + epsX,noise).x - potential(position - epsX,noise).x)/(2*eps);
 
             int index = (x * _height * _depth) + (y * _depth) + z;
-            noiseField[index] = glm::vec3(dx, 0.0f, dz);
+            float n = noise.get(position);
+            noiseField[index] = glm::vec3(n,n,n);
          }
       }
    }

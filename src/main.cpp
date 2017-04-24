@@ -98,13 +98,13 @@ int main(int argc, char**argv)
     glGenVertexArrays(1,&vao);
     glBindVertexArray(vao);
 
-      BackwakeScenario backwakeScenario(128,1,128);
+      BackwakeScenario backwakeScenario(32,32,32);
       backwakeScenario.generate();
-     ParticleSystem system = ParticleSystem(1000000, 1.0f);
-     system.addEmitter(glm::vec3(0.0f,0.0f,0.0f), glm::vec3( 128.0f,0.0f,128.0f));
+     ParticleSystem system = ParticleSystem(100000, 1.0f);
+     system.addEmitter(glm::vec3(0.0f,-16.0f,0.0f), glm::vec3( 32.0f,0.0f,32.0f));
 
      system.init("share/kernels/particles.cl", "particles", "NVIDIA", program);
-     system.setScenario(backwakeScenario);
+      system.setScenario(backwakeScenario);
 
     // For FPS counter
      float currentTime = glfwGetTime();
