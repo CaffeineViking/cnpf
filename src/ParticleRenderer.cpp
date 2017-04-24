@@ -22,7 +22,8 @@ PointRenderer::PointRenderer(const float pointSize)
     // We only need the program.
 }
 
-void PointRenderer::draw(const ParticleSystem& particleSystem) {
+void PointRenderer::draw(const ParticleSystem&) {
+    // TODO
 }
 
 BillboardRenderer::BillboardRenderer(const std::string& texturePath, const float billboardSize)
@@ -43,12 +44,18 @@ BillboardRenderer::BillboardRenderer(const std::string& texturePath, const float
     // Shaders are automatically freed!!!
     // We only need the program.
 
+    // Load texture into GPU DDR memory.
+    changeBillboardTexture(texturePath);
+}
+
+void BillboardRenderer::changeBillboardTexture(const std::string& texturePath) {
     std::vector<float> textureData;
     unsigned textureWidth, textureHeight;
     if(!OpenGLUtils::loadPNG(texturePath, textureWidth, textureHeight, textureData))
         std::cerr << "Failed to load '" << texturePath << "'!" << std::endl;
-    texture_ = Texture {textureWidth, textureHeight, textureData.data()};
+    texture_ = Texture { textureWidth, textureHeight, textureData.data() };
 }
 
-void BillboardRenderer::draw(const ParticleSystem& particleSystem) {
+void BillboardRenderer::draw(const ParticleSystem&) {
+    // TODO
 }

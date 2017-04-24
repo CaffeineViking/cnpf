@@ -17,6 +17,8 @@ protected:
 class PointRenderer : public ParticleRenderer {
 public:
     PointRenderer(const float pointSize);
+    float getPointSize() const { return pointSize_; }
+    void  setPointSize(const float value) { pointSize_ = value; }
     void draw(const ParticleSystem& particleSystem) override;
 
 private:
@@ -25,7 +27,10 @@ private:
 
 class BillboardRenderer : public ParticleRenderer {
 public:
+    void changeBillboardTexture(const std::string&);
     BillboardRenderer(const std::string&, const float);
+    float getBillboardSize() const { return billboardSize_; }
+    void  setBillboardSize(const float value) { billboardSize_ = value; }
     void draw(const ParticleSystem& particleSystem) override;
 
 private:
