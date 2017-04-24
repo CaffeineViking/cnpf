@@ -1,5 +1,6 @@
 #include "ParticleSystem.hpp"
 
+#include <random>
 #include <iostream>
 #include <CL/cl.hpp>
 #include <GL/glew.h>
