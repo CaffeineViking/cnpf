@@ -2,11 +2,28 @@
 #include "OpenGLUtils.hpp"
 
 Texture::~Texture(){
-    glDeleteTextures(1, &_id);
+    // See if have moved away the value.
+    if (_valid) glDeleteTextures(1, &_id);
 }
 
-Texture::Texture(const int width,const int height, const float* data): _width{width},_height{height}{
+Texture::Texture(const unsigned width, const unsigned height, const float* data): _width{width},_height{height}{
     _id = OpenGLUtils::createTexture(width, height, data);
+    _valid = true;
+}
+
+Texture::Texture(Texture&& otherTexture) {
+    _valid = false;
+    _id = otherTexture._id;
+    _width = otherTexture._width;
+    _height = otherTexture._height;
+}
+
+Texture& Texture::operator=(Texture&& otherTexture) {
+    _valid = false;
+    _id = otherTexture._id;
+    _width = otherTexture._width;
+    _height = otherTexture._height;
+    return *this;
 }
 
 
