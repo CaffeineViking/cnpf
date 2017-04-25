@@ -3,35 +3,38 @@
 
 #include <string>
 #include "Texture.hpp"
+#include "MovingCamera.hpp"
 #include "ParticleSystem.hpp"
 
 class ParticleRenderer {
 public:
     virtual ~ParticleRenderer() = default;
-    virtual void draw(const ParticleSystem&) = 0;
+    virtual void draw(const ParticleSystem&, const MovingCamera&, const float) = 0;
+    const ShaderProgram& getProgram() const { return shaderProgram_; }
 
 protected:
     ShaderProgram shaderProgram_;
 };
 
-class PointRenderer : public ParticleRenderer {
+class PointParticleRenderer : public ParticleRenderer {
 public:
-    PointRenderer(const float pointSize);
+    PointParticleRenderer(const float pointSize);
     float getPointSize() const { return pointSize_; }
     void  setPointSize(const float value) { pointSize_ = value; }
-    void draw(const ParticleSystem& particleSystem) override;
+    void draw(const ParticleSystem&, const MovingCamera&, const float) override;
 
 private:
     float pointSize_;
 };
 
-class BillboardRenderer : public ParticleRenderer {
+class BillboardParticleRenderer : public ParticleRenderer {
 public:
     void changeBillboardTexture(const std::string&);
-    BillboardRenderer(const std::string&, const float);
+    BillboardParticleRenderer(const std::string&, const float);
     float getBillboardSize() const { return billboardSize_; }
     void  setBillboardSize(const float value) { billboardSize_ = value; }
-    void draw(const ParticleSystem& particleSystem) override;
+    void draw(const ParticleSystem&, const MovingCamera&, const float) override;
+    Texture& getTexture() { return texture_; }
 
 private:
     Texture texture_;
