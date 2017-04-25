@@ -35,7 +35,7 @@ GLuint OpenGLUtils::createTexture3D(unsigned width,unsigned height,unsigned dept
 // Assumes RGB values interleaved in the data vector on the form 0.0f - 1.0f for each channel 
 bool OpenGLUtils::writePNG(const std::string& filePath, const unsigned width, const unsigned height, const std::vector<float>& data){
     std::vector<unsigned char> image;
-    for(int i = 0; i < width*height; i++){
+    for(unsigned i = 0; i < width*height; i++){
       image.push_back((unsigned char)(data.at(i*3 + 0)*255));
       image.push_back((unsigned char)(data.at(i*3 + 1)*255));
       image.push_back((unsigned char)(data.at(i*3 + 2)*255));

@@ -42,7 +42,7 @@ template<class T>
 inline T ramp(T r)
 { return smooth_step((r+1)/2)*2-1; }
 
-solid_distance(const glm::vec3& a, const glm::vec3& centre, const float radius)
+float solid_distance(const glm::vec3& a, const glm::vec3& centre, const float radius)
 {
    return glm::distance(a,centre) - radius;
 }
@@ -55,7 +55,7 @@ solid_distance(const glm::vec3& a, const glm::vec3& centre, const float radius)
 DebugScenario::DebugScenario(int w,int h,int d): Scenario(w,h,d)
 {}
 
-glm::vec3 DebugScenario::potential(const glm::vec3& position, const Noise& noise){
+glm::vec3 DebugScenario::potential(const glm::vec3&, const Noise&){
 
 return glm::vec3(0.0f);
 }

@@ -23,7 +23,7 @@
 
 const GLuint WIDTH = 1000, HEIGHT = 1000;
 
-int main(int argc, char**argv)
+int main(int, char**)
 {
 
     //====================================
