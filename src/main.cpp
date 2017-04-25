@@ -4,19 +4,12 @@
 #include <CL/cl.hpp>
 #include <iostream>
 
-#include "Shape.hpp"
-#include "Shader.hpp"
-#include "ShaderProgram.hpp"
 #include "Locator.hpp"
-#include "Texture.hpp"
 #include "ParticleSystem.hpp"
 #include "ParticleRenderer.hpp"
-#include "VectorField2D.hpp"
-#include "VectorField3D.hpp"
 #include "MovingCamera.hpp"
 #include <glm/ext.hpp>
 #include "OpenGLUtils.hpp"
-
 #include "stringPatch.hpp"
 
 const std::string TITLE = "Curl-Noise Particle Field @ ";
@@ -27,7 +20,7 @@ inline unsigned divup(unsigned a, unsigned b)
     return (a+b-1)/b;
 }
 
-int main(int argc, char**argv)
+int main(int, char**)
 {
 
     //====================================
@@ -35,9 +28,11 @@ int main(int argc, char**argv)
     //====================================
     const int MAJOR_VERSION = 3;
     const int MINOR_VERSION = 1;
-    std::cout << "Starting GLFW context, OpenGL " << MAJOR_VERSION << "." << MINOR_VERSION << std::endl;
+    std::cout << "Starting GLFW context, OpenGL "
+        << MAJOR_VERSION << "."
+        << MINOR_VERSION << std::endl;
 
-    glfwInit();
+    if (!glfwInit()) return -1;
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, MAJOR_VERSION);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, MINOR_VERSION);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
@@ -51,18 +46,19 @@ int main(int argc, char**argv)
     }
 
     glfwMakeContextCurrent(window);
+    glfwSwapInterval(1); // Vsync.
 
     // Set input locators
     GLFWInputLocator* input = new GLFWInputLocator();
     glfwSetCursorPosCallback(window, GLFWInputLocator::cursor_callback);
     glfwSetMouseButtonCallback(window, GLFWInputLocator::mouse_callback);
     glfwSetKeyCallback(window, GLFWInputLocator::keyboard_callback);
-    glfwSwapInterval(1);
     Locator::setInput(input);
 
     //====================================
     //  Init for GLEW
     //====================================
+
     glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK)
     {
@@ -74,55 +70,35 @@ int main(int argc, char**argv)
     // glEnable(GL_DEPTH_TEST);
     // glDepthFunc(GL_LESS);
 
-    // Setup the draw buffer blending function.
-    glEnable(GL_BLEND);
+    // Setup our buffer blending method.
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    glEnable(GL_BLEND);
 
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
     glViewport(0, 0, width, height);
 
     //====================================
-    //  Init for Shaders and Scenes
+    //  Init Particle System and Renderer
     //====================================
 
-    Shader vertexShader = Shader("share/shaders/default.vert",GL_VERTEX_SHADER);
-    Shader fragmentShader = Shader("share/shaders/default.frag",GL_FRAGMENT_SHADER);
-    Shader geometryShader = Shader("share/shaders/default.geo",GL_GEOMETRY_SHADER);
+    // Create camera to create a MVP matrix for the shader program.
+    MovingCamera camera = MovingCamera(glm::radians(100.0f),WIDTH,HEIGHT);
+    camera.getTransform()->translate(glm::vec3(0.0f,0.5f,-10.0f));
 
-    fragmentShader.compile();
-    vertexShader.compile();
-    geometryShader.compile();
-
-    ShaderProgram program{};
-    program.attach(vertexShader);
-    program.attach(geometryShader);
-    program.attach(fragmentShader);
-
-    // Create camera to change to MV projection matrix for the vertex shader
-    MovingCamera _camera = MovingCamera(glm::radians(100.0f),WIDTH,HEIGHT);
-    _camera.getTransform()->translate(glm::vec3(0.0f,0.5f,-10.0f));
-
-    // The "Generic" vertex array object which is used to render everyting
     GLuint vao;
     glGenVertexArrays(1,&vao);
     glBindVertexArray(vao);
 
+    // Create a visualization method for the particle system below.
+    BillboardParticleRenderer renderer { "share/textures/fire.png", 0.20 };
+
+    const ShaderProgram& program = renderer.getProgram();
+    // Actual class that handles the simulation of field.
     ParticleSystem system = ParticleSystem(200000, 1.0f);
+    // We add a single emitter where particles will be spawned from.
     system.addEmitter(glm::vec3(0.0f,1.0f,0.0f), glm::vec3(4.0f,4.0f,4.0f));
-
     system.init("share/kernels/particles.cl", "particles", "AMD", program);
-
-    unsigned w, h;
-    std::vector<float> diffuseData;
-    if(!OpenGLUtils::loadPNG("share/textures/fire.png", w, h, diffuseData)){
-        std::cerr << "Failed to load image..." << std::endl;
-        return 1;
-    }
-
-    Texture diffuse(w, h, diffuseData.data()); diffuse.begin(0);
-    GLuint location = glGetUniformLocation(program.getId(), "diffuse");
-    glUniform1i(location, diffuse.getId());
 
     // Keep track of slowdown/speedup.
     float currentTime = glfwGetTime();
@@ -165,21 +141,19 @@ int main(int argc, char**argv)
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        _camera.handleInput(deltaTime);
-        _camera.update(program.getId());
+        // Move with the camera. Yea!
+        camera.handleInput(deltaTime);
 
-        program.begin();
-        diffuse.begin(0);
-        glPointSize(1);
         glBindVertexArray(vao);
-        // Finally, render the vertices or quads to the back buffer!
-        glDrawArrays(GL_POINTS, 0, system.getParticleCount(currentTime));
+        // Finally, draw the simulated particles.
+        renderer.draw(system, camera, currentTime);
         glBindVertexArray(0);
 
         // Swap the render buffer to display
         glfwSwapBuffers(window);
     }
 
+    // Exit was ok!
     glfwTerminate();
     return 0;
 }

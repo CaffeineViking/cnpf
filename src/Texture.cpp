@@ -12,15 +12,17 @@ Texture::Texture(const unsigned width, const unsigned height, const float* data)
 }
 
 Texture::Texture(Texture&& otherTexture) {
-    _valid = false;
+    _valid = true;
     _id = otherTexture._id;
+    otherTexture._valid = false;
     _width = otherTexture._width;
     _height = otherTexture._height;
 }
 
 Texture& Texture::operator=(Texture&& otherTexture) {
-    _valid = false;
+    _valid = true;
     _id = otherTexture._id;
+    otherTexture._valid = false;
     _width = otherTexture._width;
     _height = otherTexture._height;
     return *this;
