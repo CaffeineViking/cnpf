@@ -13,9 +13,10 @@
 #include <windows.h>
 #endif
 
-
-
-ParticleSystem::~ParticleSystem(){}
+ParticleSystem::~ParticleSystem(){
+    // Don't forget to clean this up!
+    glDeleteBuffers(1, &_vertexBufferId);
+}
 
 ParticleSystem::ParticleSystem(const int particles, const float time): PARTICLE_COUNT{particles}, maxTime{time}{
 }
@@ -51,16 +52,16 @@ bool ParticleSystem::init(const std::string& path, const std::string& kernel, co
    }
 
 // Same but for OpenGL
-   GLuint vbo = OpenGLUtils::createBuffer(3*PARTICLE_COUNT, data.data(), GL_DYNAMIC_DRAW);
+   _vertexBufferId = OpenGLUtils::createBuffer(3*PARTICLE_COUNT, data.data(), GL_DYNAMIC_DRAW);
 // _tmp buffer to do some copying on
-   _tmp = cl::BufferGL(_params.context, CL_MEM_READ_WRITE, vbo, NULL);
+   _tmp = cl::BufferGL(_params.context, CL_MEM_READ_WRITE, _vertexBufferId, NULL);
 
 // Create Vertex buffer for the positions
    _vertexBuffer = cl::Buffer(_params.context, CL_MEM_READ_WRITE, sizeof(float)*3*PARTICLE_COUNT);
 // Write position data to buffer
    _params.queue.enqueueWriteBuffer(_vertexBuffer, CL_TRUE, 0, sizeof(float)*3*PARTICLE_COUNT, data.data());
 // Bind buffer to shader
-   glBindBuffer(GL_ARRAY_BUFFER,vbo);
+   glBindBuffer(GL_ARRAY_BUFFER, _vertexBufferId);
    GLint position_attribute = glGetAttribLocation(program.getId(), "position");
    glVertexAttribPointer(position_attribute, 3, GL_FLOAT, GL_FALSE, 0, 0);
    glEnableVertexAttribArray(position_attribute);

@@ -21,6 +21,7 @@ private:
 	 cl::ImageGL _texture;
 	 clParameters _params;
 	 cl::BufferGL _tmp;
+     GLuint _vertexBufferId;
 	 cl::Buffer _vertexBuffer;
 	 cl::Buffer _velocityBuffer;
 	std::string readKernelFile(const std::string&);
