@@ -16,9 +16,6 @@ public:
 	Texture() : _id { 0xDEADB33F}, _width {0}, _height{0}, _valid{false} {}
 	Texture(const unsigned, const unsigned, const float*);
 
-	Texture(const Texture&) = default;
-	Texture& operator=(const Texture&) = default;
-
 	Texture(Texture&&);
 	Texture& operator=(Texture&&);
 	GLuint getId() const { return _id; }
