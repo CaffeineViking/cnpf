@@ -6,15 +6,20 @@
 #include <GL/glew.h>
 #include <algorithm>
 #include "VectorField3D.hpp"
-
+#include "simplexnoise1234.hpp"
+#include <limits>
+#include "Noise.hpp"
 #ifdef WINDOWS
 #include <windows.h>
 #endif
+
+
 
 ParticleSystem::~ParticleSystem(){}
 
 ParticleSystem::ParticleSystem(const int particles, const float time): PARTICLE_COUNT{particles}, maxTime{time}{
 }
+
 
 // =====================================
 // Setup devices and kernel for OpenCL  ( ͡° ͜ʖ ͡°).
@@ -24,46 +29,23 @@ bool ParticleSystem::init(const std::string& path, const std::string& kernel, co
    std::cout << "Init OpenCL with device " << device <<  std::endl; 
    _params = OpenCLUtils::initCL(path, kernel, device);
 
-// Load texture and place in GPU
-      _width  = 8;
-      _height = 8;
-      _depth  = 8;
-
-   std::vector<float> textureData(3*_width*_height*_depth);
-
-   VectorField3D field(glm::vec3(0), glm::vec3(_width,_height,_depth));
-   std::vector<glm::vec3> curled = field.curl().normalize().getField();
-   std::cout << curled.size() << std::endl;
-   for(int i = 0; i < _width*_height*_depth; i++){
-      auto p = curled.at(i) * 0.5f;
-      textureData.at((i*3)+0) = p.x + 0.5f;
-      textureData.at((i*3)+1) = p.y + 0.5f;
-      textureData.at((i*3)+2) = p.z + 0.5f;
-   }
-
-   GLuint glTexture = OpenGLUtils::createTexture3D(_width, _height,_depth, textureData.data());
-   int errCode;
-   _texture = cl::ImageGL(_params.context,CL_MEM_READ_ONLY,GL_TEXTURE_3D,0,glTexture,&errCode);
-   if (errCode!=CL_SUCCESS) {
-      std::cout<<"Failed to create OpenGL texture refrence: "<<errCode<<std::endl;
-      return 250;
-    }
-
-
    std::default_random_engine generator{};
    std::uniform_int_distribution<int> distribution_int(0,_emitters.size()-1);
    std::uniform_real_distribution<float> distribution_float(0.0f,1.0f);
    std::vector<float> data(3*PARTICLE_COUNT);
-   for(int n = 0; n < PARTICLE_COUNT; ++n) {
-   	auto emitter = _emitters.at(distribution_int(generator));
-   	glm::vec3 min = emitter.first - (emitter.second/2.0f);
-   	glm::vec3 max = emitter.first + (emitter.second/2.0f);
+   for(int n = 0; n < PARTICLE_COUNT; ) {
+      auto emitter = _emitters.at(distribution_int(generator));
+      glm::vec3 min = emitter.first - (emitter.second/2.0f);
+      glm::vec3 max = emitter.first + (emitter.second/2.0f);
       float x = min.x + std::abs(max.x - min.x)*distribution_float(generator);
       float y = min.y + std::abs(max.y - min.y)*distribution_float(generator);
       float z = min.z + std::abs(max.z - min.z)*distribution_float(generator);
-      data[3*n+0] = x;
-      data[3*n+1] = y;
-      data[3*n+2] = z;
+      if(glm::length(glm::vec3(x,y,z)) < 8.0f)
+         continue;
+         data[3*n+0] = x;
+         data[3*n+1] = y;
+         data[3*n+2] = z;
+         ++n;
    }
 
 // Same but for OpenGL
@@ -81,12 +63,11 @@ bool ParticleSystem::init(const std::string& path, const std::string& kernel, co
    glVertexAttribPointer(position_attribute, 3, GL_FLOAT, GL_FALSE, 0, 0);
    glEnableVertexAttribArray(position_attribute);
    glBindVertexArray(0);
-
 // Create velocity buffer, this is not of interest to the renderer at the moment
    for(int n = 0; n < PARTICLE_COUNT; ++n) {
-      data[3*n+0] = 0.0f; //(distribution_float(generator) - 0.5f);
-      data[3*n+1] = 0.0f; // (distribution_float(generator) - 0.5f);
-      data[3*n+2] = 0.0f;//(distribution_float(generator) - 0.5f);
+      data[3*n+0] = 1.0f; //distribution(generator);
+      data[3*n+1] = 1.0f; //distribution(generator);
+      data[3*n+2] = 1.0f; //distribution(generator);
    }
 // Create Vertex buffer for the velocities
    _velocityBuffer = cl::Buffer(_params.context, CL_MEM_READ_WRITE, sizeof(float)*3*PARTICLE_COUNT);
@@ -96,7 +77,30 @@ bool ParticleSystem::init(const std::string& path, const std::string& kernel, co
 }
 
 void ParticleSystem::addEmitter(const glm::vec3& position, const glm::vec3& dimensions){
-	_emitters.push_back(std::make_pair(position, dimensions));
+   _emitters.push_back(std::make_pair(position, dimensions));
+}
+
+bool ParticleSystem::setScenario(const Scenario& s){
+   _width = s.getWidth();
+   _height = s.getHeight();
+   _depth = s.getDepth();
+   std::vector<float> textureData = s.getField().getData();
+   // for(int i = 0; i < textureData.size()/3; i+=3){
+   //    std::cout << textureData.at(i) << " ";
+   //    std::cout << textureData.at(i+1) << " ";
+   //    std::cout << textureData.at(i+2) << " ";
+   //    std::cout << std::endl;
+
+   // }
+
+   GLuint glTexture = OpenGLUtils::createTexture3D(_width, _height,_depth, textureData.data());
+   int errCode;
+   _texture = cl::ImageGL(_params.context,CL_MEM_READ_ONLY,GL_TEXTURE_3D,0,glTexture,&errCode);
+   if (errCode!=CL_SUCCESS) {
+      std::cout<<"Failed to create OpenGL texture refrence: "<<errCode<<std::endl;
+      return false;
+    }
+    return true;
 }
 
 void ParticleSystem::compute(const float time, const float timeDelta){

@@ -23,12 +23,6 @@
 
 const GLuint WIDTH = 1000, HEIGHT = 1000;
 
-
-inline unsigned divup(unsigned a, unsigned b)
-{
-    return (a+b-1)/b;
-}
-
 int main(int argc, char**argv)
 {
 
@@ -45,7 +39,7 @@ int main(int argc, char**argv)
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
     GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Default", nullptr, nullptr);    
- if (window == nullptr)
+    if (window == nullptr)
     {
       std::cout << "Failed to create GLFW window" << std::endl;
       glfwTerminate();
@@ -104,16 +98,24 @@ int main(int argc, char**argv)
     glGenVertexArrays(1,&vao);
     glBindVertexArray(vao);
 
-     ParticleSystem system = ParticleSystem(2000000, 1.0f);
-     system.addEmitter(glm::vec3(0.0f,1.0f,0.0f), glm::vec3(4.0f,4.0f,4.0f));
+      BackwakeScenario backwakeScenario(32,32,32);
+      backwakeScenario.generate();
+     ParticleSystem system = ParticleSystem(100000, 20.0f);
+     system.addEmitter(glm::vec3(0.0f,0.0f,0.0f), glm::vec3( 32.0f,2.0f,32.0f));
 
      system.init("share/kernels/particles.cl", "particles", "NVIDIA", program);
+      system.setScenario(backwakeScenario);
 
     // For FPS counter
      float currentTime = glfwGetTime();
      float lastFrame = 0.0f;
      float deltaTime = 0.0f;
      float accumulatedTime = 0.0f;
+
+     // glEnable(GL_BLEND);
+     //glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+       glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // Main loop
     while (!glfwWindowShouldClose(window))
     {   
@@ -124,17 +126,31 @@ int main(int argc, char**argv)
         // Poll input
         glfwPollEvents();
         
-        system.compute(accumulatedTime, deltaTime);
+        if(Locator::input()->isKeyPressed(GLFW_KEY_UP))
+          system.compute(accumulatedTime, deltaTime);
+        if(Locator::input()->isKeyPressed(GLFW_KEY_DOWN))
+          system.compute(accumulatedTime, -deltaTime);
+        if(Locator::input()->isKeyPressed(GLFW_KEY_A))
+          _camera.rotate(-30.0f * deltaTime);
+        if(Locator::input()->isKeyPressed(GLFW_KEY_D))
+          _camera.rotate(30.0f  * deltaTime);
+        if(Locator::input()->isKeyPressed(GLFW_KEY_W))
+          _camera.translate(glm::vec3(0.0f,20.0f*deltaTime,0.0f));
+        if(Locator::input()->isKeyPressed(GLFW_KEY_S))
+          _camera.translate(glm::vec3(0.0f,-20.0f*deltaTime,0.0f));
+        if(Locator::input()->isKeyPressed(GLFW_KEY_C)){
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-
+        }
+           glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+           glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         // Render vertecies
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+       // glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+       //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // _camera.translate(glm::vec3(0.0f,0.1f,0.0f));
-         _camera.rotate(30.0f * deltaTime);
+         //_camera.rotate(30.0f * deltaTime);
         _camera.update(program.getId());
        
         program.begin();

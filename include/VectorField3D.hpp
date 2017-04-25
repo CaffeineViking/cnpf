@@ -8,30 +8,48 @@
 
 class VectorField3D {
 private:
-  glm::vec3 _start;
-  glm::vec3 _end;
+  int _width, _height, _depth;
   std::vector<glm::vec3> _field;
 
 public:
-  VectorField3D(glm::vec3 start = glm::vec3(), glm::vec3 end = glm::vec3());
-  VectorField3D(glm::vec3 start, glm::vec3 end, std::vector<glm::vec3> field);
+  VectorField3D(int, int, int);
+  // VectorField3D(glm::vec3 start, glm::vec3 end, std::vector<glm::vec3> field);
+
+  VectorField3D(const VectorField3D&);
+  VectorField3D& operator=(const VectorField3D&);
+
+  VectorField3D(VectorField3D&&);
+  VectorField3D& operator=(VectorField3D&&);
 
   ~VectorField3D() = default;
 
-  VectorField3D& add(const VectorField3D&);
-  VectorField3D& add(const float);
+  VectorField3D normalize();
+  VectorField3D selfNormalize();
+  VectorField3D operator/ (const VectorField3D&);
+  VectorField3D operator/ (const float);
 
-  VectorField3D& mult(const float);
-  VectorField3D normalize() const;
-  VectorField3D curl();
+  VectorField3D operator- (const VectorField3D&);
+  VectorField3D operator- (const float);
 
-  int getSize() const;
+  VectorField3D operator* (const VectorField3D&);
+  VectorField3D operator* (const float);
 
-  std::vector<glm::vec3> getField() const;
-  
-  int getWidth() const;
+  VectorField3D operator+ (const VectorField3D&);
+  VectorField3D operator+ (const glm::vec3&);
+  VectorField3D operator+ (const float);
+
+  VectorField3D gradient();
+  VectorField3D curl(const float);
+
+  glm::vec3& operator[] (const int);
+
+  glm::vec3 get(const glm::vec3&);
+  glm::vec3 at(const int) const;
+  const std::vector<glm::vec3>& getField() const;
+  std::vector<float> getData() const;
+  int getWidth()  const;
   int getHeight() const;
-  int getDepth() const;
+  int getDepth()  const;
 
 };
 #endif // VECTOR_FIELD_3D_H
