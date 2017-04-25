@@ -4,6 +4,7 @@ layout (points) in;
 layout (triangle_strip) out;
 layout (max_vertices = 4) out;
 
+uniform float size;
 uniform mat4 projection;
 
 in vec3 vertex_position[];
@@ -13,7 +14,6 @@ out vec2 texCoords;
 void main()
 {
     final_vertex_position = vertex_position[0];
-    float size = 0.2;
     vec4 P = gl_in[0].gl_Position;
 
     // a: left-bottom
