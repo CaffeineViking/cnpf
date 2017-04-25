@@ -36,7 +36,7 @@ float3 match_boundrary(float3 psi, float d, float lengthscale, float3 normal){
 float3 potential(float3 p, float3 np, read_only image3d_t t){
 	const float3 	sphere_centre 	= (float3)(0.0f,0.0f,0.0f);
 	const float 	sphere_radius 	= 8.0f;
-	const float3 	field_direction = (float3)(0.0f,1.0f,0.0f);
+	const float3 	field_direction = (float3)(0.0f,-1.0f,0.0f);
 	const float 	field_magnitude = 1.0f;
 	const float 	noise_ratio 	= 0.0f;
 	const sampler_t smp 			= CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_MIRRORED_REPEAT |CLK_FILTER_LINEAR;
@@ -48,7 +48,7 @@ float3 potential(float3 p, float3 np, read_only image3d_t t){
     float3 psi_i = (float3)(noise.x, noise.y, noise.z);
     psi = psi_i * noise_ratio;
 
-    float3 parallel = dot(field_direction, p);
+    float3 parallel = dot(field_direction, p) * field_direction;
     float3 ortho = p - parallel;
     float3 directional = cross(ortho, field_direction);
 
