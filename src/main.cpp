@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "Locator.hpp"
+#include "Scenario.hpp"
 #include "ParticleSystem.hpp"
 #include "ParticleRenderer.hpp"
 #include "MovingCamera.hpp"
@@ -92,13 +93,23 @@ int main(int, char**)
 
     // Create a visualization method for the particle system below.
     BillboardParticleRenderer renderer { "share/textures/fire.png", 0.20 };
+    const ShaderProgram& rendererProgram = renderer.getProgram();
 
-    const ShaderProgram& program = renderer.getProgram();
-    // Actual class that handles the simulation of field.
-    ParticleSystem system = ParticleSystem(200000, 1.0f);
-    // We add a single emitter where particles will be spawned from.
-    system.addEmitter(glm::vec3(0.0f,1.0f,0.0f), glm::vec3(4.0f,4.0f,4.0f));
-    system.init("share/kernels/particles.cl", "particles", "AMD", program);
+    // Create an example Backwake scenario.
+    BackwakeScenario backwakeScenario(32,32,32);
+    backwakeScenario.generate();
+
+    // Create the particle system which will compute step.
+    ParticleSystem system = ParticleSystem(100000, 20.0f);
+    // Add a single emitter which will spawn particles into the scenario.
+    system.addEmitter(glm::vec3(0.0f,0.0f,0.0f), glm::vec3( 32.0f,2.0f,32.0f));
+
+    // Initialize with the correct computing accelerator.
+    // Usually: Intel, NVIDEA or AMD are platform vendors.
+    system.init("share/kernels/particles.cl", "particles",
+                "NVIDEA", rendererProgram);
+    // Finally, assign the scenario to it.
+    system.setScenario(backwakeScenario);
 
     // Keep track of slowdown/speedup.
     float currentTime = glfwGetTime();
@@ -110,7 +121,8 @@ int main(int, char**)
     unsigned accumulatedFrames = 0;
     float frameAccumulatedTime = 0.0;
 
-    // Main loop
+    // We have arrived at the main loop!
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     while (!glfwWindowShouldClose(window))
     {
         currentTime = glfwGetTime();
@@ -133,12 +145,17 @@ int main(int, char**)
         // Polling loop.
         glfwPollEvents();
 
+        // Step the particle simulation time forward:
+        if (Locator::input()->isKeyPressed(GLFW_KEY_UP))
+            system.compute(accumulatedTime, deltaTime);
+        if (Locator::input()->isKeyPressed(GLFW_KEY_DOWN))
+            system.compute(accumulatedTime, -deltaTime);
+
         // // Compute the next step in the particle simpulation
         // // where we issue each step in parallel using a GPU.
         // system.compute(accumulatedTime, deltaTime);
 
-        // Clear the relevant OpenGL buffers.
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        // Clear the relevant OpenGL buffers each update.
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Move with the camera. Yea!

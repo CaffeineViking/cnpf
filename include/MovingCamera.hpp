@@ -17,7 +17,7 @@ private:
     bool _mouseLocked;
     glm::vec2 _lastMousePos;
     const float SPEED = 1.0f;
-    const float SPEED_MOD = 3.0f;
+    const float SPEED_MOD = 8.0f;
 public:
     MovingCamera() = delete;
     ~MovingCamera();
