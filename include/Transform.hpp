@@ -11,13 +11,14 @@ public:
 	    const glm::quat& rot = glm::quat(1.0f,0.0f,0.0f,0.0f),
 	    const glm::vec3& scale = glm::vec3(1.0f, 1.0f, 1.0f));
   virtual ~Transform();
-
+  
   glm::mat4 getModel() const;
   glm::mat4 getMVP(const glm::mat4& viewPojection);
   glm::mat4 getMVP(const glm::mat4& viewPojection) const;
 
   void rotate(const float& angle, const glm::vec3& axis);
   void rotate(glm::quat rotation);
+  void translate(const glm::vec3&);
 
   glm::vec3 getRight()    const;
   glm::vec3 getLeft()     const;
@@ -56,7 +57,7 @@ private:
 
   Transform* m_parent;
 
-  glm::mat4 m_parentMatrix{glm::mat4()};
+  glm::mat4 m_parentMatrix;
 
   /* ====================================
    * Transform helper functions
@@ -66,8 +67,9 @@ private:
   glm::vec3 transform(glm::mat4 m, glm::vec3 r) const;
   glm::vec3 rotate(glm::vec3 v, glm::quat q) const;
   glm::quat mul(glm::quat q, glm::vec3 v) const;
-  glm::mat4 translate(const glm::vec3& v) const;
-  glm::mat4 scale(const glm::vec3& v) const;
+  glm::mat4 getTranslationMatrix(const glm::vec3& v) const;
+  glm::mat4 getScaleMatrix(const glm::vec3& v) const;
+  glm::mat4 toMat4(const glm::quat& q) const;
 
   glm::mat4 initRotation(glm::mat4 m, glm::vec3 forward, glm::vec3 up) const;
   glm::mat4 initRotation(glm::mat4 m, glm::vec3 forward, glm::vec3 up, glm::vec3 right) const;

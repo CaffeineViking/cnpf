@@ -1,27 +1,27 @@
-// third-party libraries
-#ifdef WINDOWS
-//#include <windows.h>
-#endif
-
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <CL/cl.hpp>
 #include <iostream>
 
-#include <iostream>
-
-#include "Shape.hpp"
-#include "Shader.hpp"
-#include "ShaderProgram.hpp"
 #include "Locator.hpp"
-#include "Texture.hpp"
+#include "Scenario.hpp"
 #include "ParticleSystem.hpp"
-#include "VectorField2D.hpp"
-#include "VectorField3D.hpp"
+#include "ParticleRenderer.hpp"
+#include "MovingCamera.hpp"
 #include <glm/ext.hpp>
+#include "OpenGLUtils.hpp"
+#include "stringPatch.hpp"
 
-const GLuint WIDTH = 1000, HEIGHT = 1000;
+const std::string TITLE = "Curl-Noise Particle Field @ ";
+const GLuint WIDTH = 1280, HEIGHT = 720;
+// Horizontal field of view of ~ 90 degrees.
+const float FIELD_OF_VIEW = glm::radians(60.0);
+
+inline unsigned divup(unsigned a, unsigned b)
+{
+    return (a+b-1)/b;
+}
 
 int main(int, char**)
 {
@@ -31,140 +31,160 @@ int main(int, char**)
     //====================================
     const int MAJOR_VERSION = 3;
     const int MINOR_VERSION = 1;
-    std::cout << "Starting GLFW context, OpenGL " << MAJOR_VERSION << "." << MINOR_VERSION << std::endl;
+    std::cout << "Starting GLFW context, OpenGL "
+        << MAJOR_VERSION << "."
+        << MINOR_VERSION << std::endl;
 
-    glfwInit();
+    if (!glfwInit()) return -1;
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, MAJOR_VERSION);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, MINOR_VERSION);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Default", nullptr, nullptr);    
+    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, TITLE.c_str(), nullptr, nullptr);
     if (window == nullptr)
     {
-      std::cout << "Failed to create GLFW window" << std::endl;
-      glfwTerminate();
-      return -1;
+        std::cout << "Failed to create GLFW window" << std::endl;
+        glfwTerminate();
+        return -1;
     }
 
     glfwMakeContextCurrent(window);
+    glfwSwapInterval(1); // Vsync.
 
     // Set input locators
     GLFWInputLocator* input = new GLFWInputLocator();
     glfwSetCursorPosCallback(window, GLFWInputLocator::cursor_callback);
     glfwSetMouseButtonCallback(window, GLFWInputLocator::mouse_callback);
     glfwSetKeyCallback(window, GLFWInputLocator::keyboard_callback);
-    glfwSwapInterval(0);
     Locator::setInput(input);
+
     //====================================
     //  Init for GLEW
     //====================================
+
     glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK)
     {
-      std::cout << "Failed to initialize GLEW" << std::endl;
-      return -1;
-    }    
+        std::cout << "Failed to initialize GLEW" << std::endl;
+        return -1;
+    }
 
-  // Setup Z-buffer and Viewport
-  glEnable(GL_DEPTH_TEST);
-  glDepthFunc(GL_LESS); 
+    // Setup the Z-buffer
+    // glEnable(GL_DEPTH_TEST);
+    // glDepthFunc(GL_LESS);
 
-  int width, height;
-  glfwGetFramebufferSize(window, &width, &height);  
-  glViewport(0, 0, width, height);
+    // Setup our buffer blending method.
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    glEnable(GL_BLEND);
 
-  //====================================
-  //  Init for Shaders and Scenes
-  //====================================
+    int width, height;
+    glfwGetFramebufferSize(window, &width, &height);
+    glViewport(0, 0, width, height);
 
-  Shader vertexShader = Shader("share/shaders/default.vert",GL_VERTEX_SHADER);
-  Shader fragmentShader = Shader("share/shaders/default.frag",GL_FRAGMENT_SHADER);
-  fragmentShader.compile();
-  vertexShader.compile();
+    //====================================
+    //  Init Particle System and Renderer
+    //====================================
 
-  ShaderProgram program{};
+    // Create camera to create a MVP matrix for the shader program.
+    MovingCamera camera = MovingCamera(FIELD_OF_VIEW,WIDTH,HEIGHT);
+    camera.getTransform()->translate(glm::vec3(0.0f,0.5f,-10.0f));
 
-  program.attach(fragmentShader);
-  program.attach(vertexShader);
-
-    // Create camera to change to MV projection matrix for the vertex shader
-    Camera _camera = Camera(60,WIDTH,HEIGHT);
-     _camera.translate(glm::vec3(0.0f,0.5f,2.0f));
-
-
-
-    // The "Generic" vertex array object which is used to render everyting
     GLuint vao;
     glGenVertexArrays(1,&vao);
     glBindVertexArray(vao);
 
-      BackwakeScenario backwakeScenario(32,32,32);
-      backwakeScenario.generate();
-     ParticleSystem system = ParticleSystem(100000, 20.0f);
-     system.addEmitter(glm::vec3(0.0f,0.0f,0.0f), glm::vec3( 32.0f,2.0f,32.0f));
+    // Create a visualization method for the particle system below.
+    BillboardParticleRenderer renderer { "share/textures/fire.png", 0.20 };
+    const ShaderProgram& rendererProgram = renderer.getProgram();
 
-     system.init("share/kernels/particles.cl", "particles", "NVIDIA", program);
-      system.setScenario(backwakeScenario);
+    // Create an example Backwake scenario.
+    BackwakeScenario backwakeScenario(32,32,32);
+    backwakeScenario.generate();
 
-    // For FPS counter
-     float currentTime = glfwGetTime();
-     float lastFrame = 0.0f;
-     float deltaTime = 0.0f;
-     float accumulatedTime = 0.0f;
+    // Create the particle system which will compute step.
+    ParticleSystem system = ParticleSystem(100000, 10.0f);
+    // Add a single emitter which will spawn particles into the scenario.
+    system.addEmitter(glm::vec3(0.0f,-16.0f,0.0f), glm::vec3( 32.0f,2.0f,32.0f));
 
-     // glEnable(GL_BLEND);
-     //glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-       glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    // Main loop
+    // Initialize with the correct computing accelerator.
+    // Usually: Intel, NVIDEA or AMD are platform vendors.
+    system.init("share/kernels/particles.cl", "particles",
+                "NVIDIA", rendererProgram);
+    // Finally, assign the scenario to it.
+    system.setScenario(backwakeScenario);
+
+    // Keep track of slowdown/speedup.
+    float currentTime = glfwGetTime();
+    float lastFrame = 0.0f;
+    float deltaTime = 0.0f;
+    float accumulatedTime = 0.0f;
+
+    // For counting the framerate.
+    unsigned accumulatedFrames = 0;
+    float frameAccumulatedTime = 0.0;
+
+    // We have arrived at the main loop!
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     while (!glfwWindowShouldClose(window))
-    {   
+    {
         currentTime = glfwGetTime();
         deltaTime = currentTime - lastFrame;
         lastFrame = currentTime;
         accumulatedTime += deltaTime;
-        // Poll input
-        glfwPollEvents();
-        
-        if(Locator::input()->isKeyPressed(GLFW_KEY_UP))
-          system.compute(accumulatedTime, deltaTime);
-        if(Locator::input()->isKeyPressed(GLFW_KEY_DOWN))
-          system.compute(accumulatedTime, -deltaTime);
-        if(Locator::input()->isKeyPressed(GLFW_KEY_A))
-          _camera.rotate(-30.0f * deltaTime);
-        if(Locator::input()->isKeyPressed(GLFW_KEY_D))
-          _camera.rotate(30.0f  * deltaTime);
-        if(Locator::input()->isKeyPressed(GLFW_KEY_W))
-          _camera.translate(glm::vec3(0.0f,20.0f*deltaTime,0.0f));
-        if(Locator::input()->isKeyPressed(GLFW_KEY_S))
-          _camera.translate(glm::vec3(0.0f,-20.0f*deltaTime,0.0f));
-        if(Locator::input()->isKeyPressed(GLFW_KEY_C)){
+        accumulatedFrames += 1;
 
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        // We accumulate the number of frames every second and print out this
+        // number. This is better since we don't update the title every frame
+        // and produces more stable results. Just resets counter and repeats.
+        if (currentTime - frameAccumulatedTime >= 1.0) {
+            const std::string fpsString = patch::to_string(accumulatedFrames);
+            const std::string windowTitle = TITLE + fpsString + " fps";
+            glfwSetWindowTitle(window, windowTitle.c_str());
+            frameAccumulatedTime = currentTime;
+            accumulatedFrames = 0;
         }
-           glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-           glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        // Render vertecies
-       // glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-       //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // _camera.translate(glm::vec3(0.0f,0.1f,0.0f));
-         //_camera.rotate(30.0f * deltaTime);
-        _camera.update(program.getId());
-       
-        program.begin();
-        glPointSize(1);
+        // Polling loop.
+        glfwPollEvents();
+
+        // Controls for enabling or disabling fullscreen.
+        if (Locator::input()->isKeyPressed(GLFW_KEY_F)) {
+            const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+            glfwSetWindowSize(window, mode->width, mode->height);
+            camera.updateProjection(FIELD_OF_VIEW, mode->width, mode->height);
+            glViewport(0, 0, mode->width, mode->height);
+        } else if (Locator::input()->isKeyPressed(GLFW_KEY_R)) {
+            camera.updateProjection(FIELD_OF_VIEW, WIDTH, HEIGHT);
+            glfwSetWindowSize(window, WIDTH, HEIGHT);
+            glViewport(0, 0, WIDTH, HEIGHT);
+        }
+
+        // Step the particle simulation time forward:
+        if (Locator::input()->isKeyPressed(GLFW_KEY_LEFT))
+            system.compute(accumulatedTime, deltaTime);
+        if (Locator::input()->isKeyPressed(GLFW_KEY_RIGHT))
+            system.compute(accumulatedTime, -deltaTime);
+
+        // // Compute the next step in the particle simpulation
+        // // where we issue each step in parallel using a GPU.
+        // system.compute(accumulatedTime, deltaTime);
+
+        // Clear the relevant OpenGL buffers each update.
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // Move with the camera. Yea!
+        camera.handleInput(deltaTime);
+
         glBindVertexArray(vao);
-        glDrawArrays(GL_POINTS,0,system.getParticleCount(currentTime));
+        // Finally, draw the simulated particles.
+        renderer.draw(system, camera, currentTime);
         glBindVertexArray(0);
+
         // Swap the render buffer to display
         glfwSwapBuffers(window);
     }
 
-    //glDeleteVertexArrays(1, &VertexArrayID);
+    // Exit was ok!
     glfwTerminate();
     return 0;
 }
-
-// Kyboard callback for GLFW

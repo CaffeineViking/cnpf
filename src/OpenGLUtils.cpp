@@ -16,7 +16,7 @@ GLuint OpenGLUtils::createTexture(unsigned width,unsigned height, const float* d
  	GLuint ret_val = 0;
     glGenTextures(1,&ret_val);
     glBindTexture(GL_TEXTURE_2D,ret_val);
-    glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,width,height,0,GL_RGB,GL_FLOAT,data);
+    glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,width,height,0,GL_RGBA,GL_FLOAT,data);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     return ret_val;

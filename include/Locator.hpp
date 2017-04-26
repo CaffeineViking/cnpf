@@ -22,6 +22,7 @@ private:
 	static glm::vec2 _mousePos;
 	static std::map<int,bool> _keys;
 	static std::map<int,bool> _buttons;
+static GLFWwindow* _window;
 public:
 	// Static because of clash between C and C++
 	static void cursor_callback(GLFWwindow*, double, double);
@@ -29,7 +30,8 @@ public:
 	static void keyboard_callback(GLFWwindow*, int, int, int, int);
 	const glm::vec2 getMousePos();
 	bool isButtonPressed(int);
-	bool isKeyPressed(int); 
+	bool isKeyPressed(int);
+  GLFWwindow* getWindow();
 };
 
 class Locator{

@@ -8,6 +8,6 @@ uniform sampler2D diffuse;
 
 void main()
 {
-	vec2 uv = texCoords.xy;
-	color = texture(diffuse, uv);
+    vec2 uv = texCoords.xy;
+    color = texture(diffuse, uv);
 }

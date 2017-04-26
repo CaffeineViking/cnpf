@@ -22,6 +22,7 @@ bool DummyInputLocator::isKeyPressed(int key){
 std::map<int,bool> GLFWInputLocator::_keys;
 std::map<int,bool> GLFWInputLocator::_buttons;
 glm::vec2 GLFWInputLocator::_mousePos = glm::vec2(0.0f,0.0f);
+GLFWwindow* GLFWInputLocator::_window;
 
 void GLFWInputLocator::cursor_callback(GLFWwindow* window, double x, double y)
 {
@@ -34,7 +35,7 @@ void GLFWInputLocator::cursor_callback(GLFWwindow* window, double x, double y)
 void GLFWInputLocator::mouse_callback(GLFWwindow* window, int button, int action, int mods){
 
 	// Supress unised warning
-	(void)window;
+	_window = window;
 	(void)mods;
 
 	if(action == GLFW_RELEASE){
@@ -58,7 +59,8 @@ void GLFWInputLocator::keyboard_callback(GLFWwindow* window, int key, int scanco
 		_keys[key] = true;
 	}
 
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+	if ((key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+         || (key == GLFW_KEY_Q && action == GLFW_PRESS))
 		glfwSetWindowShouldClose(window, GL_TRUE);
 }
 
@@ -91,6 +93,9 @@ bool GLFWInputLocator::isKeyPressed(int key){
 	return false;
 }
 
+GLFWwindow* GLFWInputLocator::getWindow(){
+  return _window;
+}
 InputLocator* Locator::_inputLocator = nullptr;
 DummyInputLocator Locator::_dummyInput;
 

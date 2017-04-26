@@ -1,24 +1,27 @@
 #ifndef TEXTURE_HPP
 #define TEXTURE_HPP
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+
 class Texture{
 private:
 	GLuint _id;
-	const int _width;
-	const int _height;
+	unsigned _width;
+	unsigned _height;
+	bool _valid;
+
 public:
 	~Texture();
-	Texture();
-	Texture(const int, const int, const float*);
+	Texture() : _id { 0xDEADB33F}, _width {0}, _height{0}, _valid{false} {}
+	Texture(const unsigned, const unsigned, const float*);
 
-	Texture(const Texture&) = default;
-	Texture& operator=(const Texture&) = default;
+	Texture(Texture&&);
+	Texture& operator=(Texture&&);
+	GLuint getId() const { return _id; }
 
-	Texture(Texture&&) = default;
-	Texture& operator=(Texture&&) = default;
-
-	void begin();
+	void begin(int);
 	void end();
 };
+
 #endif

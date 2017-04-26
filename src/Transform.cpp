@@ -4,7 +4,7 @@
 #include <iostream>
 
 Transform::Transform(const glm::vec3& pos, const glm::quat& rot, const glm::vec3& scale)
-  : m_pos(pos), m_rot(rot), m_scale(scale), m_parent(nullptr) 
+  : m_pos(pos), m_rot(rot), m_scale(scale), m_parent(nullptr), m_parentMatrix(glm::mat4()) 
 {
 }
 
@@ -14,9 +14,9 @@ Transform::~Transform()
 
 glm::mat4 Transform::getModel() const
 {
-  glm::mat4 posMatrix = translate(m_pos);
-  glm::mat4 scaleMatrix = scale(m_scale);
-  glm::mat4 rotMatrix = glm::mat4_cast(m_rot);
+  glm::mat4 posMatrix = getTranslationMatrix(m_pos);
+  glm::mat4 scaleMatrix = getScaleMatrix(m_scale);
+  glm::mat4 rotMatrix = toMat4(m_rot);
 
   return m_parentMatrix * posMatrix * rotMatrix * scaleMatrix;
 
@@ -43,34 +43,38 @@ void Transform::rotate(glm::quat rotation)
   m_rot = glm::normalize(rotation * m_rot);
 }
 
+void Transform::translate(const glm::vec3& v){
+  m_pos += v;
+}
+
 glm::vec3 Transform::getRight() const
 {
-  return Transform::rotate(glm::vec3(1,0,0), m_rot);
+  return glm::normalize(Transform::rotate(glm::vec3(1,0,0), m_rot));
 }
 
 glm::vec3 Transform::getLeft() const
 {
-  return Transform::rotate(glm::vec3(-1,0,0), m_rot);
+  return glm::normalize(Transform::rotate(glm::vec3(-1,0,0), m_rot));
 }
 
 glm::vec3 Transform::getUp() const
 {
-  return Transform::rotate(glm::vec3(0,1,0), m_rot);
+  return glm::normalize(Transform::rotate(glm::vec3(0,1,0), m_rot));
 }
 
 glm::vec3 Transform::getDown() const
 {
-  return Transform::rotate(glm::vec3(0,-1,0), m_rot);
+  return glm::normalize(Transform::rotate(glm::vec3(0,-1,0), m_rot));
 }
 
 glm::vec3 Transform::getForward() const
 {
-  return Transform::rotate(glm::vec3(0,0,1), m_rot);
+  return glm::normalize(Transform::rotate(glm::vec3(0,0,1), m_rot));
 }
 
 glm::vec3 Transform::getBackward() const
 {
-  return Transform::rotate(glm::vec3(0,0,-1), m_rot);
+  return glm::normalize(Transform::rotate(glm::vec3(0,0,-1), m_rot));
 }
 
 glm::vec3 Transform::getTransformedPos() const
@@ -149,27 +153,22 @@ glm::quat Transform::mul(glm::quat q, glm::vec3 v) const
   return glm::quat(w, x, y, z);
 }
 
-glm::mat4 Transform::translate(const glm::vec3& v) const
+glm::mat4 Transform::getTranslationMatrix(const glm::vec3& v) const
 {
-  glm::mat4 m;
-
-  for(unsigned int i = 0; i < 4; i++)
-    for(unsigned int j = 0; j < 4; j++)
-      if(i == 3 && j != 3)
-	m[i][j] = v[j];
-		
+  glm::mat4 m; // Identity matrix
+  m[3][0] = v.x;
+  m[3][1] = v.y;
+  m[3][2] = v.z;	
   return m;
 }
 
 	
-glm::mat4 Transform::scale(const glm::vec3& v) const
+glm::mat4 Transform::getScaleMatrix(const glm::vec3& v) const
 {
-  glm::mat4 m;
-  for(unsigned int i = 0; i < 3; i++)
-    for(unsigned int j = 0; j < 3; j++)
-      if(i == j && i != 3)
-	m[i][j] = v[i];
-  
+  glm::mat4 m; // Identity matrix
+  m[0][0] = v.x;
+  m[1][1] = v.y;
+  m[2][2] = v.z;
   return m;
 }
 
@@ -206,3 +205,18 @@ glm::mat4 Transform::initRotation(glm::mat4 m, glm::vec3 forward, glm::vec3 up, 
 
   return m;
 }
+
+glm::mat4 Transform::toMat4(const glm::quat& q) const
+{ 
+  glm::mat4 m1(q.w,   q.z, -q.y, q.x, 
+	       -q.z,  q.w,  q.x, q.y, 
+	        q.y, -q.x,  q.w, q.z, 
+	       -q.x, -q.y, -q.z, q.w ); 
+
+  glm::mat4 m2( q.w,  q.z, -q.y, -q.x, 
+	       -q.z,  q.w,  q.x, -q.y, 
+	        q.y, -q.x,  q.w, -q.z, 
+	        q.x,  q.y,  q.z,  q.w ); 
+  
+  return m1 * m2; 
+} 
