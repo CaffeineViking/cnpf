@@ -18,13 +18,18 @@ const GLuint WIDTH = 1280, HEIGHT = 720;
 // Horizontal field of view of ~ 90 degrees.
 const float FIELD_OF_VIEW = glm::radians(60.0);
 
-inline unsigned divup(unsigned a, unsigned b)
-{
-    return (a+b-1)/b;
-}
 
-int main(int, char**)
+int main(int argc, char**argv)
 {
+    
+    if(argc != 2){
+        std::cout << "Incorrect number of arguments!" << std::endl;
+        std::cout << "Should be: ./bin/cnpf.exe <Graphics Device>" << std::endl;
+        return -2;
+    }
+
+    const std::string DEVICE_NAME = argv[1];
+    std::cout << "Using: " << DEVICE_NAME << " as for OpenCL" << std::endl;
 
     //====================================
     //  Init for GLFW
@@ -107,9 +112,9 @@ int main(int, char**)
     system.addEmitter(glm::vec3(0.0f,-16.0f,0.0f), glm::vec3( 32.0f,2.0f,32.0f));
 
     // Initialize with the correct computing accelerator.
-    // Usually: Intel, NVIDEA or AMD are platform vendors.
+    // Usually: Intel, NVIIDA or AMD are platform vendors.
     system.init("share/kernels/particles.cl", "particles",
-                "NVIDIA", rendererProgram);
+                DEVICE_NAME, rendererProgram);
     // Finally, assign the scenario to it.
     system.setScenario(backwakeScenario);
 
