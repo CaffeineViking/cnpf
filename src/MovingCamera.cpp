@@ -99,6 +99,13 @@ const Transform* MovingCamera::getTransform() const {
     return _transform;
 }
 
+void MovingCamera::updateProjection(const float fov, const float width, const float height) {
+    _projection = glm::perspective(fov,
+            (float)width/(float)height,
+            0.1f,
+            2200.0f);
+}
+
 glm::mat4 MovingCamera::getViewProjection() const {
     glm::vec3 eye = _transform->getPos();
     glm::vec3 center = _transform->getPos() + _transform->getForward();

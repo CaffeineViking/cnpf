@@ -59,7 +59,8 @@ void GLFWInputLocator::keyboard_callback(GLFWwindow* window, int key, int scanco
 		_keys[key] = true;
 	}
 
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+	if ((key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+         || (key == GLFW_KEY_Q && action == GLFW_PRESS))
 		glfwSetWindowShouldClose(window, GL_TRUE);
 }
 

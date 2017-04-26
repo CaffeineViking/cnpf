@@ -24,6 +24,7 @@ public:
 
     MovingCamera(const float& fov, const float& width, const float& height);
 
+    void updateProjection(const float, const float, const float);
     void handleInput(const float& delta);
     void update(const GLuint& programId) const;
 

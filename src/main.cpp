@@ -15,6 +15,8 @@
 
 const std::string TITLE = "Curl-Noise Particle Field @ ";
 const GLuint WIDTH = 1280, HEIGHT = 720;
+// Horizontal field of view of ~ 90 degrees.
+const float FIELD_OF_VIEW = glm::radians(60.0);
 
 inline unsigned divup(unsigned a, unsigned b)
 {
@@ -84,7 +86,7 @@ int main(int, char**)
     //====================================
 
     // Create camera to create a MVP matrix for the shader program.
-    MovingCamera camera = MovingCamera(glm::radians(100.0f),WIDTH,HEIGHT);
+    MovingCamera camera = MovingCamera(FIELD_OF_VIEW,WIDTH,HEIGHT);
     camera.getTransform()->translate(glm::vec3(0.0f,0.5f,-10.0f));
 
     GLuint vao;
@@ -145,10 +147,22 @@ int main(int, char**)
         // Polling loop.
         glfwPollEvents();
 
+        // Controls for enabling or disabling fullscreen.
+        if (Locator::input()->isKeyPressed(GLFW_KEY_F)) {
+            const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+            glfwSetWindowSize(window, mode->width, mode->height);
+            camera.updateProjection(FIELD_OF_VIEW, mode->width, mode->height);
+            glViewport(0, 0, mode->width, mode->height);
+        } else if (Locator::input()->isKeyPressed(GLFW_KEY_R)) {
+            camera.updateProjection(FIELD_OF_VIEW, WIDTH, HEIGHT);
+            glfwSetWindowSize(window, WIDTH, HEIGHT);
+            glViewport(0, 0, WIDTH, HEIGHT);
+        }
+
         // Step the particle simulation time forward:
-        if (Locator::input()->isKeyPressed(GLFW_KEY_UP))
+        if (Locator::input()->isKeyPressed(GLFW_KEY_LEFT))
             system.compute(accumulatedTime, deltaTime);
-        if (Locator::input()->isKeyPressed(GLFW_KEY_DOWN))
+        if (Locator::input()->isKeyPressed(GLFW_KEY_RIGHT))
             system.compute(accumulatedTime, -deltaTime);
 
         // // Compute the next step in the particle simpulation
