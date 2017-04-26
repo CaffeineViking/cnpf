@@ -84,7 +84,7 @@ void OpenCLUtils::dumpInfo(){
 // Read OpenCL Kernel file
 //=========================
 std::string OpenCLUtils::readFile(const std::string& filePath){
-	std::string content;
+	std::string content = "";
 	std::ifstream fileStream(filePath, std::ios::in);
 
 	if(!fileStream.is_open()) {
@@ -133,11 +133,21 @@ bool OpenCLUtils::checkExtensionSupport(const cl::Device& device, const std::str
 ////==============================================
 // Get OpenCL Program given file path and context
 //================================================
-cl::Program OpenCLUtils::getProgram(const cl::Context& context, const std::string& filePath){
+cl::Program OpenCLUtils::getProgram(const cl::Context& context, std::vector<std::string> paths){
 
-	std::string sourceCode = readFile(filePath);
-	cl::Program::Sources sources{1, std::make_pair(sourceCode.c_str(),sourceCode.length()+1)};
-	cl::Program program{context, sources};
+	cl::Program::Sources sources;
+
+	for(std::string path: paths){
+		std::string tmp = readFile(path);
+		char* file = new char[tmp.length() * sizeof(char) + 1];
+		std::strcpy (file, tmp.c_str());
+		sources.push_back(std::make_pair(file, tmp.length()));
+	}
+	std::cout << sources.at(1).first << std::endl;
+	cl::Program program(context, sources);
+
+	for(std::pair<const char*,unsigned int> p: sources)
+		delete p.first;
 	return program;
 
 }
@@ -145,7 +155,7 @@ cl::Program OpenCLUtils::getProgram(const cl::Context& context, const std::strin
 //=============================
 // OpenCL Setup and parameters
 //=============================
-clParameters OpenCLUtils::initCL(const std::string& filePath, const std::string& kernelName, const std::string& platformName){
+clParameters OpenCLUtils::initCL(std::vector<std::string> paths, std::vector<std::string> kernels, const std::string& platformName){
 	// Return value
 	clParameters clParams{};
 	cl::Platform platform = getPlatform(platformName);
@@ -180,12 +190,17 @@ clParameters OpenCLUtils::initCL(const std::string& filePath, const std::string&
 	cl::Context context{clParams.device, cps};
 	clParams.context = context;
 	clParams.queue = cl::CommandQueue{context,clParams.device};
-	clParams.program = getProgram(context, filePath);
+	clParams.program = getProgram(context, paths);
 	if(clParams.program.build({clParams.device}) != CL_SUCCESS){
    		std::cout<<" Error building: "<< clParams.program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(clParams.device) << std::endl;
    		return clParams;
 	}
 
-	clParams.kernel = cl::Kernel{clParams.program, kernelName.c_str()};
+	std::string tmp;
+	for(std::string kernel: kernels){
+		tmp = kernel;
+		clParams.kernels[kernel] = cl::Kernel{clParams.program, tmp.c_str()};
+	}
+
 	return clParams;
 }

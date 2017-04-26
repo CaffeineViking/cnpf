@@ -68,8 +68,8 @@ void BackwakeScenario::generate(){
 
    Noise noise;
    noise.addNoise(glm::vec3(10.0f), glm::vec3(0.01f));
-   noise.addNoise(glm::vec3(0.0f),  glm::vec3(0.03f));
-   noise.addNoise(glm::vec3(0.0f),  glm::vec3(0.09f));
+   noise.addNoise(glm::vec3(0.0f),  glm::vec3(0.13f));
+   noise.addNoise(glm::vec3(0.0f),  glm::vec3(0.19f));
 
     for(int x = 0; x < _width; x++) {
       for(int y = 0; y < _height; y++) {

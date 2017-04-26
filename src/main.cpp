@@ -21,7 +21,7 @@ const float FIELD_OF_VIEW = glm::radians(60.0);
 
 int main(int argc, char**argv)
 {
-    
+
     if(argc != 2){
         std::cout << "Incorrect number of arguments!" << std::endl;
         std::cout << "Should be: ./bin/cnpf.exe <Graphics Device>" << std::endl;
@@ -99,7 +99,7 @@ int main(int argc, char**argv)
     glBindVertexArray(vao);
 
     // Create a visualization method for the particle system below.
-    BillboardParticleRenderer renderer { "share/textures/fire.png", 0.20 };
+    BillboardParticleRenderer renderer { "share/textures/link.png", 0.40 };
     const ShaderProgram& rendererProgram = renderer.getProgram();
 
     // Create an example Backwake scenario.
@@ -107,14 +107,20 @@ int main(int argc, char**argv)
     backwakeScenario.generate();
 
     // Create the particle system which will compute step.
-    ParticleSystem system = ParticleSystem(100000, 10.0f);
+    ParticleSystem system = ParticleSystem(200000, 30.0f);
     // Add a single emitter which will spawn particles into the scenario.
-    system.addEmitter(glm::vec3(0.0f,-16.0f,0.0f), glm::vec3( 32.0f,2.0f,32.0f));
+    system.addEmitter(glm::vec3(0.0f,-16.0f,0.0f), glm::vec3( 2.0f,2.0f,16.0f));
 
     // Initialize with the correct computing accelerator.
     // Usually: Intel, NVIIDA or AMD are platform vendors.
-    system.init("share/kernels/particles.cl", "particles",
-                DEVICE_NAME, rendererProgram);
+    std::vector<std::string> paths;
+    std::vector<std::string> kernels;
+    paths.push_back("share/kernels/particles.cl");
+    paths.push_back("share/kernels/timers.cl");
+    kernels.push_back("particles");
+    kernels.push_back("timers");
+
+    system.init(paths, kernels, DEVICE_NAME, rendererProgram);
     // Finally, assign the scenario to it.
     system.setScenario(backwakeScenario);
 
@@ -165,10 +171,10 @@ int main(int argc, char**argv)
         }
 
         // Step the particle simulation time forward:
-        if (Locator::input()->isKeyPressed(GLFW_KEY_LEFT))
+       //if (Locator::input()->isKeyPressed(GLFW_KEY_LEFT))
             system.compute(accumulatedTime, deltaTime);
-        if (Locator::input()->isKeyPressed(GLFW_KEY_RIGHT))
-            system.compute(accumulatedTime, -deltaTime);
+        //if (Locator::input()->isKeyPressed(GLFW_KEY_RIGHT))
+         //   system.compute(accumulatedTime, -deltaTime);
 
         // // Compute the next step in the particle simpulation
         // // where we issue each step in parallel using a GPU.
