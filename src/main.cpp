@@ -102,14 +102,14 @@ int main(int, char**)
     backwakeScenario.generate();
 
     // Create the particle system which will compute step.
-    ParticleSystem system = ParticleSystem(100000, 20.0f);
+    ParticleSystem system = ParticleSystem(100000, 10.0f);
     // Add a single emitter which will spawn particles into the scenario.
-    system.addEmitter(glm::vec3(0.0f,0.0f,0.0f), glm::vec3( 32.0f,2.0f,32.0f));
+    system.addEmitter(glm::vec3(0.0f,-16.0f,0.0f), glm::vec3( 32.0f,2.0f,32.0f));
 
     // Initialize with the correct computing accelerator.
     // Usually: Intel, NVIDEA or AMD are platform vendors.
     system.init("share/kernels/particles.cl", "particles",
-                "NVIDEA", rendererProgram);
+                "NVIDIA", rendererProgram);
     // Finally, assign the scenario to it.
     system.setScenario(backwakeScenario);
 

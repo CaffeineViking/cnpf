@@ -42,7 +42,7 @@ bool ParticleSystem::init(const std::string& path, const std::string& kernel, co
       float y = min.y + std::abs(max.y - min.y)*distribution_float(generator);
       float z = min.z + std::abs(max.z - min.z)*distribution_float(generator);
 
-      if(glm::length(glm::vec3(x,y,z)) < 8.0f)
+      if(glm::length(glm::vec3(x,y,z)) < 0.0f)
          continue;
 
       data[3*n+0] = x;

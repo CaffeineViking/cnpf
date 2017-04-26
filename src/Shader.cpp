@@ -13,7 +13,7 @@ std::string Shader::readFile(const std::string& filePath) {
 	}
 
 	std::string content { std::istreambuf_iterator<char>{fileStream}, {} };
-	return content; // Loading line-by-line will *not* work on some GPUs...
+	return content.c_str(); // Loading line-by-line will *not* work on some GPUs...
 }
 
 Shader::~Shader(){
