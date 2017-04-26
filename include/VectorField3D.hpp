@@ -1,8 +1,6 @@
 #ifndef VECTOR_FIELD_3D_H
 #define VECTOR_FIELD_3D_H
 
-#include "Curl.hpp"
-
 #include <vector>
 #include <glm/glm.hpp>
 

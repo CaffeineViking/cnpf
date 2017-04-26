@@ -287,11 +287,11 @@ const std::vector<glm::vec3>& VectorField3D::getField() const {
 }
 
 std::vector<float> VectorField3D::getData() const{
-  std::vector<float> data(_width*_height*_depth*3);
+  std::vector<float> data(_width*_height*_depth*4);
   for(int i = 0; i < _width*_height*_depth; i++){
-    data[i*3 + 0] = _field.at(i).x;
-    data[i*3 + 1] = _field.at(i).y;
-    data[i*3 + 2] = _field.at(i).z;
+    data[i*4 + 0] = _field.at(i).x;
+    data[i*4 + 1] = _field.at(i).y;
+    data[i*4 + 2] = _field.at(i).z;
   }
   return data;
 }

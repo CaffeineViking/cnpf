@@ -26,7 +26,7 @@ GLuint OpenGLUtils::createTexture3D(unsigned width,unsigned height,unsigned dept
   GLuint ret_val = 0;
     glGenTextures(1,&ret_val);
     glBindTexture(GL_TEXTURE_3D,ret_val);
-    glTexImage3D(GL_TEXTURE_3D,0,GL_RGB,width,height,depth,0,GL_RGB,GL_FLOAT,data);
+    glTexImage3D(GL_TEXTURE_3D,0,GL_RGBA,width,height,depth,0,GL_RGBA,GL_FLOAT,data);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     return ret_val;
@@ -36,9 +36,9 @@ GLuint OpenGLUtils::createTexture3D(unsigned width,unsigned height,unsigned dept
 bool OpenGLUtils::writePNG(const std::string& filePath, const unsigned width, const unsigned height, const std::vector<float>& data){
     std::vector<unsigned char> image;
     for(unsigned i = 0; i < width*height; i++){
-      image.push_back((unsigned char)(data.at(i*3 + 0)*255));
-      image.push_back((unsigned char)(data.at(i*3 + 1)*255));
-      image.push_back((unsigned char)(data.at(i*3 + 2)*255));
+      image.push_back((unsigned char)(data.at(i*4 + 0)*255));
+      image.push_back((unsigned char)(data.at(i*4 + 1)*255));
+      image.push_back((unsigned char)(data.at(i*4 + 2)*255));
       image.push_back((unsigned char)255);
     }
 
@@ -68,14 +68,14 @@ bool OpenGLUtils::loadPNG(const std::string& filePath, unsigned& width, unsigned
 
 void OpenGLUtils::bufferToPNG_X(const std::string& name, const std::vector<float>& data, int width, int height, int depth){
       for(int x = 0; x < width; x++) {
-      std::vector<float> crossSection(height * depth * 3);
+      std::vector<float> crossSection(height * depth * 4);
       for(int y = 0; y < height; y++) {
          for(int z = 0; z < depth; z++) {
           int globalIndex = (x * height * depth) + (y * depth) + z;
           int subIndex = (y * depth) + z;
-          crossSection[subIndex * 3 + 0] = data.at(globalIndex * 3 + 0);
-          crossSection[subIndex * 3 + 1] = data.at(globalIndex * 3 + 1);
-          crossSection[subIndex * 3 + 2] = data.at(globalIndex * 3 + 2);
+          crossSection[subIndex * 4 + 0] = data.at(globalIndex * 4 + 0);
+          crossSection[subIndex * 4 + 1] = data.at(globalIndex * 4 + 1);
+          crossSection[subIndex * 4 + 2] = data.at(globalIndex * 4 + 2);
         }
      }
        std::ostringstream oss;
@@ -85,14 +85,14 @@ void OpenGLUtils::bufferToPNG_X(const std::string& name, const std::vector<float
 }
 void OpenGLUtils::bufferToPNG_Y(const std::string& name, const std::vector<float>& data, int width, int height, int depth){
       for(int y = 0; y< height; y++) {
-      std::vector<float> crossSection(width * depth * 3);
+      std::vector<float> crossSection(width * depth * 4);
       for(int x = 0; x < width; x++) {
          for(int z = 0; z < depth; z++) {
           int globalIndex = (x * height * depth) + (y * depth) + z;
           int subIndex = (x * depth) + z;
-          crossSection[subIndex * 3 + 0] = data.at(globalIndex * 3 + 0);
-          crossSection[subIndex * 3 + 1] = data.at(globalIndex * 3 + 1);
-          crossSection[subIndex * 3 + 2] = data.at(globalIndex * 3 + 2);
+          crossSection[subIndex * 4 + 0] = data.at(globalIndex * 4 + 0);
+          crossSection[subIndex * 4 + 1] = data.at(globalIndex * 4 + 1);
+          crossSection[subIndex * 4 + 2] = data.at(globalIndex * 4 + 2);
         }
      }
        std::ostringstream oss;
