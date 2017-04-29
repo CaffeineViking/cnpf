@@ -44,7 +44,6 @@ bool ParticleSystem::init(std::vector<std::string> paths, std::vector<std::strin
 
       if(glm::length(glm::vec3(x,y,z)) < 0.0f)
          continue;
-
       data[3*n+0] = x;
       data[3*n+1] = y;
       data[3*n+2] = z;
@@ -66,17 +65,24 @@ bool ParticleSystem::init(std::vector<std::string> paths, std::vector<std::strin
    glVertexAttribPointer(position_attribute, 3, GL_FLOAT, GL_FALSE, 0, 0);
    glEnableVertexAttribArray(position_attribute);
    glBindVertexArray(0);
-// Create velocity buffer, this is not of interest to the renderer at the moment
+// Create timer buffer, this is not of interest to the renderer at the moment
    for(int n = 0; n < PARTICLE_COUNT; ++n) {
       data[3*n+0] = 0.0f; //distribution(generator);
       data[3*n+1] = 0.0f; //distribution(generator);
       data[3*n+2] = 0.0f; //distribution(generator);
    }
-// Create Vertex buffer for the velocities
-   _timerBuffer = cl::Buffer(_params.context, CL_MEM_READ_WRITE, sizeof(float)*PARTICLE_COUNT);
-// Write velocities data to buffer
-   _params.queue.enqueueWriteBuffer(_timerBuffer, CL_TRUE, 0, sizeof(float)*PARTICLE_COUNT, data.data());
+// Create Vertex buffer for the timers
+   _timerBuffer = OpenCLUtils::createBuffer(_params.context,_params.queue, CL_MEM_READ_WRITE, sizeof(float)*PARTICLE_COUNT, data);
+// Create Vertex buffer for the spheres
+   _spheresBuffer = OpenCLUtils::createBuffer(_params.context,_params.queue, CL_MEM_READ_WRITE, sizeof(float)*_spheres.size(), _spheres);
    return true;
+}
+
+void ParticleSystem::addSphere(const glm::vec3& centre, const float radius){
+   _spheres.push_back(centre.x);
+   _spheres.push_back(centre.y);
+   _spheres.push_back(centre.z);
+   _spheres.push_back(radius);
 }
 
 void ParticleSystem::addEmitter(const glm::vec3& position, const glm::vec3& dimensions){
@@ -123,11 +129,13 @@ void ParticleSystem::compute(const float time, const float timeDelta){
    }
 
    _params.kernels.at("particles").setArg(0,_vertexBuffer);
-   _params.kernels.at("particles").setArg(1,_texture);
-   _params.kernels.at("particles").setArg(2,_width);
-   _params.kernels.at("particles").setArg(3,_height);
-   _params.kernels.at("particles").setArg(4,_depth);
-   _params.kernels.at("particles").setArg(5,timeDelta);
+   _params.kernels.at("particles").setArg(1,_spheresBuffer);
+   _params.kernels.at("particles").setArg(2,_spheres.size()/4);
+   _params.kernels.at("particles").setArg(3,_texture);
+   _params.kernels.at("particles").setArg(4,_width);
+   _params.kernels.at("particles").setArg(5,_height);
+   _params.kernels.at("particles").setArg(6,_depth);
+   _params.kernels.at("particles").setArg(7,timeDelta);
 
    _params.kernels.at("timers").setArg(0,_timerBuffer);
    _params.kernels.at("timers").setArg(1,_vertexBuffer);

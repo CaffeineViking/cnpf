@@ -1,9 +1,10 @@
 #ifndef CAMERA_HPP
 #define CAMERA_HPP
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 
 //==================================================================
 // Simple wrapper around a model-view projection.

@@ -1,7 +1,7 @@
 #include "Locator.hpp"
 #include <iostream>
 #include <utility>
-
+#include "OpenCLUtils.hpp"
 // Locator for naughty developers
 const glm::vec2 DummyInputLocator::getMousePos(){
 	return glm::vec2(0.0f,0.0f);
@@ -109,4 +109,35 @@ InputLocator* Locator::input()
 
 void Locator::setInput(InputLocator* input){
 	_inputLocator= input;
+}
+
+
+GPULocator::GPULocator(std::vector<std::string> kernels, std::vector<std::string> paths, std::string device): _paths{paths}
+{
+	clParameters params = OpenCLUtils::initCL(kernels, paths, device);
+	_device = params.device;
+	_program = params.program;
+	_queue = params.queue;
+	_context = params.context;
+	_kernels = params.kernels;
+}
+
+cl::Context GPULocator::getContext(){
+	return _context;
+}
+
+cl::CommandQueue GPULocator::getQueue(){
+	return _queue;
+}
+
+cl::Kernel GPULocator::getKernel(const std::string& name){
+	return _kernels.at(name);
+}
+
+cl::Program GPULocator::getProgram(){
+	return _program;
+}
+
+cl::Device GPULocator::getDevice(){
+	return _device;
 }

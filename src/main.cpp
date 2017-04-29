@@ -4,13 +4,14 @@
 #include <CL/cl.hpp>
 #include <iostream>
 
+#include "OpenGLUtils.hpp"
+
 #include "Locator.hpp"
 #include "Scenario.hpp"
 #include "ParticleSystem.hpp"
 #include "ParticleRenderer.hpp"
 #include "MovingCamera.hpp"
 #include <glm/ext.hpp>
-#include "OpenGLUtils.hpp"
 #include "stringPatch.hpp"
 
 const std::string TITLE = "Curl-Noise Particle Field @ ";
@@ -54,7 +55,7 @@ int main(int argc, char**argv)
     }
 
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(1); // Vsync.
+    glfwSwapInterval(0); // Vsync.
 
     // Set input locators
     GLFWInputLocator* input = new GLFWInputLocator();
@@ -107,9 +108,14 @@ int main(int argc, char**argv)
     backwakeScenario.generate();
 
     // Create the particle system which will compute step.
-    ParticleSystem system = ParticleSystem(200000, 30.0f);
+    ParticleSystem system = ParticleSystem(100000, 15.0f);
     // Add a single emitter which will spawn particles into the scenario.
-    system.addEmitter(glm::vec3(0.0f,-16.0f,0.0f), glm::vec3( 2.0f,2.0f,16.0f));
+    system.addEmitter(glm::vec3(0.0f,-16.0f,0.0f), glm::vec3(16.0f,0.0f,16.0f));
+
+    system.addSphere(glm::vec3(0.0f,8.0f,0.0f), 16.0f);
+
+    //system.addSphere(glm::vec3(0.0f,8.0f,0.0f), 4.0f);
+    //system.addSphere(glm::vec3(0.0f,0.0f,8.0f), 4.0f);
 
     // Initialize with the correct computing accelerator.
     // Usually: Intel, NVIIDA or AMD are platform vendors.
@@ -172,7 +178,9 @@ int main(int argc, char**argv)
 
         // Step the particle simulation time forward:
        //if (Locator::input()->isKeyPressed(GLFW_KEY_LEFT))
+        if(accumulatedFrames > 0){
             system.compute(accumulatedTime, deltaTime);
+        }
         //if (Locator::input()->isKeyPressed(GLFW_KEY_RIGHT))
          //   system.compute(accumulatedTime, -deltaTime);
 

@@ -1,7 +1,6 @@
 #include "Scenario.hpp"
-#include <glm/glm.hpp>
 #include "OpenGLUtils.hpp"
-#include "OpenCLUtils.hpp"
+#include <glm/glm.hpp>
 #include "Noise.hpp"
 #include <iostream>
 Scenario::Scenario(int w,int h,int d): _width{w}, _height{h}, _depth{d}, _field{w,h,d}
@@ -23,7 +22,13 @@ VectorField3D Scenario::getField() const{
 	return _field;
 }
 
-
+// Polynomial smooting
+float smooth(float p1, float p2, float d){
+   float r = (d - p1)/(p2-p1);
+   if(r<0.0f) return 0.0f;
+   else if(r>1.0f) return 1.0f;
+   return r*r*r*(10.0f+r*(-15.0f+r*6.0f));
+}
 // =======================
 // Scenarios beneath
 // =======================
@@ -88,6 +93,7 @@ void BackwakeScenario::generate(){
    //OpenGLUtils::bufferToPNG_X("debug/noiseFieldX", (noiseField* 0.5f + 0.5f).getData() , _width, _height, _depth);
  
    _field = noiseField;
+
 
    std::cout << "Field generated for BackwakeScenario" << std::endl;
 }

@@ -1,7 +1,6 @@
 #include "OpenCLUtils.hpp"
 #include <iostream>
 #include <fstream>
-#include <CL/cl.hpp>
 
 #ifdef WINDOWS
 #include <windows.h>
@@ -137,17 +136,15 @@ cl::Program OpenCLUtils::getProgram(const cl::Context& context, std::vector<std:
 
 	cl::Program::Sources sources;
 
-	for(std::string path: paths){
-		std::string tmp = readFile(path);
-		char* file = new char[tmp.length() * sizeof(char) + 1];
-		std::strcpy (file, tmp.c_str());
-		sources.push_back(std::make_pair(file, tmp.length()));
+	std::vector<std::string> stringSources;
+	for(unsigned i = 0;i < paths.size(); i++){
+		stringSources.push_back(readFile(paths.at(i)));
+		sources.push_back(std::make_pair(stringSources.at(i).c_str(), stringSources.at(i).length()));
 	}
-	std::cout << sources.at(1).first << std::endl;
+
+	//std::cout << sources.at(0).first << std::endl;
 	cl::Program program(context, sources);
 
-	for(std::pair<const char*,unsigned int> p: sources)
-		delete p.first;
 	return program;
 
 }
@@ -203,4 +200,19 @@ clParameters OpenCLUtils::initCL(std::vector<std::string> paths, std::vector<std
 	}
 
 	return clParams;
+}
+
+cl::Buffer OpenCLUtils::createBuffer(const cl::Context& context,const cl::CommandQueue& queue,int flags, const unsigned size, const std::vector<float>& data){
+	cl::Buffer buffer = cl::Buffer(context, flags, size);
+   queue.enqueueWriteBuffer(buffer, CL_TRUE, 0, size, data.data());
+   return buffer;
+}
+
+cl::ImageGL OpenCLUtils::createTexture(const cl::Context& context,int flags, GLenum type,  GLuint glTexture){
+	int errCode;
+	cl::ImageGL texture = cl::ImageGL(context,flags,type,0,glTexture,&errCode);
+   if (errCode!=CL_SUCCESS) {
+      std::cout<<"Failed to create OpenGL texture refrence: "<<errCode<<std::endl;
+    }
+    return texture;
 }

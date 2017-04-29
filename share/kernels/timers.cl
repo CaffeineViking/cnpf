@@ -18,8 +18,8 @@ void __kernel timers(
     int id = get_global_id(0);
     if(timers[id] >= threshold){
       timers[id] = 0.0f;
-      float x = (((wang_hash(id) % 1000) - 500.0f)/500.0f) * 2.0f;
-      float z = (((wang_hash(id+id) % 1000) - 500.0f)/500.0f) * 32.0f;
+      float x = (((wang_hash(id) % 1000) - 500.0f)/500.0f) * 8.0f;
+      float z = (((wang_hash(id+id) % 1000) - 500.0f)/500.0f) * 8.0f;
       positions[(id * 3) + 0] = x;
       positions[(id * 3) + 1] = -16;
       positions[(id * 3) + 2] = z;
