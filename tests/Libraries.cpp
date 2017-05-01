@@ -43,8 +43,9 @@ bool checkInitGLEW(){
 }
 
 bool checkInitOpenCL() {
-    //OpenCLUtils::dumpInfo();
-    clParameters clParams = OpenCLUtils::initCL("share/kernels/simple_add.cl", "simple_add", "NVIDIA");
+    OpenCLUtils::dumpInfo();
+    clParameters clParams = OpenCLUtils::initCL(std::vector<std::string>{"share/kernels/simple_add.cl"},
+                                                std::vector<std::string>{"simple_add"}, "NVIDIA");
 
     cl::Buffer buffer_A(clParams.context,CL_MEM_READ_WRITE,sizeof(int)*10);
     cl::Buffer buffer_B(clParams.context,CL_MEM_READ_WRITE,sizeof(int)*10);
@@ -54,10 +55,10 @@ bool checkInitOpenCL() {
 
     clParams.queue.enqueueWriteBuffer(buffer_A,CL_TRUE,0,sizeof(int)*10,A);
     clParams.queue.enqueueWriteBuffer(buffer_B,CL_TRUE,0,sizeof(int)*10,B);
-    clParams.kernel.setArg(0, buffer_A);
-    clParams.kernel.setArg(1, buffer_B);
-    clParams.kernel.setArg(2, buffer_C);
-    clParams.queue.enqueueNDRangeKernel(clParams.kernel, cl::NullRange,cl::NDRange(10), cl::NullRange);
+    clParams.kernels["simple_add"].setArg(0, buffer_A);
+    clParams.kernels["simple_add"].setArg(1, buffer_B);
+    clParams.kernels["simple_add"].setArg(2, buffer_C);
+    clParams.queue.enqueueNDRangeKernel(clParams.kernels["simple_add"], cl::NullRange,cl::NDRange(10), cl::NullRange);
     int C[10];
     clParams.queue.enqueueReadBuffer(buffer_C,CL_TRUE,0,sizeof(int)*10,C);
 
