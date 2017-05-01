@@ -1,8 +1,11 @@
 #ifndef LOCATOR_HPP
 #define LOCATOR_HPP
-#include "glm/glm.hpp"
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <map>
+#include <CL/cl.hpp>
+#include "glm/glm.hpp"
+
 class InputLocator {
 public:
 	virtual const glm::vec2 getMousePos() = 0;
@@ -31,13 +34,32 @@ public:
 	const glm::vec2 getMousePos();
 	bool isButtonPressed(int);
 	bool isKeyPressed(int);
-  GLFWwindow* getWindow();
+    GLFWwindow* getWindow();
 };
+
+class GPULocator {
+private:
+    cl::Device _device;
+    cl::CommandQueue _queue;
+    cl::Program _program;
+    std::map<std::string,cl::Kernel> _kernels;
+    cl::Context _context;
+    std::vector<std::string> _paths;
+public:
+    GPULocator(std::vector<std::string>, std::vector<std::string>, std::string);
+    cl::Context getContext();
+    cl::CommandQueue getQueue();
+    cl::Kernel getKernel(const std::string&);
+    cl::Program getProgram();
+    cl::Device getDevice();
+};
+
 
 class Locator{
 private:
 	static DummyInputLocator _dummyInput;
 	static InputLocator* _inputLocator;
+
 public:
 	static InputLocator* input();
 	static void setInput(InputLocator*);

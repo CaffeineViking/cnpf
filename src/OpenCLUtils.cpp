@@ -1,7 +1,6 @@
 #include "OpenCLUtils.hpp"
 #include <iostream>
 #include <fstream>
-#include <CL/cl.hpp>
 
 #ifdef WINDOWS
 #include <windows.h>
@@ -84,7 +83,7 @@ void OpenCLUtils::dumpInfo(){
 // Read OpenCL Kernel file
 //=========================
 std::string OpenCLUtils::readFile(const std::string& filePath){
-	std::string content;
+	std::string content = "";
 	std::ifstream fileStream(filePath, std::ios::in);
 
 	if(!fileStream.is_open()) {
@@ -133,11 +132,19 @@ bool OpenCLUtils::checkExtensionSupport(const cl::Device& device, const std::str
 ////==============================================
 // Get OpenCL Program given file path and context
 //================================================
-cl::Program OpenCLUtils::getProgram(const cl::Context& context, const std::string& filePath){
+cl::Program OpenCLUtils::getProgram(const cl::Context& context, std::vector<std::string> paths){
 
-	std::string sourceCode = readFile(filePath);
-	cl::Program::Sources sources{1, std::make_pair(sourceCode.c_str(),sourceCode.length()+1)};
-	cl::Program program{context, sources};
+	cl::Program::Sources sources;
+
+	std::vector<std::string> stringSources;
+	for(unsigned i = 0;i < paths.size(); i++){
+		stringSources.push_back(readFile(paths.at(i)));
+		sources.push_back(std::make_pair(stringSources.at(i).c_str(), stringSources.at(i).length()));
+	}
+
+	//std::cout << sources.at(0).first << std::endl;
+	cl::Program program(context, sources);
+
 	return program;
 
 }
@@ -145,7 +152,7 @@ cl::Program OpenCLUtils::getProgram(const cl::Context& context, const std::strin
 //=============================
 // OpenCL Setup and parameters
 //=============================
-clParameters OpenCLUtils::initCL(const std::string& filePath, const std::string& kernelName, const std::string& platformName){
+clParameters OpenCLUtils::initCL(std::vector<std::string> paths, std::vector<std::string> kernels, const std::string& platformName){
 	// Return value
 	clParameters clParams{};
 	cl::Platform platform = getPlatform(platformName);
@@ -180,12 +187,32 @@ clParameters OpenCLUtils::initCL(const std::string& filePath, const std::string&
 	cl::Context context{clParams.device, cps};
 	clParams.context = context;
 	clParams.queue = cl::CommandQueue{context,clParams.device};
-	clParams.program = getProgram(context, filePath);
+	clParams.program = getProgram(context, paths);
 	if(clParams.program.build({clParams.device}) != CL_SUCCESS){
    		std::cout<<" Error building: "<< clParams.program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(clParams.device) << std::endl;
    		return clParams;
 	}
 
-	clParams.kernel = cl::Kernel{clParams.program, kernelName.c_str()};
+	std::string tmp;
+	for(std::string kernel: kernels){
+		tmp = kernel;
+		clParams.kernels[kernel] = cl::Kernel{clParams.program, tmp.c_str()};
+	}
+
 	return clParams;
+}
+
+cl::Buffer OpenCLUtils::createBuffer(const cl::Context& context,const cl::CommandQueue& queue,int flags, const unsigned size, const std::vector<float>& data){
+	cl::Buffer buffer = cl::Buffer(context, flags, size);
+   queue.enqueueWriteBuffer(buffer, CL_TRUE, 0, size, data.data());
+   return buffer;
+}
+
+cl::ImageGL OpenCLUtils::createTexture(const cl::Context& context,int flags, GLenum type,  GLuint glTexture){
+	int errCode;
+	cl::ImageGL texture = cl::ImageGL(context,flags,type,0,glTexture,&errCode);
+   if (errCode!=CL_SUCCESS) {
+      std::cout<<"Failed to create OpenGL texture refrence: "<<errCode<<std::endl;
+    }
+    return texture;
 }

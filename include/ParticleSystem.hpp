@@ -23,16 +23,20 @@ private:
 	 cl::BufferGL _tmp;
      GLuint _vertexBufferId;
 	 cl::Buffer _vertexBuffer;
-	 cl::Buffer _velocityBuffer;
+	 cl::Buffer _timerBuffer;
+	 cl::Buffer _spheresBuffer;
+
 	std::string readKernelFile(const std::string&);
 	std::vector<std::pair<glm::vec3, glm::vec3>> _emitters;
+	std::vector<float> _spheres;
 public:	
 	~ParticleSystem();
 	ParticleSystem(const int,const float);
 
-	bool init(const std::string&, const std::string&, const std::string&, const ShaderProgram&);
+	bool init(std::vector<std::string>, std::vector<std::string>, const std::string&, const ShaderProgram&);
 	bool setScenario(const Scenario&);
 	void compute(const float, const float);
+	void addSphere(const glm::vec3&, const float);
 	void addEmitter(const glm::vec3&, const glm::vec3&);
 	int getParticleCount(const float) const;
 	ParticleSystem(const ParticleSystem&) = default;

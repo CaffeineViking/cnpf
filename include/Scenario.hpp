@@ -1,7 +1,7 @@
 #ifndef SCENARIO_HPP
 #define SCENARIO_HPP
-#include <CL/cl.hpp>
 #include <GL/glew.h>
+#include <CL/cl.hpp>
 #include "VectorField3D.hpp"
 #include "Noise.hpp"
 
