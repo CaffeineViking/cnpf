@@ -22,8 +22,9 @@ Shader::~Shader(){
 
 Shader::Shader(const std::string& path, const GLuint& type){
 	_shaderID = glCreateShader(type);
-	const char *source = readFile(path).c_str();
-	glShaderSource(_shaderID, 1, &source, NULL);
+	std::string source = readFile(path);
+	const char *sourcePtr = source.c_str();
+	glShaderSource(_shaderID, 1, &sourcePtr, NULL);
 }
 
 bool Shader::compile(){
