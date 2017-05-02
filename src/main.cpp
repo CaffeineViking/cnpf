@@ -75,8 +75,8 @@ int main(int argc, char**argv)
         return -1;
     }
 	// init anttweakbar
-	TwInit(TW_OPENGL_CORE, NULL);
-	
+    TwInit(TW_OPENGL_CORE, NULL);
+
     // Setup the Z-buffer
     // glEnable(GL_DEPTH_TEST);
     // glDepthFunc(GL_LESS);
@@ -88,6 +88,16 @@ int main(int argc, char**argv)
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
     glViewport(0, 0, width, height);
+
+     TwWindowSize(width, height);
+    TwBar *myBar;
+    myBar = TwNewBar("NameOfMyTweakBar");
+
+    float myVar = 0.0f;
+    TwAddVarRW(myBar, "NameOfMyVariable", TW_TYPE_FLOAT, &myVar,  " min=0 max=10 step=0.01 group=Engine label='Rotation speed' ");
+    TwAddButton(myBar, "Button", NULL, NULL, "");
+    TwAddButton(myBar, "AutoRotate", NULL, NULL, " label='Auto rotate' ");
+
 
     //====================================
     //  Init Particle System and Renderer
@@ -151,7 +161,6 @@ int main(int argc, char**argv)
         lastFrame = currentTime;
         accumulatedTime += deltaTime;
         accumulatedFrames += 1;
-
         // We accumulate the number of frames every second and print out this
         // number. This is better since we don't update the title every frame
         // and produces more stable results. Just resets counter and repeats.
@@ -200,12 +209,16 @@ int main(int argc, char**argv)
         // Finally, draw the simulated particles.
         renderer.draw(system, camera, currentTime);
         glBindVertexArray(0);
-
+        
+        myVar += deltaTime;
+        TwDraw();
         // Swap the render buffer to display
         glfwSwapBuffers(window);
     }
 
     // Exit was ok!
+        TwTerminate();
+
     glfwTerminate();
     return 0;
 }

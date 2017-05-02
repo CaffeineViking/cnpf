@@ -2,6 +2,8 @@
 #include <iostream>
 #include <utility>
 #include "OpenCLUtils.hpp"
+#include "foreign/anttweakbar.h"
+
 // Locator for naughty developers
 const glm::vec2 DummyInputLocator::getMousePos(){
 	return glm::vec2(0.0f,0.0f);
@@ -26,33 +28,38 @@ GLFWwindow* GLFWInputLocator::_window;
 
 void GLFWInputLocator::cursor_callback(GLFWwindow* window, double x, double y)
 {
-	// Supress unised warning
-	(void)window;
-	
-	_mousePos  = glm::vec2(x,y);
+
+	if(!TwEventMousePosGLFW(x,y)){
+		// Supress unised warning
+		(void)window;
+		_mousePos  = glm::vec2(x,y);
+	}
 }
 
 void GLFWInputLocator::mouse_callback(GLFWwindow* window, int button, int action, int mods){
 
-	// Supress unised warning
 	_window = window;
 	(void)mods;
-
-	if(action == GLFW_RELEASE){
-		_buttons[button] = false;
-	}else if(action == GLFW_PRESS){
-		_buttons[button] = true;
+	if(!TwEventMouseButtonGLFW(button, action)){
+		if(action == GLFW_RELEASE){
+			_buttons[button] = false;
+		}else if(action == GLFW_PRESS){
+			_buttons[button] = true;
+		}
 	}
+
+	// Supress unised warning
+
 
 }
 
 void GLFWInputLocator::keyboard_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
+
+  if(!TwEventKeyGLFW(key, TW_KMOD_NONE) && !TwEventCharGLFW(key, action)){
 	// Supress unised warning
 	(void)scancode;
 	(void)mode;
-
-
 	if(action == GLFW_RELEASE){
 		_keys[key] = false;
 	}else if(action == GLFW_PRESS){
@@ -63,6 +70,8 @@ void GLFWInputLocator::keyboard_callback(GLFWwindow* window, int key, int scanco
          || (key == GLFW_KEY_Q && action == GLFW_PRESS))
 		glfwSetWindowShouldClose(window, GL_TRUE);
 }
+}
+
 
 
 const glm::vec2 GLFWInputLocator::getMousePos(){
