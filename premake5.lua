@@ -26,7 +26,7 @@ project (name)
     includedirs {"include"}
     filter {"system:windows"} -- Inconsistent...
         defines {"WINDOWS"}
-        links {"OpenCL", "glew32", "glfw3dll", "opengl32"}
+        links {"OpenCL", "glew32", "glfw3dll", "opengl32", "AntTweakBar"}
         buildoptions { " -static -static-libgcc -static-libstdc++", "-mwindows", "-mconsole" }
     filter {"system:linux or bsd or macosx"}
         links {"OpenCL", "glfw", "GLEW", "GL"}
@@ -56,7 +56,7 @@ project (name.."-tests")
     includedirs {"include"}
     filter {"system:windows"} -- Inconsistent...
         defines {"WINDOWS"}
-        links {"OpenCL", "glew32", "glfw3dll", "opengl32"}
+        links {"OpenCL", "glew32", "glfw3dll", "opengl32", "antTweakBar"}
         buildoptions { " -static -static-libgcc -static-libstdc++", "-mwindows", "-mconsole"}
     filter {"system:linux or bsd or macosx"}
         links {"OpenCL", "glfw", "GLEW", "GL"}

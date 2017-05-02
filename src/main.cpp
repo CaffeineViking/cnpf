@@ -3,7 +3,7 @@
 #include <glm/glm.hpp>
 #include <CL/cl.hpp>
 #include <iostream>
-
+#include "foreign/anttweakbar.h"
 #include "OpenGLUtils.hpp"
 
 #include "Locator.hpp"
@@ -74,7 +74,9 @@ int main(int argc, char**argv)
         std::cout << "Failed to initialize GLEW" << std::endl;
         return -1;
     }
-
+	// init anttweakbar
+	TwInit(TW_OPENGL_CORE, NULL);
+	
     // Setup the Z-buffer
     // glEnable(GL_DEPTH_TEST);
     // glDepthFunc(GL_LESS);
