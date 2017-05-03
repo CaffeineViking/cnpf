@@ -2,6 +2,7 @@
 #include "Locator.hpp"
 #include <iostream>
 #include <glm/ext.hpp>
+#include <glm/gtx/vector_angle.hpp>
 #include <cassert>
 
 MovingCamera::MovingCamera(const float& fov, const float& width, const float& height)
@@ -47,18 +48,19 @@ void MovingCamera::handleInput(const float& delta){
     if(_mouseLocked){
         glm::vec2 mousePos = input->getMousePos();
 
-        float rotX = mousePos.x - _lastMousePos.x;
-        float rotY = mousePos.y - _lastMousePos.y;
-
+	float yaw = SENS * (mousePos.x - _lastMousePos.x);
+	float pitch = SENS * (mousePos.y - _lastMousePos.y);
+	
         _lastMousePos = input->getMousePos();
 
         // Rotate around local x-axis (vector pointing to the right of the object)
-        if(rotY != 0)
-            getTransform()->rotate(rotY * SENS, getTransform()->getRight());
-
-        // Rotate around y-axis
-        if(rotX != 0)
-            getTransform()->rotate((-rotX) * SENS, glm::vec3(0,1,0));
+	if(pitch != 0) {
+	    if(pitchPossible(pitch))
+		getTransform()->rotate(pitch, getTransform()->getRight());
+	}
+	// Rotate around y-axis
+	if(yaw != 0)
+	    getTransform()->rotate((-yaw), glm::vec3(0,1,0));
     }
 
     //============================
@@ -80,10 +82,10 @@ void MovingCamera::handleInput(const float& delta){
         translation += getTransform()->getLeft() * amount;
 
     if(input->isKeyPressed(GLFW_KEY_SPACE))
-        translation += getTransform()->getUp() * amount;
+	translation += glm::vec3(0,1,0)  * amount;
 
     if(input->isKeyPressed(GLFW_KEY_LEFT_CONTROL))
-        translation += getTransform()->getDown() * amount;
+	translation += glm::vec3(0,-1,0) * amount;
 
     if(input->isKeyPressed(GLFW_KEY_LEFT_SHIFT))
         translation *= SPEED_MOD;
@@ -133,4 +135,13 @@ void MovingCamera::update(const GLuint& programId) const{
     GLuint pId = glGetUniformLocation(programId, "projection");
     glUniformMatrix4fv(pId, 1, GL_FALSE, &(p[0][0]));
 
+}
+
+bool MovingCamera::pitchPossible(const float& pitch) {
+    glm::vec3 forward = getTransform()->getForward();
+    glm::vec3 right = getTransform()->getRight();
+    glm::vec3 projForward = glm::vec3(forward.x, 0, forward.z);
+    float angle = glm::orientedAngle(forward, projForward, right);
+
+    return angle * pitch >= 0 || fabs(angle) + fabs(pitch) < HALF_PI;
 }
