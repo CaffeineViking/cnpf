@@ -16,7 +16,11 @@
 class ParticleSystem {
 private:
 	 const int PARTICLE_COUNT;
-	 float maxTime;
+	 float _maxTime;
+	 float _respawnTime;
+	 float _fieldMagnitude;
+	 float _noiseRatio;
+	 glm::vec3 _fieldDirection;
 	 int _width, _height, _depth;
 	 cl::ImageGL _texture;
 	 clParameters _params;
@@ -39,6 +43,10 @@ public:
 	void addSphere(const glm::vec3&, const float);
 	void addEmitter(const glm::vec3&, const glm::vec3&);
 	int getParticleCount(const float) const;
+	float* referenceRespawnTime();
+	float* referenceFieldMagnitude();
+	float* referenceNoiseRatio();
+	glm::vec3* referenceFieldDirection();
 	ParticleSystem(const ParticleSystem&) = default;
 	ParticleSystem& operator=(const ParticleSystem&) = default;
 

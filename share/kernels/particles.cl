@@ -25,13 +25,11 @@ float get_closest_sphere(float3 p, const int nsph, __global float* sph, float3* 
   return best_radius;
 }
 
-float3 potential(float3 p, float3 np, read_only image3d_t t,const int nsph, __global float* sph){
+float3 potential(float3 p, float3 np, read_only image3d_t t,const int nsph, __global float* sph, float field_magnitude, float noise_ratio,float fx, float fy, float fz){
 
   const float3  sphere_centre   = (float3)(0.0f,0.0f,0.0f);
   const float   sphere_radius   = get_closest_sphere(p,nsph, sph, &sphere_centre);
-  const float3  field_direction = (float3)(0.0f,-1.0f,0.0f);
-  const float   field_magnitude = 1.0f;
-  const float   noise_ratio   = 0.2f;
+  const float3  field_direction = (float3)(fx,fy,fz);
   const sampler_t smp       = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_MIRRORED_REPEAT |CLK_FILTER_LINEAR;
   float4 noise = (read_imagef(t, smp, (float4)(np.x, np.y, np.z ,0.0f)) - 0.5f) * 2.0f;
 
@@ -45,7 +43,7 @@ float3 potential(float3 p, float3 np, read_only image3d_t t,const int nsph, __gl
     float3 ortho = p - parallel;
     float3 directional = cross(ortho, field_direction);
 
-    psi += (1.0f - noise_ratio) * directional;
+    psi += (1.0f - noise_ratio) * directional * field_magnitude;
 
     float d = length(p - sphere_centre);
 
@@ -54,7 +52,7 @@ float3 potential(float3 p, float3 np, read_only image3d_t t,const int nsph, __gl
     return (alpha) * psi + (1.0f - alpha) * n * dot(n, psi);
 }
 
-float3 curl(float3 p, float3 np, read_only image3d_t t,const int nsph,  __global float* sph){
+float3 curl(float3 p, float3 np, read_only image3d_t t,const int nsph,  __global float* sph, float fm, float nr, float fx, float fy, float fz){
   const float eps = 0.0001f;
   const float3 epsX = (float3)(eps,0.0f,0.0f);
   const float3 epsY = (float3)(0.0f,eps,0.0f);
@@ -62,12 +60,12 @@ float3 curl(float3 p, float3 np, read_only image3d_t t,const int nsph,  __global
 
   float3 curl = (float3)(0.0f,0.0f,0.0f);
 
-      curl.x =( (potential(p + epsY,np + epsY,t, nsph, sph).z - potential(p - epsY,np - epsY,t, nsph, sph).z)
-             -(  potential(p + epsZ,np + epsZ,t, nsph, sph).y - potential(p - epsZ,np - epsZ,t, nsph, sph).y)) / (2*eps);
-      curl.y =( (potential(p + epsZ,np + epsZ,t, nsph, sph).x - potential(p - epsZ,np - epsZ,t, nsph, sph).x)
-             -(  potential(p + epsX,np + epsX,t, nsph, sph).z - potential(p - epsX,np - epsX,t, nsph, sph).z)) / (2*eps);
-      curl.z =( (potential(p + epsX,np + epsX,t, nsph, sph).y - potential(p - epsX,np - epsX,t, nsph, sph).y)
-             -(  potential(p + epsY,np + epsY,t, nsph, sph).x - potential(p - epsY,np - epsY,t, nsph, sph).x)) / (2*eps);
+      curl.x =( (potential(p + epsY,np + epsY,t, nsph, sph, fm, nr, fx, fy, fz).z - potential(p - epsY,np - epsY,t, nsph, sph, fm, nr, fx, fy, fz).z)
+             -(  potential(p + epsZ,np + epsZ,t, nsph, sph, fm, nr, fx, fy, fz).y - potential(p - epsZ,np - epsZ,t, nsph, sph, fm, nr, fx, fy, fz).y)) / (2*eps);
+      curl.y =( (potential(p + epsZ,np + epsZ,t, nsph, sph, fm, nr, fx, fy, fz).x - potential(p - epsZ,np - epsZ,t, nsph, sph, fm, nr, fx, fy, fz).x)
+             -(  potential(p + epsX,np + epsX,t, nsph, sph, fm, nr, fx, fy, fz).z - potential(p - epsX,np - epsX,t, nsph, sph, fm, nr, fx, fy, fz).z)) / (2*eps);
+      curl.z =( (potential(p + epsX,np + epsX,t, nsph, sph, fm, nr, fx, fy, fz).y - potential(p - epsX,np - epsX,t, nsph, sph, fm, nr, fx, fy, fz).y)
+             -(  potential(p + epsY,np + epsY,t, nsph, sph, fm, nr, fx, fy, fz).x - potential(p - epsY,np - epsY,t, nsph, sph, fm, nr, fx, fy, fz).x)) / (2*eps);
       return normalize(curl);
 }
 
@@ -79,6 +77,11 @@ void __kernel particles(
   const unsigned width,
   const unsigned height,
   const unsigned depth,
+  const float field_magnitude,
+  const float noise_ratio,
+  const float fieldX,
+  const float fieldY,
+  const float fieldZ,
   const float frameDelta)
 {
     int id = get_global_id(0);
@@ -87,7 +90,7 @@ void __kernel particles(
     float z = positions[3*id+2];
     float3 position = (float3)(x,y,z);
     float3 noise_p = (float3)((x + width / 2.0f) / width,(y + height / 2.0f) / height,(z + depth / 2.0f) / depth);
-    float3 psi = curl(position,noise_p, texture, nrSpeheres, spheres);
+    float3 psi = curl(position,noise_p, texture, nrSpeheres, spheres, field_magnitude, noise_ratio,fieldX,fieldY,fieldX);
 
 
     positions[3*id+0] += psi.x * 4.0f * frameDelta;//(values.x - 0.5f) * 2.0f * frameDelta  * velocities[3*id+0];

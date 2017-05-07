@@ -18,7 +18,8 @@ ParticleSystem::~ParticleSystem(){
     glDeleteBuffers(1, &_vertexBufferId);
 }
 
-ParticleSystem::ParticleSystem(const int particles, const float time): PARTICLE_COUNT{particles}, maxTime{time}{
+ParticleSystem::ParticleSystem(const int particles, const float time): PARTICLE_COUNT{particles}, _maxTime{time},_respawnTime{20.0f}, _fieldMagnitude{1.0f} ,_noiseRatio{0.0f}, _fieldDirection{0.0f,-1.0f,0.0f}
+{
 }
 
 
@@ -135,12 +136,17 @@ void ParticleSystem::compute(const float time, const float timeDelta){
    _params.kernels.at("particles").setArg(4,_width);
    _params.kernels.at("particles").setArg(5,_height);
    _params.kernels.at("particles").setArg(6,_depth);
-   _params.kernels.at("particles").setArg(7,timeDelta);
+   _params.kernels.at("particles").setArg(7,_fieldMagnitude);
+   _params.kernels.at("particles").setArg(8,_noiseRatio);
+   _params.kernels.at("particles").setArg(9,_fieldDirection.x);
+   _params.kernels.at("particles").setArg(10,_fieldDirection.y);
+   _params.kernels.at("particles").setArg(11,_fieldDirection.z);
+   _params.kernels.at("particles").setArg(12,timeDelta);
 
    _params.kernels.at("timers").setArg(0,_timerBuffer);
    _params.kernels.at("timers").setArg(1,_vertexBuffer);
    _params.kernels.at("timers").setArg(2,timeDelta);
-   _params.kernels.at("timers").setArg(3,20.0f);
+   _params.kernels.at("timers").setArg(3,_respawnTime);
 // Equeue kernel
    _params.queue.enqueueNDRangeKernel(_params.kernels.at("particles"),cl::NullRange,cl::NDRange(getParticleCount(time)),cl::NDRange(1));
    _params.queue.enqueueNDRangeKernel(_params.kernels.at("timers"),cl::NullRange,cl::NDRange(getParticleCount(time)),cl::NDRange(1));
@@ -159,5 +165,21 @@ void ParticleSystem::compute(const float time, const float timeDelta){
 }
 
 int ParticleSystem::getParticleCount(const float time) const {
-   return std::min(time/maxTime,1.0f)*PARTICLE_COUNT;
+   return std::min(time/_maxTime,1.0f)*PARTICLE_COUNT;
+}
+
+float* ParticleSystem::referenceRespawnTime() {
+   return &_respawnTime;
+}
+
+float* ParticleSystem::referenceFieldMagnitude(){
+   return &_fieldMagnitude;
+}
+
+float* ParticleSystem::referenceNoiseRatio() {
+   return &_noiseRatio;
+}
+
+glm::vec3* ParticleSystem::referenceFieldDirection() {
+   return &_fieldDirection;
 }

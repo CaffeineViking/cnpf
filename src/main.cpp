@@ -93,10 +93,6 @@ int main(int argc, char**argv)
     TwBar *myBar;
     myBar = TwNewBar("NameOfMyTweakBar");
 
-    float myVar = 0.0f;
-    TwAddVarRW(myBar, "NameOfMyVariable", TW_TYPE_FLOAT, &myVar,  " min=0 max=10 step=0.01 group=Engine label='Rotation speed' ");
-    TwAddButton(myBar, "Button", NULL, NULL, "");
-    TwAddButton(myBar, "AutoRotate", NULL, NULL, " label='Auto rotate' ");
 
 
     //====================================
@@ -121,6 +117,7 @@ int main(int argc, char**argv)
 
     // Create the particle system which will compute step.
     ParticleSystem system = ParticleSystem(100000, 15.0f);
+
     // Add a single emitter which will spawn particles into the scenario.
     system.addEmitter(glm::vec3(0.0f,-16.0f,0.0f), glm::vec3(16.0f,0.0f,16.0f));
 
@@ -141,6 +138,12 @@ int main(int argc, char**argv)
     system.init(paths, kernels, DEVICE_NAME, rendererProgram);
     // Finally, assign the scenario to it.
     system.setScenario(backwakeScenario);
+
+    // Add particle system varaibles to the tweak bar
+    TwAddVarRW(myBar, "RespawnTime", TW_TYPE_FLOAT, system.referenceRespawnTime(),  " min=0 max=60 step=0.5 group=System label='Particle Time' ");
+    TwAddVarRW(myBar, "FieldMagnitude", TW_TYPE_FLOAT, system.referenceFieldMagnitude(),  " min=-1 max=1 step=1 group=System label='Background field magnitude' ");
+    TwAddVarRW(myBar, "NoiseRatio", TW_TYPE_FLOAT, system.referenceNoiseRatio(),  " min=0 max=1 step=0.01 group=System label='Noise ratio' ");
+    TwAddVarRW(myBar, "Field", TW_TYPE_DIR3F, system.referenceFieldDirection(),  " min=-1 max=1 step=0.01 group=System label='Field Direction' ");
 
     // Keep track of slowdown/speedup.
     float currentTime = glfwGetTime();
@@ -210,7 +213,6 @@ int main(int argc, char**argv)
         renderer.draw(system, camera, currentTime);
         glBindVertexArray(0);
         
-        myVar += deltaTime;
         TwDraw();
         // Swap the render buffer to display
         glfwSwapBuffers(window);
