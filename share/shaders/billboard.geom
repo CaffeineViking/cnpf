@@ -19,25 +19,25 @@ void main()
     // a: left-bottom
     vec2 va = P.xy + vec2(-0.5, -0.5) * size;
     gl_Position = projection * vec4(va, P.zw);
-    texCoords = vec2(0.0, 0.0);
+    texCoords = vec2(1.0, 1.0);
     EmitVertex();
 
     // b: left-top
     vec2 vb = P.xy + vec2(-0.5, 0.5) * size;
     gl_Position = projection * vec4(vb, P.zw);
-    texCoords = vec2(0.0, 1.0);
+    texCoords = vec2(1.0, 0.0);
     EmitVertex();
 
     // d: right-bottom
     vec2 vd = P.xy + vec2(0.5, -0.5) * size;
     gl_Position = projection * vec4(vd, P.zw);
-    texCoords = vec2(1.0, 0.0);
+    texCoords = vec2(0.0, 1.0);
     EmitVertex();
 
     // c: right-top
     vec2 vc = P.xy + vec2(0.5, 0.5) * size;
     gl_Position = projection * vec4(vc, P.zw);
-    texCoords = vec2(1.0, 1.0);
+    texCoords = vec2(0.0, 0.0);
     EmitVertex();
 
     EndPrimitive();
