@@ -18,14 +18,18 @@ private:
 	 const int PARTICLE_COUNT;
 	 float maxTime;
 	 int _width, _height, _depth;
+         int _positionsBufferSize, _positionsBufferHead;
 	 cl::ImageGL _texture;
 	 clParameters _params;
 	 cl::BufferGL _tmp;
+         cl::BufferGL _positionsGLBuffer;
      GLuint _vertexBufferId;
+     GLuint _positionsBufferId;
 	 cl::Buffer _vertexBuffer;
 	 cl::Buffer _timerBuffer;
 	 cl::Buffer _spheresBuffer;
-
+         cl::Buffer _positionsBuffer;
+    
 	std::string readKernelFile(const std::string&);
 	std::vector<std::pair<glm::vec3, glm::vec3>> _emitters;
 	std::vector<float> _spheres;

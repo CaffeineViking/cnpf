@@ -100,7 +100,7 @@ int main(int argc, char**argv)
     glBindVertexArray(vao);
 
     // Create a visualization method for the particle system below.
-    BillboardParticleRenderer renderer { "share/textures/sphere.png", 0.125 };
+    BillboardParticleRenderer renderer { "share/textures/link.png", 0.4 };
     const ShaderProgram& rendererProgram = renderer.getProgram();
 
     // Create an example Backwake scenario.
@@ -108,7 +108,7 @@ int main(int argc, char**argv)
     backwakeScenario.generate();
 
     // Create the particle system which will compute step.
-    ParticleSystem system = ParticleSystem(100000, 15.0f);
+    ParticleSystem system = ParticleSystem(10000, 15.0f);
     // Add a single emitter which will spawn particles into the scenario.
     system.addEmitter(glm::vec3(0.0f,-16.0f,0.0f), glm::vec3(16.0f,0.0f,16.0f));
 
@@ -144,7 +144,7 @@ int main(int argc, char**argv)
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     while (!glfwWindowShouldClose(window))
     {
-        currentTime = glfwGetTime();
+	currentTime = glfwGetTime();
         deltaTime = currentTime - lastFrame;
         lastFrame = currentTime;
         accumulatedTime += deltaTime;

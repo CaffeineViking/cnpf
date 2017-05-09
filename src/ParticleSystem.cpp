@@ -50,21 +50,40 @@ bool ParticleSystem::init(std::vector<std::string> paths, std::vector<std::strin
       ++n;
    }
 
+   _positionsBufferSize = 16;
+   _positionsBufferHead = 0;
 // Same but for OpenGL
    _vertexBufferId = OpenGLUtils::createBuffer(3*PARTICLE_COUNT, data.data(), GL_DYNAMIC_DRAW);
 // _tmp buffer to do some copying on
    _tmp = cl::BufferGL(_params.context, CL_MEM_READ_WRITE, _vertexBufferId, NULL);
+ 
+// Same but for OpenGL
+   _positionsBufferId = OpenGLUtils::createBuffer(3*PARTICLE_COUNT, data.data(), GL_DYNAMIC_DRAW);
+// _tmp buffer to do some copying on
+   _positionsGLBuffer = cl::BufferGL(_params.context, CL_MEM_READ_WRITE, _positionsBufferId, NULL);
 
 // Create Vertex buffer for the positions
    _vertexBuffer = cl::Buffer(_params.context, CL_MEM_READ_WRITE, sizeof(float)*3*PARTICLE_COUNT);
-// Write position data to buffer
+   _positionsBuffer = cl::Buffer(_params.context, CL_MEM_READ_WRITE, sizeof(float)*3*PARTICLE_COUNT*_positionsBufferSize);
+
+   for(int i = 0; i < _positionsBufferSize; i++){
+       _params.queue.enqueueWriteBuffer(_positionsBuffer, CL_TRUE, i*data.size(), sizeof(float)*3*PARTICLE_COUNT, data.data());
+   }
+   // Write position data to buffer
    _params.queue.enqueueWriteBuffer(_vertexBuffer, CL_TRUE, 0, sizeof(float)*3*PARTICLE_COUNT, data.data());
 // Bind buffer to shader
    glBindBuffer(GL_ARRAY_BUFFER, _vertexBufferId);
    GLint position_attribute = glGetAttribLocation(program.getId(), "position");
    glVertexAttribPointer(position_attribute, 3, GL_FLOAT, GL_FALSE, 0, 0);
    glEnableVertexAttribArray(position_attribute);
+   //glBindVertexArray(0);
+
+   glBindBuffer(GL_ARRAY_BUFFER, _positionsBufferId);
+   GLint oldPosition_attribute = glGetAttribLocation(program.getId(), "oldPosition");
+   glVertexAttribPointer(oldPosition_attribute, 3, GL_FLOAT, GL_FALSE, 0, 0);
+   glEnableVertexAttribArray(oldPosition_attribute);
    glBindVertexArray(0);
+   
 // Create timer buffer, this is not of interest to the renderer at the moment
    for(int n = 0; n < PARTICLE_COUNT; ++n) {
       data[3*n+0] = 0.0f; //distribution(generator);
@@ -119,6 +138,7 @@ void ParticleSystem::compute(const float time, const float timeDelta){
    objs.clear();
    objs.push_back(_tmp);
    objs.push_back(_texture);
+   objs.push_back(_positionsGLBuffer);
 // Aquire GL Object ( ͡° ͜ʖ ͡°)
    cl_int res = _params.queue.enqueueAcquireGLObjects(&objs,NULL,&ev);
    ev.wait();
@@ -136,7 +156,13 @@ void ParticleSystem::compute(const float time, const float timeDelta){
    _params.kernels.at("particles").setArg(5,_height);
    _params.kernels.at("particles").setArg(6,_depth);
    _params.kernels.at("particles").setArg(7,timeDelta);
+   _params.kernels.at("particles").setArg(8,_positionsBuffer);
+   _params.kernels.at("particles").setArg(9,PARTICLE_COUNT);
+   _params.kernels.at("particles").setArg(10,_positionsBufferHead);
 
+   _positionsBufferHead++;
+   _positionsBufferHead %= _positionsBufferSize;
+   
    _params.kernels.at("timers").setArg(0,_timerBuffer);
    _params.kernels.at("timers").setArg(1,_vertexBuffer);
    _params.kernels.at("timers").setArg(2,timeDelta);
@@ -147,6 +173,8 @@ void ParticleSystem::compute(const float time, const float timeDelta){
 
 // Copy from OpenCL to OpenGL 
    _params.queue.enqueueCopyBuffer(_vertexBuffer, _tmp, 0, 0, 3*PARTICLE_COUNT*sizeof(float), NULL, NULL);
+    _params.queue.enqueueCopyBuffer(_positionsBuffer, _positionsGLBuffer, _positionsBufferHead*3*PARTICLE_COUNT*sizeof(float), 0,
+   				   3*PARTICLE_COUNT*sizeof(float), NULL, NULL);
    res = _params.queue.enqueueReleaseGLObjects(&objs);
    ev.wait();
    if (res!=CL_SUCCESS) {
