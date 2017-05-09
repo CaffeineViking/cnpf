@@ -67,7 +67,7 @@ bool ParticleSystem::init(std::vector<std::string> paths, std::vector<std::strin
    _positionsBuffer = cl::Buffer(_params.context, CL_MEM_READ_WRITE, sizeof(float)*3*PARTICLE_COUNT*_positionsBufferSize);
 
    for(int i = 0; i < _positionsBufferSize; i++){
-       _params.queue.enqueueWriteBuffer(_positionsBuffer, CL_TRUE, i*data.size(), sizeof(float)*3*PARTICLE_COUNT, data.data());
+       _params.queue.enqueueWriteBuffer(_positionsBuffer, CL_TRUE, i*sizeof(float)*3*PARTICLE_COUNT, sizeof(float)*3*PARTICLE_COUNT, data.data());
    }
    // Write position data to buffer
    _params.queue.enqueueWriteBuffer(_vertexBuffer, CL_TRUE, 0, sizeof(float)*3*PARTICLE_COUNT, data.data());
@@ -167,7 +167,11 @@ void ParticleSystem::compute(const float time, const float timeDelta){
    _params.kernels.at("timers").setArg(1,_vertexBuffer);
    _params.kernels.at("timers").setArg(2,timeDelta);
    _params.kernels.at("timers").setArg(3,20.0f);
-// Equeue kernel
+   _params.kernels.at("timers").setArg(4,_positionsBuffer);
+   _params.kernels.at("timers").setArg(5,PARTICLE_COUNT);
+   _params.kernels.at("timers").setArg(6,_positionsBufferSize);
+
+   // Equeue kernel
    _params.queue.enqueueNDRangeKernel(_params.kernels.at("particles"),cl::NullRange,cl::NDRange(getParticleCount(time)),cl::NDRange(1));
    _params.queue.enqueueNDRangeKernel(_params.kernels.at("timers"),cl::NullRange,cl::NDRange(getParticleCount(time)),cl::NDRange(1));
 
