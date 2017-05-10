@@ -1,5 +1,5 @@
 
-//Constants used during execution, it beats the parameter bucket brigade
+//Used during execution, it beats the parameter bucket brigade previously used
 typedef struct Params {
   float width;
   float height;
@@ -89,6 +89,9 @@ void __kernel particles(
   read_only image3d_t texture,
   const Params parameters,
   const float frameDelta)
+  __global float* positionsBuffer,
+  const unsigned particleCount,
+  const unsigned positionsBufferHead)
 {
     int id = get_global_id(0);
     float x = positions[3*id+0];
@@ -98,8 +101,11 @@ void __kernel particles(
     float3 noise_p = (float3)((x + parameters.width / 2.0f) / parameters.width,(y + parameters.height / 2.0f) / parameters.height,(z + parameters.depth / 2.0f) / parameters.depth);
     float3 psi = curl(position,noise_p, texture, nrSpeheres, spheres, parameters);
 
-
     positions[3*id+0] += psi.x * 4.0f * frameDelta;//(values.x - 0.5f) * 2.0f * frameDelta  * velocities[3*id+0];
     positions[3*id+1] += psi.y * 4.0f * frameDelta;//(values.y - 0.5f) * 2.0f * frameDelta  * velocities[3*id+1];
     positions[3*id+2] += psi.z * 4.0f * frameDelta;//(values.z - 0.5f) * 2.0f * frameDelta  * velocities[3*id+2];
+
+    positionsBuffer[positionsBufferHead*particleCount*3 + 3*id+0] = positions[3*id+0];
+    positionsBuffer[positionsBufferHead*particleCount*3 + 3*id+1] = positions[3*id+1];
+    positionsBuffer[positionsBufferHead*particleCount*3 + 3*id+2] = positions[3*id+2];
 }
