@@ -88,7 +88,7 @@ void __kernel particles(
   const int nrSpeheres,
   read_only image3d_t texture,
   const Params parameters,
-  const float frameDelta)
+  const float frameDelta,
   __global float* positionsBuffer,
   const unsigned particleCount,
   const unsigned positionsBufferHead)

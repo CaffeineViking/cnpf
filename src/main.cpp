@@ -55,7 +55,7 @@ int main(int argc, char**argv)
     }
 
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(0); // Vsync.
+    glfwSwapInterval(1); // Vsync.
 
     // Set input locators
     GLFWInputLocator* input = new GLFWInputLocator();
@@ -116,12 +116,8 @@ int main(int argc, char**argv)
     backwakeScenario.generate();
 
     // Create the particle system which will compute step.
-<<<<<<< HEAD
-    ParticleSystem system = ParticleSystem(100000, 15.0f);
 
-=======
     ParticleSystem system = ParticleSystem(10000, 15.0f);
->>>>>>> origin/field-visualization
     // Add a single emitter which will spawn particles into the scenario.
     system.addEmitter(glm::vec3(0.0f,-16.0f,0.0f), glm::vec3(16.0f,0.0f,16.0f));
 

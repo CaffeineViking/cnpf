@@ -51,7 +51,7 @@ bool ParticleSystem::init(std::vector<std::string> paths, std::vector<std::strin
       ++n;
    }
 
-   _positionsBufferSize = 16;
+   _positionsBufferSize = 64;
    _positionsBufferHead = 0;
 // Same but for OpenGL
    _vertexBufferId = OpenGLUtils::createBuffer(3*PARTICLE_COUNT, data.data(), GL_DYNAMIC_DRAW);
