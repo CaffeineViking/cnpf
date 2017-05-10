@@ -129,19 +129,19 @@ void ParticleSystem::compute(const float time, const float timeDelta){
       return;
    }
 
+   Params kernelParameters{};
+   kernelParameters.width = _width;
+   kernelParameters.height = _height;
+   kernelParameters.depth = _depth;
+   kernelParameters.fieldMagnitude = _fieldMagnitude;
+   kernelParameters.noiseRatio = _noiseRatio;
+   kernelParameters.fieldDirection = _fieldDirection;
    _params.kernels.at("particles").setArg(0,_vertexBuffer);
    _params.kernels.at("particles").setArg(1,_spheresBuffer);
    _params.kernels.at("particles").setArg(2,_spheres.size()/4);
    _params.kernels.at("particles").setArg(3,_texture);
-   _params.kernels.at("particles").setArg(4,_width);
-   _params.kernels.at("particles").setArg(5,_height);
-   _params.kernels.at("particles").setArg(6,_depth);
-   _params.kernels.at("particles").setArg(7,_fieldMagnitude);
-   _params.kernels.at("particles").setArg(8,_noiseRatio);
-   _params.kernels.at("particles").setArg(9,_fieldDirection.x);
-   _params.kernels.at("particles").setArg(10,_fieldDirection.y);
-   _params.kernels.at("particles").setArg(11,_fieldDirection.z);
-   _params.kernels.at("particles").setArg(12,timeDelta);
+   _params.kernels.at("particles").setArg(4,kernelParameters);
+   _params.kernels.at("particles").setArg(5,timeDelta);
 
    _params.kernels.at("timers").setArg(0,_timerBuffer);
    _params.kernels.at("timers").setArg(1,_vertexBuffer);

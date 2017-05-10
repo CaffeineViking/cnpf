@@ -13,6 +13,16 @@
 #include "Scenario.hpp"
 #include <vector>
 #include <utility>
+
+typedef struct Params {
+  float width;
+  float height;
+  float depth;
+  float fieldMagnitude;
+  float noiseRatio;
+  glm::vec3 fieldDirection;
+} Params;
+
 class ParticleSystem {
 private:
 	 const int PARTICLE_COUNT;
