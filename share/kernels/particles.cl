@@ -6,6 +6,9 @@ typedef struct Params {
   float depth;
   float field_magnitude;
   float noise_ratio;
+  float noise_width;
+  float noise_height;
+  float noise_depth;
   float fieldX;
   float fieldY;
   float fieldZ;
@@ -60,7 +63,7 @@ float3 potential(float3 p, float3 np, read_only image3d_t t,const int nsph, __gl
 
     float d = length(p - sphere_centre);
 
-    float alpha = fabs(((float)smooth(sphere_radius, sphere_radius + 1.0f, d)));
+    float alpha = fabs(((float)smooth(sphere_radius, sphere_radius + 4.0f, d)));
     float3 n = normalize(p);
     return (alpha) * psi + (1.0f - alpha) * n * dot(n, psi);
 }
@@ -98,7 +101,7 @@ void __kernel particles(
     float y = positions[3*id+1];
     float z = positions[3*id+2];
     float3 position = (float3)(x,y,z);
-    float3 noise_p = (float3)((x + parameters.width / 2.0f) / parameters.width,(y + parameters.height / 2.0f) / parameters.height,(z + parameters.depth / 2.0f) / parameters.depth);
+    float3 noise_p = (float3)((x + parameters.width / 2.0f) / parameters.noise_width,(y + parameters.height / 2.0f) / parameters.noise_height,(z + parameters.depth / 2.0f) / parameters.noise_depth);
     float3 psi = curl(position,noise_p, texture, nrSpeheres, spheres, parameters);
 
     positions[3*id+0] += psi.x * 4.0f * frameDelta;//(values.x - 0.5f) * 2.0f * frameDelta  * velocities[3*id+0];
@@ -108,4 +111,27 @@ void __kernel particles(
     positionsBuffer[positionsBufferHead*particleCount*3 + 3*id+0] = positions[3*id+0];
     positionsBuffer[positionsBufferHead*particleCount*3 + 3*id+1] = positions[3*id+1];
     positionsBuffer[positionsBufferHead*particleCount*3 + 3*id+2] = positions[3*id+2];
+}
+
+__kernel void export(
+  __write_only image2d_t image,
+  __global float* spheres, const int nrSpeheres,read_only image3d_t texture, const Params parameters, const float scaleFactor)
+{
+  const int x = get_global_id(0);
+  const int y = 0;
+  const int z = get_global_id(1) ;
+  const int2 coords = (int2)(x,z);
+  const float3 hd = (float3)(parameters.width, parameters.height, parameters.depth) * 0.5f;
+  float4 color;
+
+   float3 position = ((float3)(x,y,z) - hd) * scaleFactor;
+   float3 noise_p =  ((float3)(x / parameters.noise_width,y / parameters.noise_height,z / parameters.noise_depth)) * scaleFactor;
+   float3 psi = curl(position,noise_p, texture, nrSpeheres, spheres, parameters);
+   color.x = psi.x;
+   color.y = psi.y;
+   color.z = psi.z;
+   color += 1.0f;
+   color *= 0.5f;
+   color.w = 1.0f;
+  write_imagef(image, coords, color);
 }

@@ -19,6 +19,15 @@ const GLuint WIDTH = 1280, HEIGHT = 720;
 // Horizontal field of view of ~ 90 degrees.
 const float FIELD_OF_VIEW = glm::radians(60.0);
 
+void TW_CALL snapshotField(void * system)
+{ 
+  if(((ParticleSystem*)system)->snapshot()){
+    std::cout << "Snapshot created!" << std::endl;
+  }
+  else{
+    std::cout << "Error in creating snapshot!" << std::endl;
+  }
+}
 
 int main(int argc, char**argv)
 {
@@ -121,7 +130,7 @@ int main(int argc, char**argv)
     // Add a single emitter which will spawn particles into the scenario.
     system.addEmitter(glm::vec3(0.0f,-16.0f,0.0f), glm::vec3(16.0f,0.0f,16.0f));
 
-    system.addSphere(glm::vec3(0.0f,8.0f,0.0f), 16.0f);
+    system.addSphere(glm::vec3(0.0f,0.0f,0.0f), 12.0f);
 
     //system.addSphere(glm::vec3(0.0f,8.0f,0.0f), 4.0f);
     //system.addSphere(glm::vec3(0.0f,0.0f,8.0f), 4.0f);
@@ -133,6 +142,7 @@ int main(int argc, char**argv)
     paths.push_back("share/kernels/particles.cl");
     paths.push_back("share/kernels/timers.cl");
     kernels.push_back("particles");
+    kernels.push_back("export");
     kernels.push_back("timers");
 
     system.init(paths, kernels, DEVICE_NAME, rendererProgram);
@@ -144,6 +154,9 @@ int main(int argc, char**argv)
     TwAddVarRW(myBar, "FieldMagnitude", TW_TYPE_FLOAT, system.referenceFieldMagnitude(),  " min=-1 max=1 step=1 group=System label='Background field magnitude' ");
     TwAddVarRW(myBar, "NoiseRatio", TW_TYPE_FLOAT, system.referenceNoiseRatio(),  " min=0 max=1 step=0.01 group=System label='Noise ratio' ");
     TwAddVarRW(myBar, "Field", TW_TYPE_DIR3F, system.referenceFieldDirection(),  " min=-1 max=1 step=0.01 group=System label='Field Direction' ");
+   
+    // Add button to take field snapshot
+    TwAddButton(myBar, "Snapshot", snapshotField, &system,  " group=System label='Snapshot' ");
 
     // Keep track of slowdown/speedup.
     float currentTime = glfwGetTime();

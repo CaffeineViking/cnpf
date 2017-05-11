@@ -13,12 +13,15 @@
 #include <windows.h>
 #endif
 
+#define OUTPUT_WIDTH 1024
+#define OUTPUT_HEIGHT 1024
+
 ParticleSystem::~ParticleSystem(){
     // Don't forget to clean this up!
     glDeleteBuffers(1, &_vertexBufferId);
 }
 
-ParticleSystem::ParticleSystem(const int particles, const float time): PARTICLE_COUNT{particles}, _maxTime{time},_respawnTime{20.0f}, _fieldMagnitude{1.0f} ,_noiseRatio{0.0f}, _fieldDirection{0.0f,-1.0f,0.0f}
+ParticleSystem::ParticleSystem(const int particles, const float time):_takeSnapshot{false}, PARTICLE_COUNT{particles}, _maxTime{time},_respawnTime{20.0f}, _fieldMagnitude{1.0f} ,_noiseRatio{0.0f}, _fieldDirection{0.0f,-1.0f,0.0f}
 {
 }
 
@@ -51,7 +54,7 @@ bool ParticleSystem::init(std::vector<std::string> paths, std::vector<std::strin
       ++n;
    }
 
-   _positionsBufferSize = 64;
+   _positionsBufferSize = 16;
    _positionsBufferHead = 0;
 // Same but for OpenGL
    _vertexBufferId = OpenGLUtils::createBuffer(3*PARTICLE_COUNT, data.data(), GL_DYNAMIC_DRAW);
@@ -95,6 +98,8 @@ bool ParticleSystem::init(std::vector<std::string> paths, std::vector<std::strin
    _timerBuffer = OpenCLUtils::createBuffer(_params.context,_params.queue, CL_MEM_READ_WRITE, sizeof(float)*PARTICLE_COUNT, data);
 // Create Vertex buffer for the spheres
    _spheresBuffer = OpenCLUtils::createBuffer(_params.context,_params.queue, CL_MEM_READ_WRITE, sizeof(float)*_spheres.size(), _spheres);
+
+
    return true;
 }
 
@@ -155,6 +160,9 @@ void ParticleSystem::compute(const float time, const float timeDelta){
    kernelParameters.depth = _depth;
    kernelParameters.fieldMagnitude = _fieldMagnitude;
    kernelParameters.noiseRatio = _noiseRatio;
+   kernelParameters.noiseWidth = _width;
+   kernelParameters.noiseHeight = _height;
+   kernelParameters.noiseDepth = _depth;
    kernelParameters.fieldDirection = _fieldDirection;
    _params.kernels.at("particles").setArg(0,_vertexBuffer);
    _params.kernels.at("particles").setArg(1,_spheresBuffer);
@@ -177,22 +185,24 @@ void ParticleSystem::compute(const float time, const float timeDelta){
    _params.kernels.at("timers").setArg(5,PARTICLE_COUNT);
    _params.kernels.at("timers").setArg(6,_positionsBufferSize);
 
+
+   // Enqueue kernel for snapshoting field
+  
    // Equeue kernel
    _params.queue.enqueueNDRangeKernel(_params.kernels.at("particles"),cl::NullRange,cl::NDRange(getParticleCount(time)),cl::NDRange(1));
    _params.queue.enqueueNDRangeKernel(_params.kernels.at("timers"),cl::NullRange,cl::NDRange(getParticleCount(time)),cl::NDRange(1));
 
-// Copy from OpenCL to OpenGL 
+   // Copy from OpenCL to OpenGL 
    _params.queue.enqueueCopyBuffer(_vertexBuffer, _tmp, 0, 0, 3*PARTICLE_COUNT*sizeof(float), NULL, NULL);
     _params.queue.enqueueCopyBuffer(_positionsBuffer, _positionsGLBuffer, _positionsBufferHead*3*PARTICLE_COUNT*sizeof(float), 0,
-   				   3*PARTICLE_COUNT*sizeof(float), NULL, NULL);
+             3*PARTICLE_COUNT*sizeof(float), NULL, NULL);
    res = _params.queue.enqueueReleaseGLObjects(&objs);
    ev.wait();
    if (res!=CL_SUCCESS) {
       std::cout<<"Failed releasing GL object: "<<res<<std::endl;
       return;
    }
-
-// Wait for copy to be done
+      // Wait for copy to be done
    _params.queue.finish();
 }
 
@@ -214,4 +224,99 @@ float* ParticleSystem::referenceNoiseRatio() {
 
 glm::vec3* ParticleSystem::referenceFieldDirection() {
    return &_fieldDirection;
+}
+
+// A real bastard of a function
+bool ParticleSystem::snapshot() {
+
+const unsigned w = 2048;
+const unsigned h = 2048;
+const float scaleFactor = 0.018f;
+// CL event used to wait for kernel osv...
+   cl::Event ev;
+// set kernel arguments
+//======================================================
+// Vertex array object buffer with coords interleaved
+//======================================================
+// Wait for kernel
+   glFinish();
+
+   std::vector<cl::Memory> objs;
+   objs.clear();
+   objs.push_back(_tmp);
+   objs.push_back(_texture);
+   objs.push_back(_positionsGLBuffer);
+// Aquire GL Object ( ͡° ͜ʖ ͡°)
+   cl_int res = _params.queue.enqueueAcquireGLObjects(&objs,NULL,&ev);
+   ev.wait();
+
+   if (res!=CL_SUCCESS) {
+      std::cout<<"Failed acquiring GL object: "<<res<<std::endl;
+      return false;
+   }
+
+// Create Image to store field output in
+   const cl::ImageFormat format(CL_RGBA, CL_FLOAT);
+   cl::Image2D outputImage = cl::Image2D(_params.context, CL_MEM_READ_WRITE, format, w,h);
+
+    std::vector<float> data(w * h * 4 * sizeof(float));
+    std::cout << data.size() << std::endl;
+    for(int i = 0; i < data.size(); i++){
+      data[i] = 0.1f;
+    }
+
+    cl::size_t<3> origin;
+    origin[0] = 0; 
+    origin[1] = 0; 
+    origin[2] = 0;
+
+    cl::size_t<3> region;
+    region[0] = w;
+    region[1] = h;
+    region[2] = 1;
+
+    _params.queue.enqueueWriteImage(outputImage, CL_TRUE, origin, region,0,0, data.data());
+
+   Params kernelParameters{};
+   kernelParameters.width = w;
+   kernelParameters.height = 1;
+   kernelParameters.depth = h;
+   kernelParameters.fieldMagnitude = _fieldMagnitude;
+   kernelParameters.noiseRatio = _noiseRatio;
+   kernelParameters.noiseWidth = _width;
+   kernelParameters.noiseHeight = _height;
+   kernelParameters.noiseDepth = _depth;
+   kernelParameters.fieldDirection = _fieldDirection;
+
+   _params.kernels.at("export").setArg(0,outputImage);
+   _params.kernels.at("export").setArg(1,_spheresBuffer);
+   _params.kernels.at("export").setArg(2,_spheres.size()/4);
+   _params.kernels.at("export").setArg(3,_texture);
+   _params.kernels.at("export").setArg(4,kernelParameters);
+   _params.kernels.at("export").setArg(5,scaleFactor);
+
+   cl_int err;
+   err = _params.queue.enqueueNDRangeKernel(_params.kernels.at("export"),cl::NDRange(0,0),cl::NDRange(w,h),cl::NDRange(1,1));
+   if(err != 0){
+    std::cout << "Something went wrong when running export kernel: " << err << std::endl;
+    return false;
+   }
+
+   res = _params.queue.enqueueReleaseGLObjects(&objs);
+   ev.wait();
+   if (res!=CL_SUCCESS) {
+      std::cout<<"Failed releasing GL object: "<<res<<std::endl;
+      return false;
+   }
+
+   _params.queue.finish();
+
+    for(int i = 0; i < data.size(); i++){
+      data[i] = 0.0f;
+    }
+
+    _params.queue.enqueueReadImage(outputImage, CL_TRUE, origin, region,0,0, data.data());
+    OpenGLUtils::writePNG("helloworld.png", w, h, data);
+
+   return true;
 }

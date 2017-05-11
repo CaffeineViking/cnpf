@@ -20,6 +20,9 @@ typedef struct Params {
   float depth;
   float fieldMagnitude;
   float noiseRatio;
+  float noiseWidth;
+  float noiseHeight;
+  float noiseDepth;
   glm::vec3 fieldDirection;
 } Params;
 
@@ -34,6 +37,7 @@ private:
 	 int _width, _height, _depth;
      int _positionsBufferSize, _positionsBufferHead;
 	 cl::ImageGL _texture;
+	 cl::Image2D _outputImage;
 	 clParameters _params;
 	 cl::BufferGL _tmp;
      cl::BufferGL _positionsGLBuffer;
@@ -43,7 +47,8 @@ private:
 	 cl::Buffer _timerBuffer;
 	 cl::Buffer _spheresBuffer;
      cl::Buffer _positionsBuffer;
-    
+     bool _takeSnapshot;
+
 	std::string readKernelFile(const std::string&);
 	std::vector<std::pair<glm::vec3, glm::vec3>> _emitters;
 	std::vector<float> _spheres;
@@ -61,6 +66,8 @@ public:
 	float* referenceFieldMagnitude();
 	float* referenceNoiseRatio();
 	glm::vec3* referenceFieldDirection();
+
+	bool snapshot();
 	ParticleSystem(const ParticleSystem&) = default;
 	ParticleSystem& operator=(const ParticleSystem&) = default;
 
