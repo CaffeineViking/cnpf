@@ -100,7 +100,13 @@ int main(int argc, char**argv)
 
      TwWindowSize(width, height);
     TwBar *myBar;
-    myBar = TwNewBar("NameOfMyTweakBar");
+    myBar = TwNewBar("simparams");
+    TwDefine(" TW_HELP visible=false ");
+    TwDefine(" simparams label='Simulation Parameters' ");
+    TwDefine(" simparams  position='20 460' ");
+    TwDefine(" simparams  size='320 240' ");
+    TwDefine(" simparams valueswidth='160' ");
+    TwDefine(" simparams iconified=true ");
 
 
 
@@ -150,13 +156,22 @@ int main(int argc, char**argv)
     system.setScenario(backwakeScenario);
 
     // Add particle system varaibles to the tweak bar
-    TwAddVarRW(myBar, "RespawnTime", TW_TYPE_FLOAT, system.referenceRespawnTime(),  " min=0 max=60 step=0.5 group=System label='Particle Time' ");
-    TwAddVarRW(myBar, "FieldMagnitude", TW_TYPE_FLOAT, system.referenceFieldMagnitude(),  " min=-1 max=1 step=1 group=System label='Background field magnitude' ");
-    TwAddVarRW(myBar, "NoiseRatio", TW_TYPE_FLOAT, system.referenceNoiseRatio(),  " min=0 max=1 step=0.01 group=System label='Noise ratio' ");
-    TwAddVarRW(myBar, "Field", TW_TYPE_DIR3F, system.referenceFieldDirection(),  " min=-1 max=1 step=0.01 group=System label='Field Direction' ");
-   
+    TwAddVarRW(myBar, "RespawnTime", TW_TYPE_FLOAT, system.referenceRespawnTime(),  " min=0 max=60 step=0.5 group=System label='Particle lifetime' ");
+    TwAddVarRW(myBar, "FieldMagnitude", TW_TYPE_FLOAT, system.referenceFieldMagnitude(),  " min=-1 max=1 step=1 group=System label='Field magnitude' ");
+    TwAddVarRW(myBar, "NoiseRatio", TW_TYPE_FLOAT, system.referenceNoiseRatio(),  " min=0 max=1 step=0.01 group=System label='Curl-noise ratio' ");
+    TwAddVarRW(myBar, "Field", TW_TYPE_DIR3F, system.referenceFieldDirection(),  " min=-1 max=1 step=0.01 group=System label='Field direction' ");
+
+    bool depthTest = false, alphaBlend = true;
+    ParticleRendererType renderingMode = BILLBOARD;
+    TwType renderModes { TwDefineEnumFromString("RenderModeType", "Point,Billboard,BillboardStrip") };
+    TwAddVarRW(myBar, "RenderMode", renderModes, &renderingMode, " group=Renderer label='Mode' ");
+    TwAddVarRW(myBar, "RenderParticleSize", TW_TYPE_FLOAT, renderer.refParticleSize(),  " step=0.01 group=Renderer label='Particle size' ");
+    TwAddVarRW(myBar, "RenderTexture", TW_TYPE_STDSTRING, &renderer.getTexturePath(), " group=Renderer label='Billboard texture' ");
+    TwAddVarRW(myBar, "RenderDepth", TW_TYPE_BOOLCPP, &depthTest, " group=Renderer label='Depth testing' ");
+    TwAddVarRW(myBar, "RenderBlending", TW_TYPE_BOOLCPP, &alphaBlend, " group=Renderer label='Additive blending' ");
+
     // Add button to take field snapshot
-    TwAddButton(myBar, "Snapshot", snapshotField, &system,  " group=System label='Snapshot' ");
+    TwAddButton(myBar, "Snapshot", snapshotField, &system,  " group=System label='Field snapshot' ");
 
     // Keep track of slowdown/speedup.
     float currentTime = glfwGetTime();
@@ -190,6 +205,16 @@ int main(int argc, char**argv)
 
         // Polling loop.
         glfwPollEvents();
+
+        if (depthTest) {
+            glDepthFunc(GL_LESS);
+            glEnable(GL_DEPTH_TEST);
+        } else glDisable(GL_DEPTH_TEST);
+
+        if (alphaBlend) {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        } else glDisable(GL_BLEND);
 
         // Controls for enabling or disabling fullscreen.
         if (Locator::input()->isKeyPressed(GLFW_KEY_F)) {
