@@ -3,7 +3,7 @@
 #include <glm/glm.hpp>
 #include <CL/cl.hpp>
 #include <iostream>
-#include "foreign/anttweakbar.h"
+#include "foreign/AntTweakBar.h"
 #include "OpenGLUtils.hpp"
 
 #include "Locator.hpp"
