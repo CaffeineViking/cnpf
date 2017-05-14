@@ -83,8 +83,6 @@ int main(int argc, char**argv)
         std::cout << "Failed to initialize GLEW" << std::endl;
         return -1;
     }
-	// init anttweakbar
-    TwInit(TW_OPENGL_CORE, NULL);
 
     // Setup the Z-buffer
     // glEnable(GL_DEPTH_TEST);
@@ -98,7 +96,13 @@ int main(int argc, char**argv)
     glfwGetFramebufferSize(window, &width, &height);
     glViewport(0, 0, width, height);
 
-     TwWindowSize(width, height);
+    //====================================
+    //  Init for GUI with AntTweakBar
+    //====================================
+
+    TwInit(TW_OPENGL_CORE, NULL);
+
+    TwWindowSize(width, height);
     TwBar *myBar;
     myBar = TwNewBar("simparams");
     TwDefine(" TW_HELP visible=false ");
@@ -107,8 +111,6 @@ int main(int argc, char**argv)
     TwDefine(" simparams  size='320 240' ");
     TwDefine(" simparams valueswidth='160' ");
     TwDefine(" simparams iconified=true ");
-
-
 
     //====================================
     //  Init Particle System and Renderer
@@ -161,12 +163,15 @@ int main(int argc, char**argv)
     TwAddVarRW(myBar, "NoiseRatio", TW_TYPE_FLOAT, system.referenceNoiseRatio(),  " min=0 max=1 step=0.01 group=System label='Curl-noise ratio' ");
     TwAddVarRW(myBar, "Field", TW_TYPE_DIR3F, system.referenceFieldDirection(),  " min=-1 max=1 step=0.01 group=System label='Field direction' ");
 
+    // Add particle renderer variables to ANT.
     bool depthTest = false, alphaBlend = true;
     ParticleRendererType renderingMode = BILLBOARD;
     TwType renderModes { TwDefineEnumFromString("RenderModeType", "Point,Billboard,BillboardStrip") };
+    TwType textureTypes { TwDefineEnumFromString("RenderTextureType", "Fire,Link,Sphere,Vector,Fish?") };
+
     TwAddVarRW(myBar, "RenderMode", renderModes, &renderingMode, " group=Renderer label='Mode' ");
     TwAddVarRW(myBar, "RenderParticleSize", TW_TYPE_FLOAT, renderer.refParticleSize(),  " step=0.01 group=Renderer label='Particle size' ");
-    TwAddVarRW(myBar, "RenderTexture", TW_TYPE_STDSTRING, &renderer.getTexturePath(), " group=Renderer label='Billboard texture' ");
+    TwAddVarCB(myBar, "RenderTexture", textureTypes, &setBillboardTextureCallback, &getBillboardTextureCallback, &renderer, " group=Renderer label='Billboard texture' ");
     TwAddVarRW(myBar, "RenderDepth", TW_TYPE_BOOLCPP, &depthTest, " group=Renderer label='Depth testing' ");
     TwAddVarRW(myBar, "RenderBlending", TW_TYPE_BOOLCPP, &alphaBlend, " group=Renderer label='Additive blending' ");
 
@@ -216,18 +221,6 @@ int main(int argc, char**argv)
             glBlendFunc(GL_SRC_ALPHA, GL_ONE);
         } else glDisable(GL_BLEND);
 
-        // Controls for enabling or disabling fullscreen.
-        if (Locator::input()->isKeyPressed(GLFW_KEY_F)) {
-            const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-            glfwSetWindowSize(window, mode->width, mode->height);
-            camera.updateProjection(FIELD_OF_VIEW, mode->width, mode->height);
-            glViewport(0, 0, mode->width, mode->height);
-        } else if (Locator::input()->isKeyPressed(GLFW_KEY_R)) {
-            camera.updateProjection(FIELD_OF_VIEW, WIDTH, HEIGHT);
-            glfwSetWindowSize(window, WIDTH, HEIGHT);
-            glViewport(0, 0, WIDTH, HEIGHT);
-        }
-
         // Step the particle simulation time forward:
        //if (Locator::input()->isKeyPressed(GLFW_KEY_LEFT))
         if(accumulatedFrames > 0){
@@ -250,7 +243,7 @@ int main(int argc, char**argv)
         // Finally, draw the simulated particles.
         renderer.draw(system, camera, currentTime);
         glBindVertexArray(0);
-        
+
         TwDraw();
         // Swap the render buffer to display
         glfwSwapBuffers(window);

@@ -90,3 +90,31 @@ void BillboardParticleRenderer::draw(const ParticleSystem& system,
     int particles { system.getParticleCount(time)};
     glDrawArrays(GL_POINTS, 0, particles);
 }
+
+void TW_CALL setBillboardTextureCallback(const void* value, void* data) {
+    ParticleRenderer* particleRenderer = static_cast<ParticleRenderer*>(data);
+    BillboardTextureType textureType = *static_cast<const BillboardTextureType*>(value);
+    if (auto br = dynamic_cast<BillboardParticleRenderer*>(particleRenderer)) {
+        switch (textureType) {
+        case FIRE: br->changeBillboardTexture("share/textures/fire.png"); break;
+        case LINK: br->changeBillboardTexture("share/textures/link.png"); break;
+        case SPHERE: br->changeBillboardTexture("share/textures/sphere.png"); break;
+        case VERY_NICE_FISH: br->changeBillboardTexture("share/textures/fish.png"); break;
+        case VECTOR: br->changeBillboardTexture("share/textures/arrow.png"); break;
+        }
+    }
+}
+
+void TW_CALL getBillboardTextureCallback(void* value, void* data) {
+    ParticleRenderer* particleRenderer = static_cast<ParticleRenderer*>(data);
+    BillboardTextureType* textureType = static_cast<BillboardTextureType*>(value);
+    if (auto br = dynamic_cast<BillboardParticleRenderer*>(particleRenderer)) {
+        std::string path { br->getTexturePath() };
+        if (path == "share/textures/fire.png") *textureType = FIRE;
+        else if (path == "share/textures/link.png") *textureType = LINK;
+        else if (path == "share/textures/sphere.png") *textureType = SPHERE;
+        else if (path == "share/textures/arrow.png") *textureType = VECTOR;
+        else if (path == "share/textures/fish.png") *textureType = VERY_NICE_FISH;
+    }
+}
+

@@ -5,11 +5,18 @@
 #include "Texture.hpp"
 #include "MovingCamera.hpp"
 #include "ParticleSystem.hpp"
+#include "foreign/AntTweakBar.h"
 
 enum ParticleRendererType {
     POINT = 0,
     BILLBOARD,
     BILLBOARD_STRIP
+};
+
+enum BillboardTextureType {
+    FIRE = 0, LINK,
+    SPHERE,  VECTOR,
+    VERY_NICE_FISH
 };
 
 class ParticleRenderer {
@@ -45,5 +52,8 @@ private:
     std::string texturePath_;
     Texture texture_;
 };
+
+void TW_CALL setBillboardTextureCallback(const void* value, void* data);
+void TW_CALL getBillboardTextureCallback(void* value, void* data);
 
 #endif
