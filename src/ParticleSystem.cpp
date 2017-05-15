@@ -21,7 +21,7 @@ ParticleSystem::~ParticleSystem(){
     glDeleteBuffers(1, &_vertexBufferId);
 }
 
-ParticleSystem::ParticleSystem(const int particles, const float time):_takeSnapshot{false}, PARTICLE_COUNT{particles}, _maxTime{time},_respawnTime{20.0f}, _fieldMagnitude{1.0f} ,_noiseRatio{0.0f}, _fieldDirection{0.0f,-1.0f,0.0f}
+ParticleSystem::ParticleSystem(const int particles, const float time): PARTICLE_COUNT{particles}, _maxTime{time},_respawnTime{20.0f}, _fieldMagnitude{1.0f} ,_noiseRatio{0.0f}, _fieldDirection{0.0f,-1.0f,0.0f}
 {
 }
 
@@ -227,7 +227,7 @@ glm::vec3* ParticleSystem::referenceFieldDirection() {
 }
 
 // A real bastard of a function
-bool ParticleSystem::snapshot() {
+bool ParticleSystem::snapshot(const std::string& filePath, const SnapshotType type = SnapshotType::CURL) {
 
 const unsigned w = 2048;
 const unsigned h = 2048;
@@ -261,7 +261,7 @@ const float scaleFactor = 0.018f;
 
     std::vector<float> data(w * h * 4 * sizeof(float));
     std::cout << data.size() << std::endl;
-    for(int i = 0; i < data.size(); i++){
+    for(unsigned i = 0; i < data.size(); i++){
       data[i] = 0.1f;
     }
 
@@ -288,17 +288,23 @@ const float scaleFactor = 0.018f;
    kernelParameters.noiseDepth = _depth;
    kernelParameters.fieldDirection = _fieldDirection;
 
-   _params.kernels.at("export").setArg(0,outputImage);
-   _params.kernels.at("export").setArg(1,_spheresBuffer);
-   _params.kernels.at("export").setArg(2,_spheres.size()/4);
-   _params.kernels.at("export").setArg(3,_texture);
-   _params.kernels.at("export").setArg(4,kernelParameters);
-   _params.kernels.at("export").setArg(5,scaleFactor);
+   std::string kernel = "exportCurl";
+   if(type == SnapshotType::CURL){
+    kernel = "exportCurl";
+   }else if (type == SnapshotType::DISTANCE){
+    kernel =  "exportDistance";
+   }
+   _params.kernels.at(kernel).setArg(0,outputImage);
+   _params.kernels.at(kernel).setArg(1,_spheresBuffer);
+   _params.kernels.at(kernel).setArg(2,_spheres.size()/4);
+   _params.kernels.at(kernel).setArg(3,_texture);
+   _params.kernels.at(kernel).setArg(4,kernelParameters);
+   _params.kernels.at(kernel).setArg(5,scaleFactor);
 
    cl_int err;
-   err = _params.queue.enqueueNDRangeKernel(_params.kernels.at("export"),cl::NDRange(0,0),cl::NDRange(w,h),cl::NDRange(1,1));
+   err = _params.queue.enqueueNDRangeKernel(_params.kernels.at(kernel),cl::NDRange(0,0),cl::NDRange(w,h),cl::NDRange(1,1));
    if(err != 0){
-    std::cout << "Something went wrong when running export kernel: " << err << std::endl;
+    std::cout << "Something went wrong when running kernel: "<< kernel << " " << err << std::endl;
     return false;
    }
 
@@ -311,12 +317,12 @@ const float scaleFactor = 0.018f;
 
    _params.queue.finish();
 
-    for(int i = 0; i < data.size(); i++){
+    for(unsigned i = 0; i < data.size(); i++){
       data[i] = 0.0f;
     }
 
     _params.queue.enqueueReadImage(outputImage, CL_TRUE, origin, region,0,0, data.data());
-    OpenGLUtils::writePNG("helloworld.png", w, h, data);
+    OpenGLUtils::writePNG(filePath, w, h, data);
 
    return true;
 }

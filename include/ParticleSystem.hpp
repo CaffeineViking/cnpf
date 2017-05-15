@@ -26,6 +26,10 @@ typedef struct Params {
   glm::vec3 fieldDirection;
 } Params;
 
+enum SnapshotType{
+	CURL, DISTANCE
+};
+
 class ParticleSystem {
 private:
 	 const int PARTICLE_COUNT;
@@ -47,7 +51,6 @@ private:
 	 cl::Buffer _timerBuffer;
 	 cl::Buffer _spheresBuffer;
      cl::Buffer _positionsBuffer;
-     bool _takeSnapshot;
 
 	std::string readKernelFile(const std::string&);
 	std::vector<std::pair<glm::vec3, glm::vec3>> _emitters;
@@ -67,7 +70,7 @@ public:
 	float* referenceNoiseRatio();
 	glm::vec3* referenceFieldDirection();
 
-	bool snapshot();
+	bool snapshot(const std::string&, const SnapshotType);
 	ParticleSystem(const ParticleSystem&) = default;
 	ParticleSystem& operator=(const ParticleSystem&) = default;
 

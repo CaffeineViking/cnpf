@@ -41,6 +41,10 @@ float get_closest_sphere(float3 p, const int nsph, __global float* sph, float3* 
   return best_radius;
 }
 
+float getAlpha(float sphere_radius, float influence_radius, float distance){
+  return fabs(((float)smooth(sphere_radius, sphere_radius +influence_radius, distance)));
+}
+
 float3 potential(float3 p, float3 np, read_only image3d_t t,const int nsph, __global float* sph, const Params params){
 
   const float3  sphere_centre   = (float3)(0.0f,0.0f,0.0f);
@@ -63,7 +67,7 @@ float3 potential(float3 p, float3 np, read_only image3d_t t,const int nsph, __gl
 
     float d = length(p - sphere_centre);
 
-    float alpha = fabs(((float)smooth(sphere_radius, sphere_radius + 4.0f, d)));
+    float alpha = getAlpha(sphere_radius, 4.0f, d);
     float3 n = normalize(p);
     return (alpha) * psi + (1.0f - alpha) * n * dot(n, psi);
 }
@@ -113,7 +117,7 @@ void __kernel particles(
     positionsBuffer[positionsBufferHead*particleCount*3 + 3*id+2] = positions[3*id+2];
 }
 
-__kernel void export(
+__kernel void exportCurl(
   __write_only image2d_t image,
   __global float* spheres, const int nrSpeheres,read_only image3d_t texture, const Params parameters, const float scaleFactor)
 {
@@ -130,6 +134,31 @@ __kernel void export(
    color.x = psi.x;
    color.y = psi.y;
    color.z = psi.z;
+   color += 1.0f;
+   color *= 0.5f;
+   color.w = 1.0f;
+  write_imagef(image, coords, color);
+}
+
+__kernel void exportDistance(
+  __write_only image2d_t image,
+  __global float* spheres, const int nrSpeheres,read_only image3d_t texture, const Params parameters, const float scaleFactor)
+{
+  const int x = get_global_id(0);
+  const int y = 0;
+  const int z = get_global_id(1) ;
+  const int2 coords = (int2)(x,z);
+  const float3 hd = (float3)(parameters.width, parameters.height, parameters.depth) * 0.5f;
+  float4 color;
+
+   float3 position = ((float3)(x,y,z) - hd) * scaleFactor;
+   const float3  sphere_centre   = (float3)(0.0f,0.0f,0.0f);
+   const float   sphere_radius   = get_closest_sphere(position,nrSpeheres, spheres, &sphere_centre);
+  float d = length(position - sphere_centre);
+  float alpha = getAlpha(sphere_radius, 4.0f, d);
+   color.x = alpha;
+   color.y = alpha;
+   color.z = alpha;
    color += 1.0f;
    color *= 0.5f;
    color.w = 1.0f;

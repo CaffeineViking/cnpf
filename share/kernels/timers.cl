@@ -1,3 +1,8 @@
+// Defines the structure which we can read the spawners from
+typedef struct Spawners {
+  
+} Spawners;
+
 int wang_hash(int seed)
 {
     seed = (seed ^ 61) ^ (seed >> 16);

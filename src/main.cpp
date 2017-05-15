@@ -21,7 +21,7 @@ const float FIELD_OF_VIEW = glm::radians(60.0);
 
 void TW_CALL snapshotField(void * system)
 { 
-  if(((ParticleSystem*)system)->snapshot()){
+  if(((ParticleSystem*)system)->snapshot("NoiseImage.png", SnapshotType::CURL)){
     std::cout << "Snapshot created!" << std::endl;
   }
   else{
@@ -150,7 +150,8 @@ int main(int argc, char**argv)
     paths.push_back("share/kernels/particles.cl");
     paths.push_back("share/kernels/timers.cl");
     kernels.push_back("particles");
-    kernels.push_back("export");
+    kernels.push_back("exportCurl");
+    kernels.push_back("exportDistance");
     kernels.push_back("timers");
 
     system.init(paths, kernels, DEVICE_NAME, rendererProgram);
@@ -176,7 +177,7 @@ int main(int argc, char**argv)
 
     // Add button to take field snapshot
     TwAddButton(myBar, "Snapshot", snapshotField, &system,  " group=System label='Field snapshot' ");
-
+    
     // Keep track of slowdown/speedup.
     float currentTime = glfwGetTime();
     float lastFrame = 0.0f;
