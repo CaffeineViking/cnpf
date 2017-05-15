@@ -55,5 +55,9 @@ private:
 
 void TW_CALL setBillboardTextureCallback(const void* value, void* data);
 void TW_CALL getBillboardTextureCallback(void* value, void* data);
+void TW_CALL setRendererCallback(const void* value, void* data);
+void TW_CALL getRendererCallback(void* value, void* data);
+void TW_CALL setParticleSizeCallback(const void* value, void* data);
+void TW_CALL getParticleSizeCallback(void* value, void* data);
 
 #endif

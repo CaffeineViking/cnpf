@@ -124,9 +124,9 @@ int main(int argc, char**argv)
     glGenVertexArrays(1,&vao);
     glBindVertexArray(vao);
 
-    // Create a visualization method for the particle system below.
-    BillboardParticleRenderer renderer { "share/textures/arrow.png", 0.4 };
-    const ShaderProgram& rendererProgram = renderer.getProgram();
+    // Create a visualization method for the particle system below. Changed under run-time by D.C.
+    ParticleRenderer* renderer = new BillboardParticleRenderer { "share/textures/arrow.png", 0.4 };
+    const ShaderProgram& rendererProgram = renderer->getProgram();
 
     // Create an example Backwake scenario.
     BackwakeScenario backwakeScenario(32,32,32);
@@ -165,12 +165,11 @@ int main(int argc, char**argv)
 
     // Add particle renderer variables to ANT.
     bool depthTest = false, alphaBlend = true;
-    ParticleRendererType renderingMode = BILLBOARD;
     TwType renderModes { TwDefineEnumFromString("RenderModeType", "Point,Billboard,BillboardStrip") };
     TwType textureTypes { TwDefineEnumFromString("RenderTextureType", "Fire,Link,Sphere,Vector,Fish?") };
-
-    TwAddVarRW(myBar, "RenderMode", renderModes, &renderingMode, " group=Renderer label='Mode' ");
-    TwAddVarRW(myBar, "RenderParticleSize", TW_TYPE_FLOAT, renderer.refParticleSize(),  " step=0.01 group=Renderer label='Particle size' ");
+    // This is beyond horrible. Please don't even try look at the source for setting/getting these values. It's pure/condensed cancer.
+    TwAddVarCB(myBar, "RenderMode", renderModes, &setRendererCallback, &getRendererCallback, &renderer, " group=Renderer label='Mode' ");
+    TwAddVarCB(myBar, "RenderParticleSize", TW_TYPE_FLOAT, &setParticleSizeCallback, &getParticleSizeCallback, &renderer, " step=0.01 group=Renderer label='Particle size' ");
     TwAddVarCB(myBar, "RenderTexture", textureTypes, &setBillboardTextureCallback, &getBillboardTextureCallback, &renderer, " group=Renderer label='Billboard texture' ");
     TwAddVarRW(myBar, "RenderDepth", TW_TYPE_BOOLCPP, &depthTest, " group=Renderer label='Depth testing' ");
     TwAddVarRW(myBar, "RenderBlending", TW_TYPE_BOOLCPP, &alphaBlend, " group=Renderer label='Additive blending' ");
@@ -241,7 +240,7 @@ int main(int argc, char**argv)
 
         glBindVertexArray(vao);
         // Finally, draw the simulated particles.
-        renderer.draw(system, camera, currentTime);
+        renderer->draw(system, camera, currentTime);
         glBindVertexArray(0);
 
         TwDraw();
@@ -252,6 +251,7 @@ int main(int argc, char**argv)
     // Exit was ok!
         TwTerminate();
 
+    delete renderer;
     glfwTerminate();
     return 0;
 }

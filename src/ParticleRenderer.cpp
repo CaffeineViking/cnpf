@@ -91,8 +91,21 @@ void BillboardParticleRenderer::draw(const ParticleSystem& system,
     glDrawArrays(GL_POINTS, 0, particles);
 }
 
+//-----------------------------------------------------------------------
+//----------------------- BRAVE ADVENTURERS BEWARE! ---------------------
+//-----------------------------------------------------------------------
+//
+//
+// Below follows the most ugly hacks known to man. *Highly* recommend you
+// you turn back now while you can.      Because here be dragons...
+// Please increment this counter with the number of hours spent debugging
+// or trying to understand this: 4 hours. (Fallen warriors so far: Erik).
+//
+//
+//-----------------------------------------------------------------------
+
 void TW_CALL setBillboardTextureCallback(const void* value, void* data) {
-    ParticleRenderer* particleRenderer = static_cast<ParticleRenderer*>(data);
+    ParticleRenderer* particleRenderer = *static_cast<ParticleRenderer**>(data);
     BillboardTextureType textureType = *static_cast<const BillboardTextureType*>(value);
     if (auto br = dynamic_cast<BillboardParticleRenderer*>(particleRenderer)) {
         switch (textureType) {
@@ -106,7 +119,7 @@ void TW_CALL setBillboardTextureCallback(const void* value, void* data) {
 }
 
 void TW_CALL getBillboardTextureCallback(void* value, void* data) {
-    ParticleRenderer* particleRenderer = static_cast<ParticleRenderer*>(data);
+    ParticleRenderer* particleRenderer = *static_cast<ParticleRenderer**>(data);
     BillboardTextureType* textureType = static_cast<BillboardTextureType*>(value);
     if (auto br = dynamic_cast<BillboardParticleRenderer*>(particleRenderer)) {
         std::string path { br->getTexturePath() };
@@ -118,3 +131,51 @@ void TW_CALL getBillboardTextureCallback(void* value, void* data) {
     }
 }
 
+void TW_CALL setRendererCallback(const void* value, void* data) {
+    ParticleRenderer** renderer = static_cast<ParticleRenderer**>(data);
+    const ParticleRendererType rendererType = *static_cast<const ParticleRendererType*>(value);
+    std::string billboardTexture = "share/textures/arrow.png";
+    float particleSize = (*renderer)->getParticleSize();
+    switch (rendererType) {
+    case POINT:
+        delete *renderer;
+        *renderer = new PointParticleRenderer { particleSize };
+        break;
+    case BILLBOARD:
+        if (auto br = dynamic_cast<BillboardParticleRenderer*>(*renderer))
+            billboardTexture = br->getTexturePath();
+        delete *renderer;
+        *renderer = new BillboardParticleRenderer { billboardTexture, particleSize };
+        break;
+    case BILLBOARD_STRIP:
+        delete *renderer;
+        *renderer = nullptr;
+        break;
+    }
+}
+
+void TW_CALL getRendererCallback(void* value, void* data) {
+    ParticleRenderer* renderer = *static_cast<ParticleRenderer**>(data);
+    ParticleRendererType* rendererType = static_cast<ParticleRendererType*>(value);
+    if (dynamic_cast<BillboardParticleRenderer*>(renderer)) {
+        *rendererType = BILLBOARD;
+    } else if (dynamic_cast<PointParticleRenderer*>(renderer)) {
+        *rendererType = POINT;
+    } else *rendererType = BILLBOARD_STRIP;
+}
+
+// ------------------------------------------------------------------
+// This part is a bit more reasonable. But still very,  *VERY*  ugly.
+// ------------------------------------------------------------------
+
+void TW_CALL setParticleSizeCallback(const void* value, void* data) {
+    ParticleRenderer* renderer = *static_cast<ParticleRenderer**>(data);
+    float pvalue = *static_cast<const float*>(value);
+    renderer->setParticleSize(pvalue);
+}
+
+void TW_CALL getParticleSizeCallback(void* value, void* data) {
+    ParticleRenderer* renderer = *static_cast<ParticleRenderer**>(data);
+    float* pvalue = static_cast<float*>(value);
+    *pvalue = renderer->getParticleSize();
+}
