@@ -2,7 +2,7 @@
 #include <iostream>
 #include <utility>
 #include "OpenCLUtils.hpp"
-#include "foreign/anttweakbar.h"
+#include "foreign/AntTweakBar.h"
 
 // Locator for naughty developers
 const glm::vec2 DummyInputLocator::getMousePos(){

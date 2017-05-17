@@ -8,6 +8,9 @@
 
 #include "Transform.hpp"
 
+constexpr float PI = 3.1415;
+constexpr float HALF_PI = PI / 2;
+
 class MovingCamera {
 private:
     glm::mat4 _projection;
@@ -18,6 +21,8 @@ private:
     glm::vec2 _lastMousePos;
     const float SPEED = 1.0f;
     const float SPEED_MOD = 8.0f;
+
+    bool pitchPossible(const float& pitch);
 public:
     MovingCamera() = delete;
     ~MovingCamera();

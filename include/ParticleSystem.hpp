@@ -13,6 +13,23 @@
 #include "Scenario.hpp"
 #include <vector>
 #include <utility>
+
+typedef struct Params {
+  float width;
+  float height;
+  float depth;
+  float fieldMagnitude;
+  float noiseRatio;
+  float noiseWidth;
+  float noiseHeight;
+  float noiseDepth;
+  glm::vec3 fieldDirection;
+} Params;
+
+enum SnapshotType{
+	CURL, DISTANCE
+};
+
 class ParticleSystem {
 private:
 	 const int PARTICLE_COUNT;
@@ -23,13 +40,18 @@ private:
 	 float _noiseRatio;
 	 glm::vec3 _fieldDirection;
 	 int _width, _height, _depth;
+     int _positionsBufferSize, _positionsBufferHead;
 	 cl::ImageGL _texture;
+	 cl::Image2D _outputImage;
 	 clParameters _params;
 	 cl::BufferGL _tmp;
+     cl::BufferGL _positionsGLBuffer;
      GLuint _vertexBufferId;
+     GLuint _positionsBufferId;
 	 cl::Buffer _vertexBuffer;
 	 cl::Buffer _timerBuffer;
 	 cl::Buffer _spheresBuffer;
+     cl::Buffer _positionsBuffer;
 
 	std::string readKernelFile(const std::string&);
 	std::vector<std::pair<glm::vec3, glm::vec3>> _emitters;
@@ -48,6 +70,8 @@ public:
 	float* referenceFieldMagnitude();
 	float* referenceNoiseRatio();
 	glm::vec3* referenceFieldDirection();
+
+	bool snapshot(const std::string&, const SnapshotType);
 	ParticleSystem(const ParticleSystem&) = default;
 	ParticleSystem& operator=(const ParticleSystem&) = default;
 
