@@ -133,7 +133,7 @@ int main(int argc, char**argv)
     backwakeScenario.generate();
 
     // Create the particle system which will compute step.
-	float currentParticleCount = 100000;
+	float currentParticleCount = 50000;
 	ParticleSystem system = ParticleSystem(currentParticleCount, 15.0f);
 
 
@@ -257,7 +257,7 @@ int main(int argc, char**argv)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Move with the camera. Yea!
-        camera.handleInput(deltaTime);
+        camera.handleInput(deltaTime, accumulatedTime);
 
         glBindVertexArray(vao);
         // Finally, draw the simulated particles.
