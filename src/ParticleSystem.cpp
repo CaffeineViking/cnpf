@@ -18,7 +18,7 @@ ParticleSystem::~ParticleSystem(){
     glDeleteBuffers(1, &_vertexBufferId);
 }
 
-ParticleSystem::ParticleSystem(const int particles, const float time): PARTICLE_COUNT{particles}, _maxTime{time},_respawnTime{20.0f}, _fieldMagnitude{1.0f} ,_noiseRatio{0.0f}, _fieldDirection{0.0f,-1.0f,0.0f}
+ParticleSystem::ParticleSystem(const int particles, const float time): PARTICLE_COUNT{particles}, _maxParticleCount(particles), _maxTime{time},_respawnTime{20.0f}, _fieldMagnitude{1.0f} ,_noiseRatio{0.0f}, _fieldDirection{0.0f,-1.0f,0.0f}
 {
 }
 
@@ -85,6 +85,8 @@ void ParticleSystem::addSphere(const glm::vec3& centre, const float radius){
    _spheres.push_back(centre.z);
    _spheres.push_back(radius);
 }
+
+
 
 void ParticleSystem::addEmitter(const glm::vec3& position, const glm::vec3& dimensions){
    _emitters.push_back(std::make_pair(position, dimensions));
@@ -163,9 +165,16 @@ void ParticleSystem::compute(const float time, const float timeDelta){
 // Wait for copy to be done
    _params.queue.finish();
 }
-
+float* ParticleSystem::getMaxParticleCount(){
+	return &_maxParticleCount;
+}
 int ParticleSystem::getParticleCount(const float time) const {
-   return std::min(time/_maxTime,1.0f)*PARTICLE_COUNT;
+	if (PARTICLE_COUNT > _maxParticleCount){
+		return std::min(time/_maxTime,1.0f)*_maxParticleCount;
+	}
+	else {
+		return std::min(time/_maxTime,1.0f)*PARTICLE_COUNT;
+   }
 }
 
 float* ParticleSystem::referenceRespawnTime() {

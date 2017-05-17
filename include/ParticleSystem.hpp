@@ -16,6 +16,7 @@
 class ParticleSystem {
 private:
 	 const int PARTICLE_COUNT;
+	 float _maxParticleCount;
 	 float _maxTime;
 	 float _respawnTime;
 	 float _fieldMagnitude;
@@ -52,6 +53,6 @@ public:
 
 	ParticleSystem(ParticleSystem&&) = default;
 	ParticleSystem& operator=(ParticleSystem&&) = default;
-
+	float* getMaxParticleCount();
 };
 #endif
