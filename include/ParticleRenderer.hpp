@@ -41,4 +41,18 @@ private:
     float billboardSize_;
 };
 
+class SampledParticleRenderer : public ParticleRenderer {
+public:
+    void changeTexture(const std::string&);
+    SampledParticleRenderer(const std::string&, const float);
+    float getWidth() const { return width_; }
+    void  setWidth(const float value) { width_ = value; }
+    void draw(const ParticleSystem&, const MovingCamera&, const float) override;
+    Texture& getTexture() { return texture_; }
+
+private:
+    Texture texture_;
+    float width_;
+};
+
 #endif

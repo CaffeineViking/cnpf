@@ -13,6 +13,9 @@
 #include "Scenario.hpp"
 #include <vector>
 #include <utility>
+
+#define MAX_POSITIONS_BUFFERS 8
+
 class ParticleSystem {
 private:
 	 const int PARTICLE_COUNT;
@@ -22,9 +25,9 @@ private:
 	 cl::ImageGL _texture;
 	 clParameters _params;
 	 cl::BufferGL _tmp;
-         cl::BufferGL _positionsGLBuffer;
+         cl::BufferGL _positionsGLBuffer[MAX_POSITIONS_BUFFERS];
      GLuint _vertexBufferId;
-     GLuint _positionsBufferId;
+     GLuint _positionsBufferId[MAX_POSITIONS_BUFFERS];
 	 cl::Buffer _vertexBuffer;
 	 cl::Buffer _timerBuffer;
 	 cl::Buffer _spheresBuffer;

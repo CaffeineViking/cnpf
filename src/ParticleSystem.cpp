@@ -9,6 +9,7 @@
 #include "simplexnoise1234.hpp"
 #include <limits>
 #include "Noise.hpp"
+#include <algorithm>
 #ifdef WINDOWS
 #include <windows.h>
 #endif
@@ -50,17 +51,23 @@ bool ParticleSystem::init(std::vector<std::string> paths, std::vector<std::strin
       ++n;
    }
 
-   _positionsBufferSize = 16;
+   _positionsBufferSize = 64;
    _positionsBufferHead = 0;
-// Same but for OpenGL
+
+   std::vector<float> positionsBufferData(4*3*PARTICLE_COUNT);
+   for(int i = 0; i < 4; i++)
+       std::copy(data.begin(), data.end(), positionsBufferData.begin() + i*data.size());
+   
+
+   // Same but for OpenGL
    _vertexBufferId = OpenGLUtils::createBuffer(3*PARTICLE_COUNT, data.data(), GL_DYNAMIC_DRAW);
 // _tmp buffer to do some copying on
    _tmp = cl::BufferGL(_params.context, CL_MEM_READ_WRITE, _vertexBufferId, NULL);
- 
-// Same but for OpenGL
-   _positionsBufferId = OpenGLUtils::createBuffer(3*PARTICLE_COUNT, data.data(), GL_DYNAMIC_DRAW);
-// _tmp buffer to do some copying on
-   _positionsGLBuffer = cl::BufferGL(_params.context, CL_MEM_READ_WRITE, _positionsBufferId, NULL);
+   
+   for(int i = 0; i < MAX_POSITIONS_BUFFERS; i++){
+       _positionsBufferId[i] = OpenGLUtils::createBuffer(3*PARTICLE_COUNT, data.data(), GL_DYNAMIC_DRAW);
+       _positionsGLBuffer[i] = cl::BufferGL(_params.context, CL_MEM_READ_WRITE, _positionsBufferId[i], NULL);
+   }
 
 // Create Vertex buffer for the positions
    _vertexBuffer = cl::Buffer(_params.context, CL_MEM_READ_WRITE, sizeof(float)*3*PARTICLE_COUNT);
@@ -76,14 +83,20 @@ bool ParticleSystem::init(std::vector<std::string> paths, std::vector<std::strin
    GLint position_attribute = glGetAttribLocation(program.getId(), "position");
    glVertexAttribPointer(position_attribute, 3, GL_FLOAT, GL_FALSE, 0, 0);
    glEnableVertexAttribArray(position_attribute);
-   //glBindVertexArray(0);
 
-   glBindBuffer(GL_ARRAY_BUFFER, _positionsBufferId);
-   GLint oldPosition_attribute = glGetAttribLocation(program.getId(), "oldPosition");
-   glVertexAttribPointer(oldPosition_attribute, 3, GL_FLOAT, GL_FALSE, 0, 0);
-   glEnableVertexAttribArray(oldPosition_attribute);
+   GLint oldPosition_attribute = glGetAttribLocation(program.getId(), "positionsBuffer");
+   for(int i = 0; i < MAX_POSITIONS_BUFFERS; i++){
+       glBindBuffer(GL_ARRAY_BUFFER, _positionsBufferId[i]);
+       glVertexAttribPointer(oldPosition_attribute + i, 3, GL_FLOAT, GL_FALSE, 0, 0);
+       glEnableVertexAttribArray(oldPosition_attribute + i);
+   }
    glBindVertexArray(0);
+
+   // GLuint positionsBufferLoc = glGetUniformLocation(program.getId(), "positionsBuffer");
+   // glUniform3fv(positionsBufferLoc, _positionsBufferSize, &_positionsBuffer);
+
    
+      
 // Create timer buffer, this is not of interest to the renderer at the moment
    for(int n = 0; n < PARTICLE_COUNT; ++n) {
       data[3*n+0] = 0.0f; //distribution(generator);
@@ -138,7 +151,9 @@ void ParticleSystem::compute(const float time, const float timeDelta){
    objs.clear();
    objs.push_back(_tmp);
    objs.push_back(_texture);
-   objs.push_back(_positionsGLBuffer);
+   for(int i = 0; i < MAX_POSITIONS_BUFFERS; i++)
+       objs.push_back(_positionsGLBuffer[i]);
+   
 // Aquire GL Object ( ͡° ͜ʖ ͡°)
    cl_int res = _params.queue.enqueueAcquireGLObjects(&objs,NULL,&ev);
    ev.wait();
@@ -177,8 +192,14 @@ void ParticleSystem::compute(const float time, const float timeDelta){
 
 // Copy from OpenCL to OpenGL 
    _params.queue.enqueueCopyBuffer(_vertexBuffer, _tmp, 0, 0, 3*PARTICLE_COUNT*sizeof(float), NULL, NULL);
-    _params.queue.enqueueCopyBuffer(_positionsBuffer, _positionsGLBuffer, _positionsBufferHead*3*PARTICLE_COUNT*sizeof(float), 0,
-   				   3*PARTICLE_COUNT*sizeof(float), NULL, NULL);
+
+   size_t stride = _positionsBufferSize/MAX_POSITIONS_BUFFERS;
+   for(int i = 0; i < MAX_POSITIONS_BUFFERS; i++){
+       size_t bufferIndex = (_positionsBufferHead + stride*(i+1)) % _positionsBufferSize;
+       _params.queue.enqueueCopyBuffer(_positionsBuffer, _positionsGLBuffer[i],
+				       bufferIndex*3*PARTICLE_COUNT*sizeof(float), 0,
+				       3*PARTICLE_COUNT*sizeof(float), NULL, NULL);
+   }
    res = _params.queue.enqueueReleaseGLObjects(&objs);
    ev.wait();
    if (res!=CL_SUCCESS) {
