@@ -90,8 +90,8 @@ void BillboardParticleRenderer::draw(const ParticleSystem& system,
 }
 
 
-SampledParticleRenderer::SampledParticleRenderer(const std::string& texturePath, const float width)
-    : width_ { width } {
+SampledParticleRenderer::SampledParticleRenderer(const std::string& texturePath, const float width, const int segmentCount)
+    : width_ { width }, segmentCount_ { segmentCount }{
     Shader vertexShader { "share/shaders/sampled.vert", GL_VERTEX_SHADER };
     Shader geometryShader { "share/shaders/sampled.geom", GL_GEOMETRY_SHADER };
     Shader fragmentShader { "share/shaders/sampled.frag", GL_FRAGMENT_SHADER };
@@ -137,6 +137,8 @@ void SampledParticleRenderer::draw(const ParticleSystem& system,
     // Also make the billboard size adjustable at runtime with this.
     glUniform1f(glGetUniformLocation(shaderProgram_.getId(), "size"),
                 width_);
+    glUniform1i(glGetUniformLocation(shaderProgram_.getId(), "segment_count"),
+                segmentCount_);
 
     // Finally, render the particles. *PARTICLES*.
     int particles { system.getParticleCount(time)};

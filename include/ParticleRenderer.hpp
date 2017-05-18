@@ -44,15 +44,18 @@ private:
 class SampledParticleRenderer : public ParticleRenderer {
 public:
     void changeTexture(const std::string&);
-    SampledParticleRenderer(const std::string&, const float);
+    SampledParticleRenderer(const std::string&, const float, const int);
     float getWidth() const { return width_; }
     void  setWidth(const float value) { width_ = value; }
+    float getSegmentCount() const { return segmentCount_; }
+    void  setSegmentCount(const int count) { segmentCount_ = count; }
     void draw(const ParticleSystem&, const MovingCamera&, const float) override;
     Texture& getTexture() { return texture_; }
 
 private:
     Texture texture_;
     float width_;
+    int segmentCount_;
 };
 
 #endif

@@ -100,7 +100,7 @@ int main(int argc, char**argv)
     glBindVertexArray(vao);
 
     // Create a visualization method for the particle system below.
-    SampledParticleRenderer renderer { "share/textures/arrow.png", 1.0 };
+    SampledParticleRenderer renderer { "share/textures/arrow.png", 0.4, 4 };
     const ShaderProgram& rendererProgram = renderer.getProgram();
 
     // Create an example Backwake scenario.

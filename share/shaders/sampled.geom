@@ -3,10 +3,11 @@
 
 layout (points) in;
 layout (triangle_strip) out;
-layout (max_vertices = 12) out;
+layout (max_vertices = 16) out;
 
 uniform float size;
 uniform mat4 projection;
+uniform int segment_count;
 
 in vec3 vertex_position[];
 in vec4 old_vertex_positions[][MAX_POSITIONS_BUFFERS];
@@ -16,19 +17,19 @@ out vec2 texCoords;
 void createQuad(vec4 V0, vec4 V1, float uvStart, float uvEnd){
     vec2 v;
 
-    // a: left 1
+    // bottom left
     v = V0.xy + vec2(-0.5, 0.0) * size;
     gl_Position = projection * vec4(v, V0.zw);
     texCoords = vec2(1.0, uvStart);
     EmitVertex();
 
-    // b: right 1
+    // bottom right
     v = V0.xy + vec2(0.5, 0.0) * size;
     gl_Position = projection * vec4(v, V0.zw);
     texCoords = vec2(0.0, uvStart);
     EmitVertex();
 
-    // d: left 2
+    // top left
     v = V1.xy + vec2(-0.5, 0.0) * size;
     gl_Position = projection * vec4(v, V1.zw);
     texCoords = vec2(1.0, uvEnd);
@@ -36,20 +37,19 @@ void createQuad(vec4 V0, vec4 V1, float uvStart, float uvEnd){
 
     EndPrimitive();
 
-    
-    // d: left 2
+    // top left
     v = V1.xy + vec2(-0.5, 0.0) * size;
     gl_Position = projection * vec4(v, V1.zw);
     texCoords = vec2(1.0, uvEnd);
     EmitVertex();
     
-    // b: right 1
+    // bottom right
     v = V0.xy + vec2(0.5, 0.0) * size;
     gl_Position = projection * vec4(v, V0.zw);
     texCoords = vec2(0.0, uvStart);
     EmitVertex();
 
-    // right 2
+    // top right
     v = V1.xy + vec2(0.5, 0.0) * size;
     gl_Position = projection * vec4(v, V1.zw);
     texCoords = vec2(0.0, uvEnd);
@@ -58,40 +58,33 @@ void createQuad(vec4 V0, vec4 V1, float uvStart, float uvEnd){
     EndPrimitive();
 }
 
+vec4 interpolatedPoint(float index){
+    if (index >= MAX_POSITIONS_BUFFERS-1)
+	return old_vertex_positions[0][MAX_POSITIONS_BUFFERS-1];
+    else { 
+	vec4 p1 = old_vertex_positions[0][int(floor(index))];
+	vec4 p2 = old_vertex_positions[0][int(ceil(index))];
+	float weight = index - floor(index);
+	
+	return vec4(p1.xyz + weight*(p2.xyz - p1.xyz), 1.0);
+    }
+}
 
 void main()
 {
     final_vertex_position = vertex_position[0];
     vec4 P = gl_in[0].gl_Position;
-    vec4 V0 = old_vertex_positions[0][0];
-    vec4 V1 = old_vertex_positions[0][3];
+    vec4 V0, V1;
+    float uv0, uv1;
     
-    createQuad(V0, V1, 1.0, 0.5);
-    createQuad(V1, P, 0.5, 0.0);
-    
-    // // left 2
-    // v = V1.xy + vec2(-0.5, 0.0) * size;
-    // gl_Position = projection * vec4(v, V1.zw);
-    // texCoords = vec2(1.0, 0.5);
-    // EmitVertex();
-
-    // // left 3
-    // v = P.xy + vec2(-0.5, 0.0) * size;
-    // gl_Position = projection * vec4(v, P.zw);
-    // texCoords = vec2(1.0, 0.0);
-    // EmitVertex();
-
-    // // right 2
-    // v = V1.xy + vec2(0.5, 0.0) * size;
-    // gl_Position = projection * vec4(v, V1.zw);
-    // texCoords = vec2(0.0, 0.5);
-    // EmitVertex();
-
-    // // right 3
-    // v = P.xy + vec2(0.5, 0.0) * size;
-    // gl_Position = projection * vec4(v, P.zw);
-    // texCoords = vec2(0.0, 0.0);
-    // EmitVertex();
-
-    // EndPrimitive();
+    float stride = MAX_POSITIONS_BUFFERS / float(segment_count);
+    V1 = P;
+    uv1 = 0.0;
+    for(int i = segment_count-1; i >= 0; i--){
+	V0 = interpolatedPoint(i*stride);
+	uv0 = 1.0 - (i*stride) / MAX_POSITIONS_BUFFERS;
+	createQuad(V0, V1, uv0, uv1);
+	V1 = V0;
+	uv1 = uv0;
+    }
 }
