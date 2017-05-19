@@ -20,5 +20,5 @@ void main()
     // Scale, rotate and then translate.
     // The order is important
     mat4 model = translationMatrix; //* rotationMatrix * scaleMatrix;
-    gl_Position  = view * model * vec4(1); //vec4(pos.x, pos.y, pos.z, 1.0);
+    gl_Position  = view * model * vec4(pos.x, pos.y, pos.z, 1.0);
 }

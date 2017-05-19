@@ -6,7 +6,6 @@
 #include <CL/cl.hpp>
 #include <algorithm>
 #include "VectorField3D.hpp"
-#include "simplexnoise1234.hpp"
 #include <limits>
 #include "Noise.hpp"
 #include <algorithm>

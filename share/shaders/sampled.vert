@@ -32,6 +32,6 @@ void main()
     	translationMatrix[3][1] = positionsBuffer[i].y;
     	translationMatrix[3][2] = positionsBuffer[i].z;
     	model = translationMatrix; //* rotationMatrix * scaleMatrix;
-    	old_vertex_positions[i] = view * model * vec4(1); //vec4(old_vertex_positions,1);
+    	old_vertex_positions[i] = view * model * vec4(old_vertex_positions,1);
     }
 }
