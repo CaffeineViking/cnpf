@@ -174,7 +174,7 @@ int main(int argc, char**argv)
     TwAddVarCB(myBar, "RenderMode", renderModes, &setRendererCallback, &getRendererCallback, &renderer, " group=Renderer label='Mode' ");
     TwAddVarCB(myBar, "RenderParticleSize", TW_TYPE_FLOAT, &setParticleSizeCallback, &getParticleSizeCallback, &renderer, " step=0.01 group=Renderer label='Particle size' ");
     TwAddVarCB(myBar, "RenderTexture", textureTypes, &setBillboardTextureCallback, &getBillboardTextureCallback, &renderer, " group=Renderer label='Billboard texture' ");
-    TwAddVarCB(myBar, "RenderSegments", TW_TYPE_INT32, &setSegmentCountCallback, &getSegmentCountCallback, &renderer, " min=1 max=4 step=1 group=Renderer label='Segment count' ");
+    TwAddVarCB(myBar, "RenderSegments", TW_TYPE_INT32, &setSegmentCountCallback, &getSegmentCountCallback, &renderer, " min=2 max=4 step=1 group=Renderer label='Segment count' ");
     TwAddVarRW(myBar, "RenderDepth", TW_TYPE_BOOLCPP, &depthTest, " group=Renderer label='Depth testing' ");
     TwAddVarRW(myBar, "RenderBlending", TW_TYPE_BOOLCPP, &alphaBlend, " group=Renderer label='Additive blending' ");
 
