@@ -125,7 +125,7 @@ int main(int argc, char**argv)
     glBindVertexArray(vao);
 
     // Create a visualization method for the particle system below. Changed under run-time by D.C.
-    ParticleRenderer* renderer = new BillboardParticleRenderer { "share/textures/arrow.png", 0.4 };
+    ParticleRenderer* renderer = new SampledParticleRenderer { "share/textures/arrow.png", 0.4,4 };
     const ShaderProgram& rendererProgram = renderer->getProgram();
 
     // Create an example Backwake scenario.
@@ -164,7 +164,7 @@ int main(int argc, char**argv)
     TwAddVarRW(myBar, "FieldMagnitude", TW_TYPE_FLOAT, system.referenceFieldMagnitude(),  " min=-1 max=1 step=1 group=System label='Background field magnitude' ");
     TwAddVarRW(myBar, "NoiseRatio", TW_TYPE_FLOAT, system.referenceNoiseRatio(),  " min=0 max=1 step=0.01 group=System label='Noise ratio' ");
     TwAddVarRW(myBar, "Field", TW_TYPE_DIR3F, system.referenceFieldDirection(),  " min=-1 max=1 step=0.01 group=System label='Field Direction' ");
-    TwAddVarRW(myBar, "Population", TW_TYPE_FLOAT, system.getMaxParticleCount(),  "min=0, max=1000000 step=100000 group=System label='Particle count' ");
+    TwAddVarRW(myBar, "Population", TW_TYPE_FLOAT, system.getMaxParticleCount(),  "min=0, max=1000000 step=100 group=System label='Particle count' ");
 
     // Add particle renderer variables to ANT.
     bool depthTest = false, alphaBlend = true;

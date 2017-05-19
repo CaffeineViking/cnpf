@@ -69,7 +69,7 @@ void BackwakeScenario::generate(){
    noise.addNoise(glm::vec3(10.0f), glm::vec3(0.01f));
    noise.addNoise(glm::vec3(0.0f),  glm::vec3(0.13f));
    noise.addNoise(glm::vec3(0.0f),  glm::vec3(0.19f));
-   float eps = 0.001f;
+   float eps = 0.00001f;
    glm::vec3 epsX(eps,0,0);
    glm::vec3 epsY(0,eps,0);
    glm::vec3 epsZ(0,0,eps);
