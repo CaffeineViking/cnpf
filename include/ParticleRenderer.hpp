@@ -59,21 +59,22 @@ void TW_CALL setRendererCallback(const void* value, void* data);
 void TW_CALL getRendererCallback(void* value, void* data);
 void TW_CALL setParticleSizeCallback(const void* value, void* data);
 void TW_CALL getParticleSizeCallback(void* value, void* data);
+void TW_CALL setSegmentCountCallback(const void* value, void* data);
+void TW_CALL getSegmentCountCallback(void* value, void* data);
 
 class SampledParticleRenderer : public ParticleRenderer {
 public:
-    void changeTexture(const std::string&);
+    void changeBillboardTexture(const std::string&);
     SampledParticleRenderer(const std::string&, const float, const int);
-    float getWidth() const { return width_; }
-    void  setWidth(const float value) { width_ = value; }
-    float getSegmentCount() const { return segmentCount_; }
+    int getSegmentCount() const { return segmentCount_; }
     void  setSegmentCount(const int count) { segmentCount_ = count; }
     void draw(const ParticleSystem&, const MovingCamera&, const float) override;
+    std::string& getTexturePath() { return texturePath_; }
     Texture& getTexture() { return texture_; }
 
 private:
     Texture texture_;
-    float width_;
+    std::string texturePath_;
     int segmentCount_;
 };
 
