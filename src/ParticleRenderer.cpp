@@ -136,7 +136,7 @@ void TW_CALL getBillboardTextureCallback(void* value, void* data) {
         else if (path == "share/textures/sphere.png") *textureType = SPHERE;
         else if (path == "share/textures/arrow.png") *textureType = VECTOR;
         else if (path == "share/textures/fish.png") *textureType = VERY_NICE_FISH;
-    } else if (auto sr = dynamic_cast<BillboardParticleRenderer*>(particleRenderer)) {
+    } else if (auto sr = dynamic_cast<SampledParticleRenderer*>(particleRenderer)) {
         std::string path { sr->getTexturePath() };
         if (path == "share/textures/fire.png") *textureType = FIRE;
         else if (path == "share/textures/link.png") *textureType = LINK;
