@@ -25,13 +25,13 @@ void main()
     // Scale, rotate and then translate.
     // The order is important
     mat4 model = translationMatrix; //* rotationMatrix * scaleMatrix;
-    gl_Position  = view * model * vec4(1); //vec4(pos.x, pos.y, pos.z, 1.0);
+    gl_Position  = view * model * vec4(pos.x, pos.y, pos.z, 1.0);
 
     for(int i = 0; i < MAX_POSITIONS_BUFFERS; i++){
     	translationMatrix[3][0] = positionsBuffer[i].x;
     	translationMatrix[3][1] = positionsBuffer[i].y;
     	translationMatrix[3][2] = positionsBuffer[i].z;
     	model = translationMatrix; //* rotationMatrix * scaleMatrix;
-    	old_vertex_positions[i] = view * model * vec4(old_vertex_positions,1);
+    	old_vertex_positions[i] = view * model * vec4(old_vertex_positions[i],1);
     }
 }
