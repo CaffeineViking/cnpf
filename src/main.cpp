@@ -133,9 +133,8 @@ int main(int argc, char**argv)
     backwakeScenario.generate();
 
     // Create the particle system which will compute step.
-	float currentParticleCount = 50000;
-	ParticleSystem system = ParticleSystem(currentParticleCount, 15.0f);
-
+    float currentParticleCount = 50000;
+    ParticleSystem system = ParticleSystem(currentParticleCount, 15.0f);
 
     // Add a single emitter which will spawn particles into the scenario.
     system.addEmitter(glm::vec3(0.0f,-16.0f,0.0f), glm::vec3(16.0f,0.0f,16.0f));
@@ -165,11 +164,8 @@ int main(int argc, char**argv)
     TwAddVarRW(myBar, "FieldMagnitude", TW_TYPE_FLOAT, system.referenceFieldMagnitude(),  " min=-1 max=1 step=1 group=System label='Background field magnitude' ");
     TwAddVarRW(myBar, "NoiseRatio", TW_TYPE_FLOAT, system.referenceNoiseRatio(),  " min=0 max=1 step=0.01 group=System label='Noise ratio' ");
     TwAddVarRW(myBar, "Field", TW_TYPE_DIR3F, system.referenceFieldDirection(),  " min=-1 max=1 step=0.01 group=System label='Field Direction' ");
-	TwAddVarRW(myBar, "Population", TW_TYPE_FLOAT, system.getMaxParticleCount(),  "min=0, max=1000000 step=100000 group=System label='Particle count' ");
+    TwAddVarRW(myBar, "Population", TW_TYPE_FLOAT, system.getMaxParticleCount(),  "min=0, max=1000000 step=100000 group=System label='Particle count' ");
 
-
-    
-	
     // Add particle renderer variables to ANT.
     bool depthTest = false, alphaBlend = true;
     TwType renderModes { TwDefineEnumFromString("RenderModeType", "Point,Billboard,BillboardStrip") };
@@ -178,12 +174,13 @@ int main(int argc, char**argv)
     TwAddVarCB(myBar, "RenderMode", renderModes, &setRendererCallback, &getRendererCallback, &renderer, " group=Renderer label='Mode' ");
     TwAddVarCB(myBar, "RenderParticleSize", TW_TYPE_FLOAT, &setParticleSizeCallback, &getParticleSizeCallback, &renderer, " step=0.01 group=Renderer label='Particle size' ");
     TwAddVarCB(myBar, "RenderTexture", textureTypes, &setBillboardTextureCallback, &getBillboardTextureCallback, &renderer, " group=Renderer label='Billboard texture' ");
+    TwAddVarCB(myBar, "RenderSegments", TW_TYPE_INT32, &setSegmentCountCallback, &getSegmentCountCallback, &renderer, " min=2 max=4 step=1 group=Renderer label='Segment count' ");
     TwAddVarRW(myBar, "RenderDepth", TW_TYPE_BOOLCPP, &depthTest, " group=Renderer label='Depth testing' ");
     TwAddVarRW(myBar, "RenderBlending", TW_TYPE_BOOLCPP, &alphaBlend, " group=Renderer label='Additive blending' ");
 
     // Add button to take field snapshot
     TwAddButton(myBar, "Snapshot", snapshotField, &system,  " group=System label='Field snapshot' ");
-    
+
     // Keep track of slowdown/speedup.
     float currentTime = glfwGetTime();
     float lastFrame = 0.0f;
@@ -216,20 +213,6 @@ int main(int argc, char**argv)
 
         // Polling loop.
         glfwPollEvents();
-// <<<<<<< HEAD
-		
-        // // Controls for enabling or disabling fullscreen.
-        // if (Locator::input()->isKeyPressed(GLFW_KEY_F)) {
-            // const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-            // glfwSetWindowSize(window, mode->width, mode->height);
-            // camera.updateProjection(FIELD_OF_VIEW, mode->width, mode->height);
-            // glViewport(0, 0, mode->width, mode->height);
-        // } else if (Locator::input()->isKeyPressed(GLFW_KEY_R)) {
-            // camera.updateProjection(FIELD_OF_VIEW, WIDTH, HEIGHT);
-            // glfwSetWindowSize(window, WIDTH, HEIGHT);
-            // glViewport(0, 0, WIDTH, HEIGHT);
-        // }
-// =======
 
         if (depthTest) {
             glDepthFunc(GL_LESS);
