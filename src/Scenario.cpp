@@ -69,19 +69,24 @@ void BackwakeScenario::generate(){
    noise.addNoise(glm::vec3(10.0f), glm::vec3(0.01f));
    noise.addNoise(glm::vec3(0.0f),  glm::vec3(0.13f));
    noise.addNoise(glm::vec3(0.0f),  glm::vec3(0.19f));
-
+   float eps = 0.001f;
+   glm::vec3 epsX(eps,0,0);
+   glm::vec3 epsY(0,eps,0);
+   glm::vec3 epsZ(0,0,eps);
     for(int x = 0; x < _width; x++) {
       for(int y = 0; y < _height; y++) {
          for(int z = 0; z < _depth; z++) {
             glm::vec3 position(x,y,z);
 
             int index = (x * _height * _depth) + (y * _depth) + z;
-            float n = noise.get(position);
-            noiseField[index] = glm::vec3(n,n,n);
+            float nx = noise.get(position + epsX) - noise.get(position - epsX);
+            float ny = noise.get(position + epsY) - noise.get(position - epsY);
+            float nz = noise.get(position + epsZ) - noise.get(position - epsZ);
+            noiseField[index] = glm::vec3(nx,ny,nz);
          }
       }
    }
-   noiseField = (noiseField.selfNormalize() * 0.5f) + 0.5f;
+   noiseField = (noiseField.normalize() * 0.5f) + 0.5f;
 
    OpenGLUtils::bufferToPNG_Y("debug/noiseFieldY", noiseField.getData() , _width, _height, _depth);
    //OpenGLUtils::bufferToPNG_X("debug/noiseFieldX", (noiseField* 0.5f + 0.5f).getData() , _width, _height, _depth);

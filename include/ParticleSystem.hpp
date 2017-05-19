@@ -23,6 +23,7 @@ typedef struct Params {
   float noiseWidth;
   float noiseHeight;
   float noiseDepth;
+  float boundraryWidth;
   glm::vec3 fieldDirection;
 } Params;
 

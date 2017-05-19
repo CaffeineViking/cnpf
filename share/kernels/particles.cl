@@ -9,6 +9,7 @@ typedef struct Params {
   float noise_width;
   float noise_height;
   float noise_depth;
+  float boundrary_width;
   float fieldX;
   float fieldY;
   float fieldZ;
@@ -42,7 +43,7 @@ float get_closest_sphere(float3 p, const int nsph, __global float* sph, float3* 
 }
 
 float getAlpha(float sphere_radius, float influence_radius, float distance){
-  return fabs(((float)smooth(sphere_radius, sphere_radius +influence_radius, distance)));
+  return fabs(((float)smooth(sphere_radius, sphere_radius + influence_radius, distance)));
 }
 
 float3 potential(float3 p, float3 np, read_only image3d_t t,const int nsph, __global float* sph, const Params params){
@@ -67,7 +68,7 @@ float3 potential(float3 p, float3 np, read_only image3d_t t,const int nsph, __gl
 
     float d = length(p - sphere_centre);
 
-    float alpha = getAlpha(sphere_radius, 4.0f, d);
+    float alpha = getAlpha(sphere_radius, params.boundrary_width, d);
     float3 n = normalize(p);
     return (alpha) * psi + (1.0f - alpha) * n * dot(n, psi);
 }
@@ -105,8 +106,8 @@ void __kernel particles(
     float y = positions[3*id+1];
     float z = positions[3*id+2];
     float3 position = (float3)(x,y,z);
-    float3 noise_p = (float3)((x + parameters.width / 2.0f) / parameters.noise_width,(y + parameters.height / 2.0f) / parameters.noise_height,(z + parameters.depth / 2.0f) / parameters.noise_depth);
-    float3 psi = curl(position,noise_p, texture, nrSpeheres, spheres, parameters);
+    float3 noise_p = (float3)(x / parameters.noise_width,y / parameters.noise_height , z / parameters.noise_depth);
+   float3 psi = curl(position,noise_p, texture, nrSpeheres, spheres, parameters);
 
     positions[3*id+0] += psi.x * 4.0f * frameDelta;//(values.x - 0.5f) * 2.0f * frameDelta  * velocities[3*id+0];
     positions[3*id+1] += psi.y * 4.0f * frameDelta;//(values.y - 0.5f) * 2.0f * frameDelta  * velocities[3*id+1];
@@ -129,7 +130,7 @@ __kernel void exportCurl(
   float4 color;
 
    float3 position = ((float3)(x,y,z) - hd) * scaleFactor;
-   float3 noise_p =  ((float3)(x / parameters.noise_width,y / parameters.noise_height,z / parameters.noise_depth)) * scaleFactor;
+   float3 noise_p = ((float3)(x,y,z) - hd) * scaleFactor;
    float3 psi = curl(position,noise_p, texture, nrSpeheres, spheres, parameters);
    color.x = psi.x;
    color.y = psi.y;

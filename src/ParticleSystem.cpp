@@ -165,6 +165,7 @@ void ParticleSystem::compute(const float time, const float timeDelta){
    kernelParameters.noiseWidth = _width;
    kernelParameters.noiseHeight = _height;
    kernelParameters.noiseDepth = _depth;
+   kernelParameters.boundraryWidth = 1.0f;
    kernelParameters.fieldDirection = _fieldDirection;
    _params.kernels.at("particles").setArg(0,_vertexBuffer);
    _params.kernels.at("particles").setArg(1,_spheresBuffer);
@@ -298,6 +299,7 @@ const float scaleFactor = 0.018f;
    kernelParameters.noiseWidth = _width;
    kernelParameters.noiseHeight = _height;
    kernelParameters.noiseDepth = _depth;
+   kernelParameters.boundraryWidth = 1.0f;
    kernelParameters.fieldDirection = _fieldDirection;
 
    std::string kernel = "exportCurl";
