@@ -130,7 +130,12 @@ __kernel void exportCurl(
   float4 color;
 
    float3 position = ((float3)(x,y,z) - hd) * scaleFactor;
-   float3 noise_p = ((float3)(x,y,z) - hd) * scaleFactor;
+   float3 noise_p = ((float3)(x,y,z) - hd);
+   noise_p.x /= parameters.noise_width;
+   noise_p.y /= parameters.noise_height;
+   noise_p.z /= parameters.noise_depth;
+   noise_p *= scaleFactor;
+   
    float3 psi = curl(position,noise_p, texture, nrSpeheres, spheres, parameters);
    color.x = psi.x;
    color.y = psi.y;
@@ -152,9 +157,9 @@ __kernel void exportDistance(
   const float3 hd = (float3)(parameters.width, parameters.height, parameters.depth) * 0.5f;
   float4 color;
 
-   float3 position = ((float3)(x,y,z) - hd) * scaleFactor;
-   const float3  sphere_centre   = (float3)(0.0f,0.0f,0.0f);
-   const float   sphere_radius   = get_closest_sphere(position,nrSpeheres, spheres, &sphere_centre);
+  float3 position = ((float3)(x,y,z) - hd) * scaleFactor;
+  const float3  sphere_centre   = (float3)(0.0f,0.0f,0.0f);
+  const float   sphere_radius   = get_closest_sphere(position,nrSpeheres, spheres, &sphere_centre);
   float d = length(position - sphere_centre);
   float alpha = getAlpha(sphere_radius, 4.0f, d);
    color.x = alpha;
