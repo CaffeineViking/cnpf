@@ -3,7 +3,7 @@
 
 layout (points) in;
 layout (triangle_strip) out;
-layout (max_vertices = 16) out;
+layout (max_vertices = 24) out;
 
 uniform float size;
 uniform mat4 projection;
@@ -65,7 +65,6 @@ vec4 interpolatedPoint(float index){
 	vec4 p1 = old_vertex_positions[0][int(floor(index))];
 	vec4 p2 = old_vertex_positions[0][int(ceil(index))];
 	float weight = index - floor(index);
-	
 	return vec4(p1.xyz + weight*(p2.xyz - p1.xyz), 1.0);
     }
 }
