@@ -133,9 +133,8 @@ int main(int argc, char**argv)
     backwakeScenario.generate();
 
     // Create the particle system which will compute step.
-	float currentParticleCount = 50000;
-	ParticleSystem system = ParticleSystem(currentParticleCount, 15.0f);
-
+    float currentParticleCount = 50000;
+    ParticleSystem system = ParticleSystem(currentParticleCount, 15.0f);
 
     // Add a single emitter which will spawn particles into the scenario.
     system.addEmitter(glm::vec3(0.0f,-16.0f,0.0f), glm::vec3(16.0f,0.0f,16.0f));
@@ -216,20 +215,6 @@ int main(int argc, char**argv)
 
         // Polling loop.
         glfwPollEvents();
-// <<<<<<< HEAD
-		
-        // // Controls for enabling or disabling fullscreen.
-        // if (Locator::input()->isKeyPressed(GLFW_KEY_F)) {
-            // const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-            // glfwSetWindowSize(window, mode->width, mode->height);
-            // camera.updateProjection(FIELD_OF_VIEW, mode->width, mode->height);
-            // glViewport(0, 0, mode->width, mode->height);
-        // } else if (Locator::input()->isKeyPressed(GLFW_KEY_R)) {
-            // camera.updateProjection(FIELD_OF_VIEW, WIDTH, HEIGHT);
-            // glfwSetWindowSize(window, WIDTH, HEIGHT);
-            // glViewport(0, 0, WIDTH, HEIGHT);
-        // }
-// =======
 
         if (depthTest) {
             glDepthFunc(GL_LESS);

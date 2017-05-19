@@ -29,6 +29,7 @@ typedef struct Params {
 enum SnapshotType{
 	CURL, DISTANCE
 };
+#define MAX_POSITIONS_BUFFERS 8
 
 class ParticleSystem {
 private:
@@ -45,9 +46,9 @@ private:
 	 cl::Image2D _outputImage;
 	 clParameters _params;
 	 cl::BufferGL _tmp;
-     cl::BufferGL _positionsGLBuffer;
+     cl::BufferGL _positionsGLBuffer[MAX_POSITIONS_BUFFERS];
      GLuint _vertexBufferId;
-     GLuint _positionsBufferId;
+     GLuint _positionsBufferId[MAX_POSITIONS_BUFFERS];
 	 cl::Buffer _vertexBuffer;
 	 cl::Buffer _timerBuffer;
 	 cl::Buffer _spheresBuffer;

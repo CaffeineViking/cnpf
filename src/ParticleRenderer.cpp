@@ -179,3 +179,58 @@ void TW_CALL getParticleSizeCallback(void* value, void* data) {
     float* pvalue = static_cast<float*>(value);
     *pvalue = renderer->getParticleSize();
 }
+
+SampledParticleRenderer::SampledParticleRenderer(const std::string& texturePath, const float width, const int segmentCount)
+    : width_ { width }, segmentCount_ { segmentCount }{
+    Shader vertexShader { "share/shaders/sampled.vert", GL_VERTEX_SHADER };
+    Shader geometryShader { "share/shaders/sampled.geom", GL_GEOMETRY_SHADER };
+    Shader fragmentShader { "share/shaders/sampled.frag", GL_FRAGMENT_SHADER };
+
+    // Compile our shaders.
+    vertexShader.compile();
+    geometryShader.compile();
+    fragmentShader.compile();
+
+    // Links them together to a program.
+    shaderProgram_.attach(vertexShader);
+    shaderProgram_.attach(geometryShader);
+    shaderProgram_.attach(fragmentShader);
+    // Shaders are automatically freed!!!
+    // We only need the program.
+
+    // Load texture into GPU DDR memory.
+    changeTexture(texturePath);
+
+    // Set the location and all that kind of OpenGL stuff. Interesting thing to
+    // note: if we do this later, it doesn't work. And I don't know why. WHY?!?
+    GLint location { glGetUniformLocation(shaderProgram_.getId(), "diffuse") };
+    glUniform1i(location, texture_.getId());
+}
+
+void SampledParticleRenderer::changeTexture(const std::string& texturePath) {
+    std::vector<float> textureData;
+    unsigned textureWidth, textureHeight;
+    if(!OpenGLUtils::loadPNG(texturePath, textureWidth, textureHeight, textureData))
+        std::cerr << "Failed to load '" << texturePath << "'!" << std::endl;
+    texture_ = Texture { textureWidth, textureHeight, textureData.data() };
+}
+
+void SampledParticleRenderer::draw(const ParticleSystem& system,
+                                     const MovingCamera& camera,
+                                     const float time) {
+    // Make sure we have bound an program.
+    shaderProgram_.begin(); // Yea baby!!!
+    // Fetch the MVP matrix of the camera.
+    camera.update(shaderProgram_.getId());
+    texture_.begin(0); // Bind it to TU 0.
+
+    // Also make the billboard size adjustable at runtime with this.
+    glUniform1f(glGetUniformLocation(shaderProgram_.getId(), "size"),
+                width_);
+    glUniform1i(glGetUniformLocation(shaderProgram_.getId(), "segment_count"),
+                segmentCount_);
+
+    // Finally, render the particles. *PARTICLES*.
+    int particles { system.getParticleCount(time)};
+    glDrawArrays(GL_POINTS, 0, particles);
+}
