@@ -17,8 +17,11 @@ GLuint OpenGLUtils::createTexture(unsigned width,unsigned height, const float* d
     glGenTextures(1,&ret_val);
     glBindTexture(GL_TEXTURE_2D,ret_val);
     glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,width,height,0,GL_RGBA,GL_FLOAT,data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     return ret_val;
 }
 
@@ -36,10 +39,11 @@ GLuint OpenGLUtils::createTexture3D(unsigned width,unsigned height,unsigned dept
 bool OpenGLUtils::writePNG(const std::string& filePath, const unsigned width, const unsigned height, const std::vector<float>& data){
     std::vector<unsigned char> image;
     for(unsigned i = 0; i < width*height; i++){
+      //std::cout << data.at(i*4 + 0) << " " << data.at(i*4 + 1) << " " << data.at(i*4 + 2) << " " << data.at(i*4 + 3) << " "; 
       image.push_back((unsigned char)(data.at(i*4 + 0)*255));
       image.push_back((unsigned char)(data.at(i*4 + 1)*255));
       image.push_back((unsigned char)(data.at(i*4 + 2)*255));
-      image.push_back((unsigned char)255);
+      image.push_back((unsigned char)(data.at(i*4 + 3)*255));
     }
 
    //Encode the image

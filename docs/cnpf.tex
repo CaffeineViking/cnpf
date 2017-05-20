@@ -1,11 +1,11 @@
 \RequirePackage[l2tabu, orthodox]{nag}
-\documentclass[a4paper, twocolumn]{article}
+\documentclass[a4paper]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[pdftex, hidelinks,
-            pdftitle={Rendering 3-D Curl Noise Particle Flow in Real-Time},
+            pdftitle={Flödessimulering i Realtid med 3-D Curl-Brus},
             pdfauthor={Martin Estgren and and Rasmus Hedin and Alfred Rundquist and Erik S. V. Jansson},
-            pdfsubject={},
+            pdfsubject={curl-noise, fluid simulation, gpu, opencl, opengl, real-time},
             pdfkeywords={}]{hyperref}
 
 \usepackage{bm}
@@ -16,6 +16,9 @@
 \usepackage{booktabs}
 \usepackage{mathtools}
 \usepackage{blindtext}
+\usepackage[margin=1.5in]{geometry}
+\usepackage[parfill]{parskip}
+\usepackage[swedish]{babel}
 \usepackage{algorithmic}
 \usepackage{todonotes}
 \usepackage{graphicx}
@@ -26,6 +29,7 @@
 \usepackage{amsthm}
 \usepackage{siunitx}
 \usepackage{algorithm}
+\usepackage{lipsum}
 \usepackage[capitalize, noabbrev]{cleveref}
 \usepackage[activate={true, nocompatibility}, final,
             tracking=true, kerning=true, spacing=true,
@@ -50,26 +54,20 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
         aboveskip = \bigskipamount,
         escapeinside={<@}{@>}}
 
-\title{\textbf{Rendering 3-D Curl Noise Particle Flow in Real-Time}\\
-       \Large{\textit{--- Project in Computer Graphics at Linköping University ---}}}
-\author{{\textbf{Martin Estgren}}\; {\href{mailto:mares480@student.liu.se}{\texttt{<mares480@student.liu.se>}}}\\
-        {\textbf{Rasmus Hedin}}\; {\href{mailto:rashe877@student.liu.se}{\texttt{<rashe877@student.liu.se>}}}\\
-        {\textbf{Alfred Rundquist}}\; {\href{mailto:alfru536@student.liu.se}{\texttt{<alfru536@student.liu.se>}}}\\
+\title{\vspace{-2.5cm}\textbf{Flödessimulering i Realtid med 3-D Curl-Brus}\\
+       \Large{\textit{--- en kort teknisk saga angående dess fasor och dess under ---}}}
+\author{{\textbf{Martin Estgren}}\;\;\;\;\;\; {\href{mailto:mares480@student.liu.se}{\texttt{<mares480@student.liu.se>}}}\\
+        {\textbf{Rasmus Hedin}}\;\;\;\;\;\;\;\; {\href{mailto:rashe877@student.liu.se}{\texttt{<rashe877@student.liu.se>}}}\\
+        {\textbf{Alfred Rundquist}}\;\;\; {\href{mailto:alfru536@student.liu.se}{\texttt{<alfru536@student.liu.se>}}}\\
         {\textbf{Erik S. V. Jansson}}\; {\href{mailto:erija578@student.liu.se}{\texttt{<erija578@student.liu.se>}}}}
 
 \begin{document}
     \maketitle
-    \section*{Abstract}
-    \pagenumbering{gobble}
-    \section*{Acknowledgments}
-    \tableofcontents \newpage
 
+    \lipsum
 
-
-    \newpage % Next column...
     \nocite{*} % Include all.
     \bibliographystyle{abbrv}
     \bibliography{cnpf}
-    \clearpage % Pages!!
-    \pagenumbering{arabic}
+
 \end{document}

@@ -13,18 +13,47 @@
 #include "Scenario.hpp"
 #include <vector>
 #include <utility>
+
+typedef struct Params {
+  float width;
+  float height;
+  float depth;
+  float fieldMagnitude;
+  float noiseRatio;
+  float noiseWidth;
+  float noiseHeight;
+  float noiseDepth;
+  float boundraryWidth;
+  glm::vec3 fieldDirection;
+} Params;
+
+enum SnapshotType{
+	CURL, DISTANCE
+};
+#define MAX_POSITIONS_BUFFERS 8
+
 class ParticleSystem {
 private:
 	 const int PARTICLE_COUNT;
-	 float maxTime;
+	 float _maxParticleCount;
+	 float _maxTime;
+	 float _respawnTime;
+	 float _fieldMagnitude;
+	 float _noiseRatio;
+	 glm::vec3 _fieldDirection;
 	 int _width, _height, _depth;
+     int _positionsBufferSize, _positionsBufferHead;
 	 cl::ImageGL _texture;
+	 cl::Image2D _outputImage;
 	 clParameters _params;
 	 cl::BufferGL _tmp;
+     cl::BufferGL _positionsGLBuffer[MAX_POSITIONS_BUFFERS];
      GLuint _vertexBufferId;
+     GLuint _positionsBufferId[MAX_POSITIONS_BUFFERS];
 	 cl::Buffer _vertexBuffer;
 	 cl::Buffer _timerBuffer;
 	 cl::Buffer _spheresBuffer;
+     cl::Buffer _positionsBuffer;
 
 	std::string readKernelFile(const std::string&);
 	std::vector<std::pair<glm::vec3, glm::vec3>> _emitters;
@@ -39,11 +68,17 @@ public:
 	void addSphere(const glm::vec3&, const float);
 	void addEmitter(const glm::vec3&, const glm::vec3&);
 	int getParticleCount(const float) const;
+	float* referenceRespawnTime();
+	float* referenceFieldMagnitude();
+	float* referenceNoiseRatio();
+	glm::vec3* referenceFieldDirection();
+
+	bool snapshot(const std::string&, const SnapshotType);
 	ParticleSystem(const ParticleSystem&) = default;
 	ParticleSystem& operator=(const ParticleSystem&) = default;
 
 	ParticleSystem(ParticleSystem&&) = default;
 	ParticleSystem& operator=(ParticleSystem&&) = default;
-
+	float* getMaxParticleCount();
 };
 #endif

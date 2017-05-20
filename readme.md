@@ -21,7 +21,7 @@ Dependencies
 
 If you encounter a run-time error about some basic_string funcitonallity, it's caused by the wrong libstdc++-6.dll is first in the path. The easiest solution is to copy it from C:\MinGW\bin to C:\Windows, or to the folder where the binaries are run from.
 
-### For linux or bsd:
+### For linux or bsd (maybe macos):
 
 * Using your favorite package manager, install:
     * GLFW with development packages.
@@ -29,6 +29,7 @@ If you encounter a run-time error about some basic_string funcitonallity, it's c
     * Maybe OpenCL hardware runtimes.
     * Oh yea, the OpenCL headers too.
     * The standard MESA schenanigans.
+    * AntTweakBar by building source.
     * The Premake5 build system.
 * If it doesn't work, ask Erik!!
 

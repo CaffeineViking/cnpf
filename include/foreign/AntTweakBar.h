@@ -95,6 +95,7 @@ TW_API int          TW_CALL TwGetBarCount();
 TW_API TwBar *      TW_CALL TwGetBarByIndex(int barIndex);
 TW_API TwBar *      TW_CALL TwGetBarByName(const char *barName);
 TW_API int          TW_CALL TwRefreshBar(TwBar *bar);
+TW_API TwBar *      TW_CALL TwGetActiveBar();
 
 // ----------------------------------------------------------------------------
 //  Var functions and definitions
@@ -319,6 +320,28 @@ TW_API int      TW_CALL TwEventSDL(const void *sdlEvent, unsigned char sdlMajorV
     TW_API int  TW_CALL TwEventCharGLFW(int glfwChar, int glfwAction);
 #   define TwEventMousePosGLFW     TwMouseMotion
 #   define TwEventMouseWheelGLFW   TwMouseWheel
+#endif
+
+// For GLFW3 event callbacks
+// You should define GLFW_CDECL before including AntTweakBar.h if your version of GLFW uses cdecl calling convensions
+typedef struct GLFWwindow GLFWwindow;
+#ifdef GLFW_CDECL
+    TW_API int TW_CDECL_CALL TwEventMouseButtonGLFW3cdecl(GLFWwindow *window, int glfwButton, int glfwAction, int glfwMods);
+    TW_API int TW_CDECL_CALL TwEventKeyGLFW3cdecl(GLFWwindow *window, int glfwKey, int glfwScancode, int glfwAction, int glfwMods);
+    TW_API int TW_CDECL_CALL TwEventCharModsGLFW3cdecl(GLFWwindow *window, int glfwChar, int glfwMods);
+    TW_API int TW_CDECL_CALL TwEventCursorPosGLFW3cdecl(GLFWwindow *window, double xpos, double ypos);
+    TW_API int TW_CDECL_CALL TwEventScrollGLFW3cdecl(GLFWwindow *window, double xoffset, double yoffset);
+#   define TwEventMouseButtonGLFW3 TwEventMouseButtonGLFW3cdecl
+#   define TwEventKeyGLFW3         TwEventKeyGLFW3cdecl
+#   define TwEventCharModsGLFW3    TwEventCharModsGLFW3cdecl
+#   define TwEventCursorPosGLFW3   TwEventCursorPosGLFW3cdecl
+#   define TwEventScrollGLFW3      TwEventScrollGLFW3cdecl
+#else
+    TW_API int TW_CALL TwEventMouseButtonGLFW3(GLFWwindow *window, int glfwButton, int glfwAction, int glfwMods);
+    TW_API int TW_CALL TwEventKeyGLFW3(GLFWwindow *window, int glfwKey, int glfwScancode, int glfwAction, int glfwMods);
+    TW_API int TW_CALL TwEventCharModsGLFW3(GLFWwindow *window, int glfwChar, int glfwMods);
+    TW_API int TW_CALL TwEventCursorPosGLFW3(GLFWwindow *window, double xpos, double ypos);
+    TW_API int TW_CALL TwEventScrollGLFW3(GLFWwindow *window, double xoffset, double yoffset);
 #endif
 
 // For GLUT event callbacks (Windows calling convention for GLUT callbacks is cdecl)

@@ -3,7 +3,7 @@
 #include <glm/glm.hpp>
 #include <CL/cl.hpp>
 #include <iostream>
-#include "foreign/anttweakbar.h"
+#include "foreign/AntTweakBar.h"
 #include "OpenGLUtils.hpp"
 
 #include "Locator.hpp"
@@ -19,6 +19,15 @@ const GLuint WIDTH = 1280, HEIGHT = 720;
 // Horizontal field of view of ~ 90 degrees.
 const float FIELD_OF_VIEW = glm::radians(60.0);
 
+void TW_CALL snapshotField(void * system)
+{ 
+  if(((ParticleSystem*)system)->snapshot("NoiseImage.png", SnapshotType::CURL)){
+    std::cout << "Snapshot created!" << std::endl;
+  }
+  else{
+    std::cout << "Error in creating snapshot!" << std::endl;
+  }
+}
 
 int main(int argc, char**argv)
 {
@@ -55,7 +64,7 @@ int main(int argc, char**argv)
     }
 
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(0); // Vsync.
+    glfwSwapInterval(1); // Vsync.
 
     // Set input locators
     GLFWInputLocator* input = new GLFWInputLocator();
@@ -74,9 +83,7 @@ int main(int argc, char**argv)
         std::cout << "Failed to initialize GLEW" << std::endl;
         return -1;
     }
-	// init anttweakbar
-	TwInit(TW_OPENGL_CORE, NULL);
-	
+
     // Setup the Z-buffer
     // glEnable(GL_DEPTH_TEST);
     // glDepthFunc(GL_LESS);
@@ -90,6 +97,22 @@ int main(int argc, char**argv)
     glViewport(0, 0, width, height);
 
     //====================================
+    //  Init for GUI with AntTweakBar
+    //====================================
+
+    TwInit(TW_OPENGL_CORE, NULL);
+
+    TwWindowSize(width, height);
+    TwBar *myBar;
+    myBar = TwNewBar("simparams");
+    TwDefine(" TW_HELP visible=false ");
+    TwDefine(" simparams label='Simulation Parameters' ");
+    TwDefine(" simparams  position='20 460' ");
+    TwDefine(" simparams  size='320 240' ");
+    TwDefine(" simparams valueswidth='160' ");
+    TwDefine(" simparams iconified=true ");
+
+    //====================================
     //  Init Particle System and Renderer
     //====================================
 
@@ -101,20 +124,22 @@ int main(int argc, char**argv)
     glGenVertexArrays(1,&vao);
     glBindVertexArray(vao);
 
-    // Create a visualization method for the particle system below.
-    BillboardParticleRenderer renderer { "share/textures/link.png", 0.40 };
-    const ShaderProgram& rendererProgram = renderer.getProgram();
+    // Create a visualization method for the particle system below. Changed under run-time by D.C.
+    ParticleRenderer* renderer = new SampledParticleRenderer { "share/textures/arrow.png", 0.4,4 };
+    const ShaderProgram& rendererProgram = renderer->getProgram();
 
     // Create an example Backwake scenario.
     BackwakeScenario backwakeScenario(32,32,32);
     backwakeScenario.generate();
 
     // Create the particle system which will compute step.
-    ParticleSystem system = ParticleSystem(100000, 15.0f);
+    float currentParticleCount = 50000;
+    ParticleSystem system = ParticleSystem(currentParticleCount, 15.0f);
+
     // Add a single emitter which will spawn particles into the scenario.
     system.addEmitter(glm::vec3(0.0f,-16.0f,0.0f), glm::vec3(16.0f,0.0f,16.0f));
 
-    system.addSphere(glm::vec3(0.0f,8.0f,0.0f), 16.0f);
+    system.addSphere(glm::vec3(0.0f,0.0f,0.0f), 12.0f);
 
     //system.addSphere(glm::vec3(0.0f,8.0f,0.0f), 4.0f);
     //system.addSphere(glm::vec3(0.0f,0.0f,8.0f), 4.0f);
@@ -126,11 +151,35 @@ int main(int argc, char**argv)
     paths.push_back("share/kernels/particles.cl");
     paths.push_back("share/kernels/timers.cl");
     kernels.push_back("particles");
+    kernels.push_back("exportCurl");
+    kernels.push_back("exportDistance");
     kernels.push_back("timers");
 
     system.init(paths, kernels, DEVICE_NAME, rendererProgram);
     // Finally, assign the scenario to it.
     system.setScenario(backwakeScenario);
+
+    // Add particle system varaibles to the tweak bar
+    TwAddVarRW(myBar, "RespawnTime", TW_TYPE_FLOAT, system.referenceRespawnTime(),  " min=0 max=60 step=0.5 group=System label='Particle Time' ");
+    TwAddVarRW(myBar, "FieldMagnitude", TW_TYPE_FLOAT, system.referenceFieldMagnitude(),  " min=-1 max=1 step=1 group=System label='Background field magnitude' ");
+    TwAddVarRW(myBar, "NoiseRatio", TW_TYPE_FLOAT, system.referenceNoiseRatio(),  " min=0 max=1 step=0.01 group=System label='Noise ratio' ");
+    TwAddVarRW(myBar, "Field", TW_TYPE_DIR3F, system.referenceFieldDirection(),  " min=-1 max=1 step=0.01 group=System label='Field Direction' ");
+    TwAddVarRW(myBar, "Population", TW_TYPE_FLOAT, system.getMaxParticleCount(),  "min=0, max=1000000 step=100 group=System label='Particle count' ");
+
+    // Add particle renderer variables to ANT.
+    bool depthTest = false, alphaBlend = true;
+    TwType renderModes { TwDefineEnumFromString("RenderModeType", "Point,Billboard,BillboardStrip") };
+    TwType textureTypes { TwDefineEnumFromString("RenderTextureType", "Fire,Link,Sphere,Vector,Fish?") };
+    // This is beyond horrible. Please don't even try look at the source for setting/getting these values. It's pure/condensed cancer.
+    TwAddVarCB(myBar, "RenderMode", renderModes, &setRendererCallback, &getRendererCallback, &renderer, " group=Renderer label='Mode' ");
+    TwAddVarCB(myBar, "RenderParticleSize", TW_TYPE_FLOAT, &setParticleSizeCallback, &getParticleSizeCallback, &renderer, " step=0.01 group=Renderer label='Particle size' ");
+    TwAddVarCB(myBar, "RenderTexture", textureTypes, &setBillboardTextureCallback, &getBillboardTextureCallback, &renderer, " group=Renderer label='Billboard texture' ");
+    TwAddVarCB(myBar, "RenderSegments", TW_TYPE_INT32, &setSegmentCountCallback, &getSegmentCountCallback, &renderer, " min=2 max=4 step=1 group=Renderer label='Segment count' ");
+    TwAddVarRW(myBar, "RenderDepth", TW_TYPE_BOOLCPP, &depthTest, " group=Renderer label='Depth testing' ");
+    TwAddVarRW(myBar, "RenderBlending", TW_TYPE_BOOLCPP, &alphaBlend, " group=Renderer label='Additive blending' ");
+
+    // Add button to take field snapshot
+    TwAddButton(myBar, "Snapshot", snapshotField, &system,  " group=System label='Field snapshot' ");
 
     // Keep track of slowdown/speedup.
     float currentTime = glfwGetTime();
@@ -146,12 +195,11 @@ int main(int argc, char**argv)
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     while (!glfwWindowShouldClose(window))
     {
-        currentTime = glfwGetTime();
+	currentTime = glfwGetTime();
         deltaTime = currentTime - lastFrame;
         lastFrame = currentTime;
         accumulatedTime += deltaTime;
         accumulatedFrames += 1;
-
         // We accumulate the number of frames every second and print out this
         // number. This is better since we don't update the title every frame
         // and produces more stable results. Just resets counter and repeats.
@@ -166,17 +214,15 @@ int main(int argc, char**argv)
         // Polling loop.
         glfwPollEvents();
 
-        // Controls for enabling or disabling fullscreen.
-        if (Locator::input()->isKeyPressed(GLFW_KEY_F)) {
-            const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-            glfwSetWindowSize(window, mode->width, mode->height);
-            camera.updateProjection(FIELD_OF_VIEW, mode->width, mode->height);
-            glViewport(0, 0, mode->width, mode->height);
-        } else if (Locator::input()->isKeyPressed(GLFW_KEY_R)) {
-            camera.updateProjection(FIELD_OF_VIEW, WIDTH, HEIGHT);
-            glfwSetWindowSize(window, WIDTH, HEIGHT);
-            glViewport(0, 0, WIDTH, HEIGHT);
-        }
+        if (depthTest) {
+            glDepthFunc(GL_LESS);
+            glEnable(GL_DEPTH_TEST);
+        } else glDisable(GL_DEPTH_TEST);
+
+        if (alphaBlend) {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        } else glDisable(GL_BLEND);
 
         // Step the particle simulation time forward:
        //if (Locator::input()->isKeyPressed(GLFW_KEY_LEFT))
@@ -194,18 +240,22 @@ int main(int argc, char**argv)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Move with the camera. Yea!
-        camera.handleInput(deltaTime);
+        camera.handleInput(deltaTime, accumulatedTime);
 
         glBindVertexArray(vao);
         // Finally, draw the simulated particles.
-        renderer.draw(system, camera, currentTime);
+        renderer->draw(system, camera, currentTime);
         glBindVertexArray(0);
 
+        TwDraw();
         // Swap the render buffer to display
         glfwSwapBuffers(window);
     }
 
     // Exit was ok!
+        TwTerminate();
+
+    delete renderer;
     glfwTerminate();
     return 0;
 }
