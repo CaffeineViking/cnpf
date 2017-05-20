@@ -15,7 +15,7 @@ void main()
 {
     final_vertex_position = vertex_position[0];
     vec4 P = gl_in[0].gl_Position;
-
+    
     // a: left-bottom
     vec2 va = P.xy + vec2(-0.5, -0.5) * size;
     gl_Position = projection * vec4(va, P.zw);

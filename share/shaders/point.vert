@@ -1,6 +1,7 @@
 #version 410 core
 
 layout (location = 0) in vec3 position;
+layout (location = 1) in vec3 oldPosition;
 
 uniform mat4 view;
 uniform mat4 projection;
@@ -21,5 +22,5 @@ void main()
     mat4 model = translationMatrix * rotationMatrix * scaleMatrix;
 
     vertex_position = position;
-    gl_Position  = projection * view * model * vec4(position.x, position.y, position.z, 1.0);
+    gl_Position  = projection * view * model * vec4(1);
 }

@@ -29,6 +29,7 @@ If you encounter a run-time error about some basic_string funcitonallity, it's c
     * Maybe OpenCL hardware runtimes.
     * Oh yea, the OpenCL headers too.
     * The standard MESA schenanigans.
+    * AntTweakBar by building source.
     * The Premake5 build system.
 * If it doesn't work, ask Erik!!
 

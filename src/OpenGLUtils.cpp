@@ -39,10 +39,11 @@ GLuint OpenGLUtils::createTexture3D(unsigned width,unsigned height,unsigned dept
 bool OpenGLUtils::writePNG(const std::string& filePath, const unsigned width, const unsigned height, const std::vector<float>& data){
     std::vector<unsigned char> image;
     for(unsigned i = 0; i < width*height; i++){
+      //std::cout << data.at(i*4 + 0) << " " << data.at(i*4 + 1) << " " << data.at(i*4 + 2) << " " << data.at(i*4 + 3) << " "; 
       image.push_back((unsigned char)(data.at(i*4 + 0)*255));
       image.push_back((unsigned char)(data.at(i*4 + 1)*255));
       image.push_back((unsigned char)(data.at(i*4 + 2)*255));
-      image.push_back((unsigned char)255);
+      image.push_back((unsigned char)(data.at(i*4 + 3)*255));
     }
 
    //Encode the image
