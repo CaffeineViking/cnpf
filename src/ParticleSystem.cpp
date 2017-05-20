@@ -21,7 +21,15 @@ ParticleSystem::~ParticleSystem(){
     glDeleteBuffers(1, &_vertexBufferId);
 }
 
-ParticleSystem::ParticleSystem(const int particles, const float time): PARTICLE_COUNT{particles}, _maxParticleCount(particles), _maxTime{time},_respawnTime{20.0f}, _fieldMagnitude{1.0f} ,_noiseRatio{0.0f}, _fieldDirection{0.0f,-1.0f,0.0f}
+ParticleSystem::ParticleSystem(const int particles, const float time):
+ PARTICLE_COUNT{particles}, _maxParticleCount(particles), 
+ _currentParticles{0},
+ _particlePerFrame{10},
+ _maxTime{time},
+ _respawnTime{20.0f},
+ _fieldMagnitude{1.0f},
+ _noiseRatio{0.0f},
+ _fieldDirection{0.0f,-1.0f,0.0f}
 {
 }
 
@@ -34,25 +42,19 @@ bool ParticleSystem::init(std::vector<std::string> paths, std::vector<std::strin
    std::cout << "Init OpenCL with device " << device <<  std::endl; 
    _params = OpenCLUtils::initCL(paths, kernels, device);
 
-   std::default_random_engine generator{};
-   std::uniform_int_distribution<int> distribution_int(0,_emitters.size()-1);
-   std::uniform_real_distribution<float> distribution_float(0.0f,1.0f);
-   std::vector<float> data(3*PARTICLE_COUNT);
-   for(int n = 0; n < PARTICLE_COUNT; ) {
-      auto emitter = _emitters.at(distribution_int(generator));
-      glm::vec3 min = emitter.first - (emitter.second/2.0f);
-      glm::vec3 max = emitter.first + (emitter.second/2.0f);
-      float x = min.x + std::abs(max.x - min.x)*distribution_float(generator);
-      float y = min.y + std::abs(max.y - min.y)*distribution_float(generator);
-      float z = min.z + std::abs(max.z - min.z)*distribution_float(generator);
-
-      if(glm::length(glm::vec3(x,y,z)) < 0.0f)
-         continue;
-      data[3*n+0] = x;
-      data[3*n+1] = y;
-      data[3*n+2] = z;
-      ++n;
+   std::vector<float> spawnerData;
+   for(int i = 0; i < _emitters.size(); i++){
+      spawnerData.push_back(_emitters.at(i).first.x);
+      spawnerData.push_back(_emitters.at(i).first.y);
+      spawnerData.push_back(_emitters.at(i).first.z);
+      spawnerData.push_back(_emitters.at(i).second.x);
+      spawnerData.push_back(_emitters.at(i).second.y);
+      spawnerData.push_back(_emitters.at(i).second.z);
    }
+
+   _spawnerBuffer = OpenCLUtils::createBuffer(_params.context,_params.queue, CL_MEM_READ_WRITE, sizeof(float)*_emitters.size()*6, spawnerData);
+
+   std::vector<float> data(3*PARTICLE_COUNT);
 
    _positionsBufferSize = 64;
    _positionsBufferHead = 0;
@@ -102,9 +104,9 @@ bool ParticleSystem::init(std::vector<std::string> paths, std::vector<std::strin
       
 // Create timer buffer, this is not of interest to the renderer at the moment
    for(int n = 0; n < PARTICLE_COUNT; ++n) {
-      data[3*n+0] = 0.0f; //distribution(generator);
-      data[3*n+1] = 0.0f; //distribution(generator);
-      data[3*n+2] = 0.0f; //distribution(generator);
+      data[3*n+0] = 999; //distribution(generator);
+      data[3*n+1] = 999; //distribution(generator);
+      data[3*n+2] = 999; //distribution(generator);
    }
 // Create Vertex buffer for the timers
    _timerBuffer = OpenCLUtils::createBuffer(_params.context,_params.queue, CL_MEM_READ_WRITE, sizeof(float)*PARTICLE_COUNT, data);
@@ -145,6 +147,8 @@ bool ParticleSystem::setScenario(const Scenario& s){
 }
 
 void ParticleSystem::compute(const float time, const float timeDelta){
+
+  _currentParticles += _particlePerFrame;
 // CL event used to wait for kernel osv...
    cl::Event ev;
 // set kernel arguments
@@ -201,6 +205,8 @@ void ParticleSystem::compute(const float time, const float timeDelta){
    _params.kernels.at("timers").setArg(4,_positionsBuffer);
    _params.kernels.at("timers").setArg(5,PARTICLE_COUNT);
    _params.kernels.at("timers").setArg(6,_positionsBufferSize);
+   _params.kernels.at("timers").setArg(7,_spawnerBuffer);
+   _params.kernels.at("timers").setArg(8,_emitters.size());
 
 
    // Enqueue kernel for snapshoting field
@@ -231,12 +237,16 @@ float* ParticleSystem::getMaxParticleCount(){
 	return &_maxParticleCount;
 }
 int ParticleSystem::getParticleCount(const float time) const {
-	if (PARTICLE_COUNT > _maxParticleCount){
+
+  return std::min(_currentParticles, _maxParticleCount);
+	/*
+  if (PARTICLE_COUNT > _maxParticleCount){
 		return std::min(time/_maxTime,1.0f)*_maxParticleCount;
 	}
 	else {
 		return std::min(time/_maxTime,1.0f)*PARTICLE_COUNT;
    }
+   */
 }
 
 float* ParticleSystem::referenceRespawnTime() {
@@ -249,6 +259,11 @@ float* ParticleSystem::referenceFieldMagnitude(){
 
 float* ParticleSystem::referenceNoiseRatio() {
    return &_noiseRatio;
+}
+
+
+float* ParticleSystem::referenceParticlesPerFrame() {
+   return &_particlePerFrame;
 }
 
 glm::vec3* ParticleSystem::referenceFieldDirection() {

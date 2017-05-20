@@ -134,12 +134,18 @@ int main(int argc, char**argv)
 
     // Create the particle system which will compute step.
     float currentParticleCount = 50000;
-    ParticleSystem system = ParticleSystem(currentParticleCount, 15.0f);
+    ParticleSystem system = ParticleSystem(currentParticleCount, 12.0f);
 
     // Add a single emitter which will spawn particles into the scenario.
-    system.addEmitter(glm::vec3(0.0f,-16.0f,0.0f), glm::vec3(16.0f,0.0f,16.0f));
+    system.addEmitter(glm::vec3(0.0f,-20.0f,0.0f), glm::vec3(16.0f,0.0f,16.0f));
+   // system.addEmitter(glm::vec3(-6.0f,-16.0f,0.0f), glm::vec3(4.0f,0.0f,4.0f));
+    //system.addEmitter(glm::vec3(0.0f,-16.0f,6.0f), glm::vec3(4.0f,0.0f,4.0f));
+   // system.addEmitter(glm::vec3(0.0f,-16.0f,-6.0f), glm::vec3(4.0f,0.0f,4.0f));
 
-    system.addSphere(glm::vec3(0.0f,0.0f,0.0f), 12.0f);
+    system.addSphere(glm::vec3(0.0f,0.0f,0.0f), 18.0f);
+    //system.addSphere(glm::vec3(0.0f,0.0f,0.0f), 12.0f);
+    //system.addSphere(glm::vec3(12.0f,0.0f,0.0f), 12.0f);
+    //system.addSphere(glm::vec3(0.0f,12.0f,8.0f), 12.0f);
 
     //system.addSphere(glm::vec3(0.0f,8.0f,0.0f), 4.0f);
     //system.addSphere(glm::vec3(0.0f,0.0f,8.0f), 4.0f);
@@ -164,7 +170,8 @@ int main(int argc, char**argv)
     TwAddVarRW(myBar, "FieldMagnitude", TW_TYPE_FLOAT, system.referenceFieldMagnitude(),  " min=-1 max=1 step=1 group=System label='Background field magnitude' ");
     TwAddVarRW(myBar, "NoiseRatio", TW_TYPE_FLOAT, system.referenceNoiseRatio(),  " min=0 max=1 step=0.01 group=System label='Noise ratio' ");
     TwAddVarRW(myBar, "Field", TW_TYPE_DIR3F, system.referenceFieldDirection(),  " min=-1 max=1 step=0.01 group=System label='Field Direction' ");
-    TwAddVarRW(myBar, "Population", TW_TYPE_FLOAT, system.getMaxParticleCount(),  "min=0, max=1000000 step=100 group=System label='Particle count' ");
+    TwAddVarRW(myBar, "SpawnRate", TW_TYPE_FLOAT, system.referenceParticlesPerFrame(),  " min=1 max=100 step=1 group=System label='Spawn Rate' ");
+    TwAddVarRW(myBar, "Population", TW_TYPE_FLOAT, system.getMaxParticleCount(),  "min=0, max=1000000 step=1000 group=System label='Particle count' ");
 
     // Add particle renderer variables to ANT.
     bool depthTest = false, alphaBlend = true;

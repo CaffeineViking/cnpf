@@ -30,12 +30,15 @@ typedef struct Params {
 enum SnapshotType{
 	CURL, DISTANCE
 };
+
 #define MAX_POSITIONS_BUFFERS 8
 
 class ParticleSystem {
 private:
 	 const int PARTICLE_COUNT;
 	 float _maxParticleCount;
+	 float _currentParticles;
+	 float _particlePerFrame;
 	 float _maxTime;
 	 float _respawnTime;
 	 float _fieldMagnitude;
@@ -54,6 +57,7 @@ private:
 	 cl::Buffer _timerBuffer;
 	 cl::Buffer _spheresBuffer;
      cl::Buffer _positionsBuffer;
+     cl::Buffer _spawnerBuffer;
 
 	std::string readKernelFile(const std::string&);
 	std::vector<std::pair<glm::vec3, glm::vec3>> _emitters;
@@ -71,6 +75,7 @@ public:
 	float* referenceRespawnTime();
 	float* referenceFieldMagnitude();
 	float* referenceNoiseRatio();
+	float* referenceParticlesPerFrame();
 	glm::vec3* referenceFieldDirection();
 
 	bool snapshot(const std::string&, const SnapshotType);
