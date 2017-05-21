@@ -29,6 +29,8 @@ ParticleSystem::ParticleSystem(const int particles, const float time):
  _respawnTime{20.0f},
  _fieldMagnitude{1.0f},
  _noiseRatio{0.0f},
+  _noiseMagnitude{1.0f},
+ _lengthScale{20.0f},
  _fieldDirection{0.0f,-1.0f,0.0f}
 {
 }
@@ -180,20 +182,18 @@ void ParticleSystem::compute(const float time, const float timeDelta){
    kernelParameters.depth = _depth;
    kernelParameters.fieldMagnitude = _fieldMagnitude;
    kernelParameters.noiseRatio = _noiseRatio;
-   kernelParameters.noiseWidth = _width;
-   kernelParameters.noiseHeight = _height;
-   kernelParameters.noiseDepth = _depth;
+   kernelParameters.lengthScale = _lengthScale;
+   kernelParameters.noiseMagnitude = _noiseMagnitude;
    kernelParameters.boundraryWidth = 1.0f;
    kernelParameters.fieldDirection = _fieldDirection;
    _params.kernels.at("particles").setArg(0,_vertexBuffer);
    _params.kernels.at("particles").setArg(1,_spheresBuffer);
    _params.kernels.at("particles").setArg(2,_spheres.size()/4);
-   _params.kernels.at("particles").setArg(3,_texture);
-   _params.kernels.at("particles").setArg(4,kernelParameters);
-   _params.kernels.at("particles").setArg(5,timeDelta);
-   _params.kernels.at("particles").setArg(6,_positionsBuffer);
-   _params.kernels.at("particles").setArg(7,PARTICLE_COUNT);
-   _params.kernels.at("particles").setArg(8,_positionsBufferHead);
+   _params.kernels.at("particles").setArg(3,kernelParameters);
+   _params.kernels.at("particles").setArg(4,timeDelta);
+   _params.kernels.at("particles").setArg(5,_positionsBuffer);
+   _params.kernels.at("particles").setArg(6,PARTICLE_COUNT);
+   _params.kernels.at("particles").setArg(7,_positionsBufferHead);
 
    _positionsBufferHead++;
    _positionsBufferHead %= _positionsBufferSize;
@@ -271,7 +271,13 @@ glm::vec3* ParticleSystem::referenceFieldDirection() {
 
 }
 
+float* ParticleSystem::referenceLengthScale() {
+  return &_lengthScale;
+}
 
+float* ParticleSystem::referenceNoiseMagnitude() {
+  return &_noiseMagnitude;
+}
 
 // A real bastard of a function
 bool ParticleSystem::snapshot(const std::string& filePath, const SnapshotType type = SnapshotType::CURL) {
@@ -330,9 +336,8 @@ const float scaleFactor = 0.018f;
    kernelParameters.depth = h;
    kernelParameters.fieldMagnitude = _fieldMagnitude;
    kernelParameters.noiseRatio = _noiseRatio;
-   kernelParameters.noiseWidth = _width;
-   kernelParameters.noiseHeight = _height;
-   kernelParameters.noiseDepth = _depth;
+   kernelParameters.lengthScale = _lengthScale;
+   kernelParameters.noiseMagnitude = _noiseMagnitude;
    kernelParameters.boundraryWidth = 1.0f;
    kernelParameters.fieldDirection = _fieldDirection;
 
@@ -345,9 +350,8 @@ const float scaleFactor = 0.018f;
    _params.kernels.at(kernel).setArg(0,outputImage);
    _params.kernels.at(kernel).setArg(1,_spheresBuffer);
    _params.kernels.at(kernel).setArg(2,_spheres.size()/4);
-   _params.kernels.at(kernel).setArg(3,_texture);
-   _params.kernels.at(kernel).setArg(4,kernelParameters);
-   _params.kernels.at(kernel).setArg(5,scaleFactor);
+   _params.kernels.at(kernel).setArg(3,kernelParameters);
+   _params.kernels.at(kernel).setArg(4,scaleFactor);
 
    cl_int err;
    err = _params.queue.enqueueNDRangeKernel(_params.kernels.at(kernel),cl::NDRange(0,0),cl::NDRange(w,h),cl::NDRange(1,1));

@@ -97,6 +97,8 @@ void OpenGLUtils::bufferToPNG_Y(const std::string& name, const std::vector<float
           crossSection[subIndex * 4 + 0] = data.at(globalIndex * 4 + 0);
           crossSection[subIndex * 4 + 1] = data.at(globalIndex * 4 + 1);
           crossSection[subIndex * 4 + 2] = data.at(globalIndex * 4 + 2);
+          crossSection[subIndex * 4 + 3] = 1.0f;
+
         }
      }
        std::ostringstream oss;

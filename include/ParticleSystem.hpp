@@ -20,9 +20,8 @@ typedef struct Params {
   float depth;
   float fieldMagnitude;
   float noiseRatio;
-  float noiseWidth;
-  float noiseHeight;
-  float noiseDepth;
+  float lengthScale;
+  float noiseMagnitude;
   float boundraryWidth;
   glm::vec3 fieldDirection;
 } Params;
@@ -43,6 +42,8 @@ private:
 	 float _respawnTime;
 	 float _fieldMagnitude;
 	 float _noiseRatio;
+	 float _noiseMagnitude;
+	 float _lengthScale;
 	 glm::vec3 _fieldDirection;
 	 int _width, _height, _depth;
      int _positionsBufferSize, _positionsBufferHead;
@@ -76,6 +77,8 @@ public:
 	float* referenceFieldMagnitude();
 	float* referenceNoiseRatio();
 	float* referenceParticlesPerFrame();
+	float* referenceLengthScale();
+	float* referenceNoiseMagnitude();
 	glm::vec3* referenceFieldDirection();
 
 	bool snapshot(const std::string&, const SnapshotType);

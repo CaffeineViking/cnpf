@@ -6,10 +6,9 @@ typedef struct Params {
   float depth;
   float field_magnitude;
   float noise_ratio;
-  float noise_width;
-  float noise_height;
-  float noise_depth;
+  float length_scale;
   float boundrary_width;
+  float noise_magnitude;
   float fieldX;
   float fieldY;
   float fieldZ;
@@ -46,20 +45,22 @@ float getAlpha(float sphere_radius, float influence_radius, float distance){
   return fabs(((float)smooth(sphere_radius, sphere_radius + influence_radius, distance)));
 }
 
-float3 potential(float3 p, float3 np, read_only image3d_t t,const int nsph, __global float* sph, const Params params){
+float3 potential(float3 p,const int nsph, __global float* sph, const Params params){
 
   const float3  sphere_centre   = (float3)(0.0f,0.0f,0.0f);
   const float   sphere_radius   = get_closest_sphere(p,nsph, sph, &sphere_centre);
   const float3  field_direction = (float3)(params.fieldX,params.fieldY, params.fieldZ);
-  const sampler_t smp       = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_MIRRORED_REPEAT |CLK_FILTER_LINEAR;
-  float4 noise = (read_imagef(t, smp, (float4)(np.x, np.y, np.z ,0.0f)) - 0.5f) * 2.0f;
-
-    float3 psi = (float3)(0.0f,0.0f,0.0f);
+  float3 psi = (float3)(0.0f,0.0f,0.0f);
 
     // Add Noise
-    float3 psi_i = (float3)(noise.x, noise.y, noise.z);
-    psi = psi_i * params.noise_ratio;
+    float nx = snoise3((p + (float3)(8,0,0))/params.length_scale);
+    float ny = snoise3((p + (float3)(0,8,0))/params.length_scale);
+    float nz = snoise3((p + (float3)(0,0,8))/params.length_scale);
 
+    float3 psi_i = (float3)(nx,ny,nz);
+    psi = params.length_scale * psi_i * params.noise_ratio * params.noise_magnitude;
+
+    // Add Background Field
     float3 parallel = dot(field_direction, p) * field_direction;
     float3 ortho = p - parallel;
     float3 directional = cross(ortho, field_direction);
@@ -73,7 +74,7 @@ float3 potential(float3 p, float3 np, read_only image3d_t t,const int nsph, __gl
     return (alpha) * psi + (1.0f - alpha) * n * dot(n, psi);
 }
 
-float3 curl(float3 p, float3 np, read_only image3d_t t,const int nsph,  __global float* sph, const Params parameters){
+float3 curl(float3 p, const int nsph, __global float* sph, const Params parameters){
   const float eps = 0.0001f;
   const float3 epsX = (float3)(eps,0.0f,0.0f);
   const float3 epsY = (float3)(0.0f,eps,0.0f);
@@ -81,12 +82,12 @@ float3 curl(float3 p, float3 np, read_only image3d_t t,const int nsph,  __global
 
   float3 curl = (float3)(0.0f,0.0f,0.0f);
 
-      curl.x =( (potential(p + epsY,np + epsY,t, nsph, sph, parameters).z - potential(p - epsY,np - epsY,t, nsph, sph, parameters).z)
-             -(  potential(p + epsZ,np + epsZ,t, nsph, sph, parameters).y - potential(p - epsZ,np - epsZ,t, nsph, sph, parameters).y)) / (2*eps);
-      curl.y =( (potential(p + epsZ,np + epsZ,t, nsph, sph, parameters).x - potential(p - epsZ,np - epsZ,t, nsph, sph, parameters).x)
-             -(  potential(p + epsX,np + epsX,t, nsph, sph, parameters).z - potential(p - epsX,np - epsX,t, nsph, sph, parameters).z)) / (2*eps);
-      curl.z =( (potential(p + epsX,np + epsX,t, nsph, sph, parameters).y - potential(p - epsX,np - epsX,t, nsph, sph, parameters).y)
-             -(  potential(p + epsY,np + epsY,t, nsph, sph, parameters).x - potential(p - epsY,np - epsY,t, nsph, sph, parameters).x)) / (2*eps);
+      curl.x =( (potential(p + epsY, nsph, sph, parameters).z - potential(p - epsY, nsph, sph, parameters).z)
+             -(  potential(p + epsZ, nsph, sph, parameters).y - potential(p - epsZ, nsph, sph, parameters).y)) / (2*eps);
+      curl.y =( (potential(p + epsZ, nsph, sph, parameters).x - potential(p - epsZ, nsph, sph, parameters).x)
+             -(  potential(p + epsX, nsph, sph, parameters).z - potential(p - epsX, nsph, sph, parameters).z)) / (2*eps);
+      curl.z =( (potential(p + epsX, nsph, sph, parameters).y - potential(p - epsX, nsph, sph, parameters).y)
+             -(  potential(p + epsY, nsph, sph, parameters).x - potential(p - epsY, nsph, sph, parameters).x)) / (2*eps);
       return normalize(curl);
 }
 
@@ -94,7 +95,6 @@ void __kernel particles(
   __global float* positions,
   __global float* spheres,
   const int nrSpeheres,
-  read_only image3d_t texture,
   const Params parameters,
   const float frameDelta,
   __global float* positionsBuffer,
@@ -106,8 +106,7 @@ void __kernel particles(
     float y = positions[3*id+1];
     float z = positions[3*id+2];
     float3 position = (float3)(x,y,z);
-    float3 noise_p = (float3)(x / parameters.noise_width,y / parameters.noise_height , z / parameters.noise_depth);
-   float3 psi = curl(position,noise_p, texture, nrSpeheres, spheres, parameters);
+    float3 psi = curl(position, nrSpeheres, spheres, parameters);
 
     positions[3*id+0] += psi.x * 4.0f * frameDelta;//(values.x - 0.5f) * 2.0f * frameDelta  * velocities[3*id+0];
     positions[3*id+1] += psi.y * 4.0f * frameDelta;//(values.y - 0.5f) * 2.0f * frameDelta  * velocities[3*id+1];
@@ -120,7 +119,7 @@ void __kernel particles(
 
 __kernel void exportCurl(
   __write_only image2d_t image,
-  __global float* spheres, const int nrSpeheres,read_only image3d_t texture, const Params parameters, const float scaleFactor)
+  __global float* spheres, const int nrSpeheres, const Params parameters, const float scaleFactor)
 {
   const int x = get_global_id(0);
   const int y = 0;
@@ -130,13 +129,8 @@ __kernel void exportCurl(
   float4 color;
 
    float3 position = ((float3)(x,y,z) - hd) * scaleFactor;
-   float3 noise_p = ((float3)(x,y,z) - hd);
-   noise_p.x /= parameters.noise_width;
-   noise_p.y /= parameters.noise_height;
-   noise_p.z /= parameters.noise_depth;
-   noise_p *= scaleFactor;
    
-   float3 psi = curl(position,noise_p, texture, nrSpeheres, spheres, parameters);
+   float3 psi = curl(position,nrSpeheres, spheres, parameters);
    color.x = psi.x;
    color.y = psi.y;
    color.z = psi.z;
@@ -148,7 +142,7 @@ __kernel void exportCurl(
 
 __kernel void exportDistance(
   __write_only image2d_t image,
-  __global float* spheres, const int nrSpeheres,read_only image3d_t texture, const Params parameters, const float scaleFactor)
+  __global float* spheres, const int nrSpeheres, const Params parameters, const float scaleFactor)
 {
   const int x = get_global_id(0);
   const int y = 0;
