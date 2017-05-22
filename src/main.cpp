@@ -21,11 +21,39 @@ const float FIELD_OF_VIEW = glm::radians(60.0);
 
 void TW_CALL snapshotField(void * system)
 { 
-  if(((ParticleSystem*)system)->snapshot("NoiseImage.png", SnapshotType::CURL)){
+  if(((ParticleSystem*)system)->snapshot("Curl.png", "exportCurl")){
     std::cout << "Snapshot created!" << std::endl;
   }
   else{
-    std::cout << "Error in creating snapshot!" << std::endl;
+    std::cout << "Error in creating snapshot! Problem in exportCurl" << std::endl;
+  }
+
+ if(((ParticleSystem*)system)->snapshot("Noise.png", "exportNoise")){
+    std::cout << "Snapshot created!" << std::endl;
+  }
+  else{
+    std::cout << "Error in creating snapshot! Problem in exportNoise" << std::endl;
+  }
+
+   if(((ParticleSystem*)system)->snapshot("Background.png", "exportBackground")){
+    std::cout << "Snapshot created!" << std::endl;
+  }
+  else{
+    std::cout << "Error in creating snapshot! Problem in exportBackground" << std::endl;
+  }
+
+     if(((ParticleSystem*)system)->snapshot("Potential.png", "exportPotential")){
+    std::cout << "Snapshot created!" << std::endl;
+  }
+  else{
+    std::cout << "Error in creating snapshot! Problem in exportPotential" << std::endl;
+  }
+
+       if(((ParticleSystem*)system)->snapshot("Alpha.png", "exportAlpha")){
+    std::cout << "Snapshot created!" << std::endl;
+  }
+  else{
+    std::cout << "Error in creating snapshot! Problem in exportAlpha" << std::endl;
   }
 }
 
@@ -159,7 +187,12 @@ int main(int argc, char**argv)
     paths.push_back("share/kernels/timers.cl");
     kernels.push_back("particles");
     kernels.push_back("exportCurl");
-    kernels.push_back("exportDistance");
+    kernels.push_back("exportBackground");
+    kernels.push_back("exportNoise");
+    kernels.push_back("exportPotential");
+    kernels.push_back("exportAlpha");
+
+
     kernels.push_back("timers");
 
     system.init(paths, kernels, DEVICE_NAME, rendererProgram);

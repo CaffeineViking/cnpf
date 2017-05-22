@@ -42,15 +42,23 @@ float get_closest_sphere(float3 p, const int nsph, __global float* sph, float3* 
 }
 
 float getAlpha(float sphere_radius, float influence_radius, float distance){
+
   return fabs(((float)smooth(sphere_radius, sphere_radius + influence_radius, distance)));
 }
 
-float3 potential(float3 p,const int nsph, __global float* sph, const Params params){
+float3 getBackgorund(float3 p, const Params params){
+  // Add Background Field
+   
+    const float3  field_direction = (float3)(params.fieldX,params.fieldY, params.fieldZ);
 
-  const float3  sphere_centre   = (float3)(0.0f,0.0f,0.0f);
-  const float   sphere_radius   = get_closest_sphere(p,nsph, sph, &sphere_centre);
-  const float3  field_direction = (float3)(params.fieldX,params.fieldY, params.fieldZ);
-  float3 psi = (float3)(0.0f,0.0f,0.0f);
+    const float3 parallel = dot(field_direction, p) * field_direction;
+    const float3 ortho = p - parallel;
+    const float3 directional = cross(ortho, field_direction);
+
+    return (1.0f - params.noise_ratio) * directional * params.field_magnitude;
+}
+
+float3 getNoise(float3 p, const Params params){
 
     // Add Noise
     float nx = snoise3((p + (float3)(8,0,0))/params.length_scale);
@@ -58,17 +66,20 @@ float3 potential(float3 p,const int nsph, __global float* sph, const Params para
     float nz = snoise3((p + (float3)(0,0,8))/params.length_scale);
 
     float3 psi_i = (float3)(nx,ny,nz);
-    psi = params.length_scale * psi_i * params.noise_ratio * params.noise_magnitude;
+    return params.length_scale * psi_i * params.noise_ratio * params.noise_magnitude;
+}
 
-    // Add Background Field
-    float3 parallel = dot(field_direction, p) * field_direction;
-    float3 ortho = p - parallel;
-    float3 directional = cross(ortho, field_direction);
 
-    psi += (1.0f - params.noise_ratio) * directional * params.field_magnitude;
+float3 potential(float3 p,const int nsph, __global float* sph, const Params params){
+
+
+    float3 psi = getNoise(p, params);
+    psi += getBackgorund(p, params);
+
+    const float3  sphere_centre   = (float3)(0.0f,0.0f,0.0f);
+    const float   sphere_radius   = get_closest_sphere(p,nsph, sph, &sphere_centre);
 
     float d = length(p - sphere_centre);
-
     float alpha = getAlpha(sphere_radius, params.boundrary_width, d);
     float3 n = normalize(p);
     return (alpha) * psi + (1.0f - alpha) * n * dot(n, psi);
@@ -140,7 +151,7 @@ __kernel void exportCurl(
   write_imagef(image, coords, color);
 }
 
-__kernel void exportDistance(
+__kernel void exportPotential(
   __write_only image2d_t image,
   __global float* spheres, const int nrSpeheres, const Params parameters, const float scaleFactor)
 {
@@ -151,14 +162,86 @@ __kernel void exportDistance(
   const float3 hd = (float3)(parameters.width, parameters.height, parameters.depth) * 0.5f;
   float4 color;
 
-  float3 position = ((float3)(x,y,z) - hd) * scaleFactor;
-  const float3  sphere_centre   = (float3)(0.0f,0.0f,0.0f);
-  const float   sphere_radius   = get_closest_sphere(position,nrSpeheres, spheres, &sphere_centre);
-  float d = length(position - sphere_centre);
-  float alpha = getAlpha(sphere_radius, 4.0f, d);
+   float3 position = ((float3)(x,y,z) - hd) * scaleFactor;
+   
+   float3 psi = normalize(potential(position,nrSpeheres, spheres, parameters));
+   color.x = psi.x;
+   color.y = psi.y;
+   color.z = psi.z;
+   color += 1.0f;
+   color *= 0.5f;
+   color.w = 1.0f;
+  write_imagef(image, coords, color);
+}
+
+
+__kernel void exportBackground(
+  __write_only image2d_t image,
+  __global float* spheres, const int nrSpeheres, const Params parameters, const float scaleFactor)
+{
+  const int x = get_global_id(0);
+  const int y = 0;
+  const int z = get_global_id(1) ;
+  const int2 coords = (int2)(x,z);
+  const float3 hd = (float3)(parameters.width, parameters.height, parameters.depth) * 0.5f;
+  float4 color;
+
+   float3 position = ((float3)(x,y,z) - hd) * scaleFactor;
+    
+   float3 psi = normalize(getBackgorund(position, parameters));
+   color.x = psi.x;
+   color.y = psi.y;
+   color.z = psi.z;
+   color += 1.0f;
+   color *= 0.5f;
+   color.w = 1.0f;
+  write_imagef(image, coords, color);
+}
+
+__kernel void exportAlpha(
+  __write_only image2d_t image,
+  __global float* spheres, const int nrSpeheres, const Params parameters, const float scaleFactor)
+{
+  const int x = get_global_id(0);
+  const int y = 0;
+  const int z = get_global_id(1) ;
+  const int2 coords = (int2)(x,z);
+  const float3 hd = (float3)(parameters.width, parameters.height, parameters.depth) * 0.5f;
+  float4 color;
+
+   float3 position = ((float3)(x,y,z) - hd) * scaleFactor;
+
+    const float3  sphere_centre   = (float3)(0.0f,0.0f,0.0f);
+    const float   sphere_radius   = get_closest_sphere(position,nrSpeheres, spheres, &sphere_centre);
+
+    float d = length(position - sphere_centre);
+    float alpha = getAlpha(sphere_radius, parameters.boundrary_width, d);
    color.x = alpha;
    color.y = alpha;
    color.z = alpha;
+   color += 1.0f;
+   color *= 0.5f;
+   color.w = 1.0f;
+  write_imagef(image, coords, color);
+}
+
+__kernel void exportNoise(
+  __write_only image2d_t image,
+  __global float* spheres, const int nrSpeheres, const Params parameters, const float scaleFactor)
+{
+  const int x = get_global_id(0);
+  const int y = 0;
+  const int z = get_global_id(1) ;
+  const int2 coords = (int2)(x,z);
+  const float3 hd = (float3)(parameters.width, parameters.height, parameters.depth) * 0.5f;
+  float4 color;
+
+   float3 position = ((float3)(x,y,z) - hd) * scaleFactor;
+   
+   float3 psi = normalize(getNoise(position, parameters));
+   color.x = psi.x;
+   color.y = psi.y;
+   color.z = psi.z;
    color += 1.0f;
    color *= 0.5f;
    color.w = 1.0f;

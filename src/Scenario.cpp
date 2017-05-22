@@ -88,7 +88,7 @@ void BackwakeScenario::generate(){
    }
    noiseField = (noiseField.normalize() * 0.5f) + 0.5f;
 
-   OpenGLUtils::bufferToPNG_Y("debug/noiseFieldY", noiseField.getData() , _width, _height, _depth);
+  // OpenGLUtils::bufferToPNG_Y("debug/noiseFieldY", noiseField.getData() , _width, _height, _depth);
    //OpenGLUtils::bufferToPNG_X("debug/noiseFieldX", (noiseField* 0.5f + 0.5f).getData() , _width, _height, _depth);
  
    _field = noiseField;

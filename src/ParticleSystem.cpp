@@ -280,7 +280,7 @@ float* ParticleSystem::referenceNoiseMagnitude() {
 }
 
 // A real bastard of a function
-bool ParticleSystem::snapshot(const std::string& filePath, const SnapshotType type = SnapshotType::CURL) {
+bool ParticleSystem::snapshot(const std::string& filePath, const std::string& kenelName) {
 
 const unsigned w = 2048;
 const unsigned h = 2048;
@@ -328,7 +328,7 @@ const float scaleFactor = 0.018f;
     region[1] = h;
     region[2] = 1;
 
-    _params.queue.enqueueWriteImage(outputImage, CL_TRUE, origin, region,0,0, data.data());
+//    _params.queue.enqueueWriteImage(outputImage, CL_TRUE, origin, region,0,0, data.data());
 
    Params kernelParameters{};
    kernelParameters.width = w;
@@ -341,22 +341,17 @@ const float scaleFactor = 0.018f;
    kernelParameters.boundraryWidth = 1.0f;
    kernelParameters.fieldDirection = _fieldDirection;
 
-   std::string kernel = "exportCurl";
-   if(type == SnapshotType::CURL){
-    kernel = "exportCurl";
-   }else if (type == SnapshotType::DISTANCE){
-    kernel =  "exportDistance";
-   }
-   _params.kernels.at(kernel).setArg(0,outputImage);
-   _params.kernels.at(kernel).setArg(1,_spheresBuffer);
-   _params.kernels.at(kernel).setArg(2,_spheres.size()/4);
-   _params.kernels.at(kernel).setArg(3,kernelParameters);
-   _params.kernels.at(kernel).setArg(4,scaleFactor);
+
+   _params.kernels.at(kenelName).setArg(0,outputImage);
+   _params.kernels.at(kenelName).setArg(1,_spheresBuffer);
+   _params.kernels.at(kenelName).setArg(2,_spheres.size()/4);
+   _params.kernels.at(kenelName).setArg(3,kernelParameters);
+   _params.kernels.at(kenelName).setArg(4,scaleFactor);
 
    cl_int err;
-   err = _params.queue.enqueueNDRangeKernel(_params.kernels.at(kernel),cl::NDRange(0,0),cl::NDRange(w,h),cl::NDRange(1,1));
+   err = _params.queue.enqueueNDRangeKernel(_params.kernels.at(kenelName),cl::NDRange(0,0),cl::NDRange(w,h),cl::NDRange(1,1));
    if(err != 0){
-    std::cout << "Something went wrong when running kernel: "<< kernel << " " << err << std::endl;
+    std::cout << "Something went wrong when running kernel: "<< kenelName << " " << err << std::endl;
     return false;
    }
 

@@ -26,10 +26,6 @@ typedef struct Params {
   glm::vec3 fieldDirection;
 } Params;
 
-enum SnapshotType{
-	CURL, DISTANCE
-};
-
 #define MAX_POSITIONS_BUFFERS 8
 
 class ParticleSystem {
@@ -81,7 +77,7 @@ public:
 	float* referenceNoiseMagnitude();
 	glm::vec3* referenceFieldDirection();
 
-	bool snapshot(const std::string&, const SnapshotType);
+	bool snapshot(const std::string&, const std::string&);
 	ParticleSystem(const ParticleSystem&) = default;
 	ParticleSystem& operator=(const ParticleSystem&) = default;
 

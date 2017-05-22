@@ -2,8 +2,9 @@
 \documentclass[a4paper]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+\usepackage{lmodern}
 \usepackage[pdftex, hidelinks,
-            pdftitle={Flödessimulering i Realtid med 3-D Curl-Brus},
+            pdftitle={"Flödessimulering" i Realtid med 3-D Curl-Brus},
             pdfauthor={Martin Estgren and and Rasmus Hedin and Alfred Rundquist and Erik S. V. Jansson},
             pdfsubject={curl-noise, fluid simulation, gpu, opencl, opengl, real-time},
             pdfkeywords={}]{hyperref}
@@ -23,6 +24,7 @@
 \usepackage{todonotes}
 \usepackage{graphicx}
 \usepackage{courier}
+\usepackage{hyperref}
 \usepackage{acronym}
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -54,7 +56,7 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
         aboveskip = \bigskipamount,
         escapeinside={<@}{@>}}
 
-\title{\vspace{-2.5cm}\textbf{Flödessimulering i Realtid med 3-D Curl-Brus}\\
+\title{\vspace{-2.5cm}\textbf{"Flödessimulering" i Realtid med 3-D Curl-Brus}\\
        \Large{\textit{--- en kort teknisk saga angående dess fasor och dess under ---}}}
 \author{{\textbf{Martin Estgren}}\;\;\;\;\;\; {\href{mailto:mares480@student.liu.se}{\texttt{<mares480@student.liu.se>}}}\\
         {\textbf{Rasmus Hedin}}\;\;\;\;\;\;\;\; {\href{mailto:rashe877@student.liu.se}{\texttt{<rashe877@student.liu.se>}}}\\
@@ -64,7 +66,75 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
 \begin{document}
     \maketitle
 
-    \lipsum
+    \section{Inledning}
+
+    Ett viktigt område inom datorgrafik och visualisering är förmågan att kunna simulera verklighetstrogna flödessystem i realtid. I detta projekt har vi implementerat grundläggande flödesystem för ett partikelsystem i 3D via en metod kallad \textit{Curl-nosie} först presenterat av Robert Bridson et al.\cite{bridson2007curl}.
+
+    \textit{Curl-noise} är en metod att framställa verklighetstroget partikelflöde genom att procentuellt animera turbulenta flöden genom med hjälp utav procentuellt brus som man applicerar några relativt billiga operationer på, istället för att beräkna flödet det genom t.ex. \textit{Navier-Stokes ekvationer}. 
+
+    \section{Teori}
+
+    Flödets riktning beräknas för varje partikels position genom följande system. I original papperet presenteras både beräkningarna för två och tre dimensioner men efters vi valt att enbart implementera den sistnämnda fokuserar vi på den.
+
+    \textbf{Brusriktningen}
+    \begin{equation}
+        N(\hat{x}) =  
+        \begin{bmatrix}
+        Simplex((\hat{x} + \epsilon_x)\frac{1}{L})
+        \\
+        Simplex((\hat{x} + \epsilon_y)\frac{1}{L})
+        \\ 
+        Simplex((\hat{x} + \epsilon_z)\frac{1}{L})
+        \end{bmatrix} * \gamma M_nL
+    \end{equation}
+    Där $\epsilon$ representerar en förskjutning så att inte alla komponenter samplas på exakt samma punkt. I detta fall $\epsilon = \begin{bmatrix}
+8 & 0 & 0\\ 
+0 & 8 & 0\\ 
+0 & 0 & 8
+\end{bmatrix}$, $\gamma$ representerar förhållande mellan brus och bakgrundsfällt. $M_n$ är styrkan på bruset (Styrkan är först normerad så vi skalar upp det till vad vi vill ha). $L$ är längdskalan på bruset vilket i vårat fall är relativt stor då vi vill ha långa övergångar i bruset.
+
+\textbf{Bargrundskikningen}
+\begin{equation}
+    F(\hat{x}) = (1.0-\gamma) * D(\hat{x}) * M_f
+\end{equation}
+TBA
+
+
+\textbf{Alpha}
+
+\textbf{Potential}
+\begin{equation}
+    P(\hat{x}) = N(\hat{x}) + F(\hat{x})
+\end{equation}
+
+
+\textbf{Curl}
+
+    \section{Metod}
+
+    \section{Resultat}
+\begin{figure}[H]
+\center
+\begin{minipage}[]{0.19\textwidth}
+\includegraphics[width=\textwidth]{share/Noise.png}
+\end{minipage}
+\begin{minipage}[]{0.19\textwidth}
+\includegraphics[width=\textwidth]{share/Background.png}
+\end{minipage}
+\begin{minipage}[]{0.19\textwidth}
+\includegraphics[width=\textwidth]{share/Alpha.png}
+\end{minipage}
+\begin{minipage}[]{0.19\textwidth}
+\includegraphics[width=\textwidth]{share/Potential.png}
+\end{minipage}
+\begin{minipage}[]{0.19\textwidth}
+\includegraphics[width=\textwidth]{share/Curl.png}
+\end{minipage}
+\end{figure}
+
+    \section{Diskussion}
+
+    \section{Sammanfattning}
 
     \nocite{*} % Include all.
     \bibliographystyle{abbrv}
