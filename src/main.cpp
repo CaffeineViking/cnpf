@@ -129,17 +129,23 @@ int main(int argc, char**argv)
     const ShaderProgram& rendererProgram = renderer->getProgram();
 
     // Create an example Backwake scenario.
-    BackwakeScenario backwakeScenario(32,32,32);
+    BackwakeScenario backwakeScenario(16,16,16);
     backwakeScenario.generate();
 
     // Create the particle system which will compute step.
     float currentParticleCount = 50000;
-    ParticleSystem system = ParticleSystem(currentParticleCount, 15.0f);
+    ParticleSystem system = ParticleSystem(currentParticleCount, 12.0f);
 
     // Add a single emitter which will spawn particles into the scenario.
-    system.addEmitter(glm::vec3(0.0f,-16.0f,0.0f), glm::vec3(16.0f,0.0f,16.0f));
+    system.addEmitter(glm::vec3(0.0f,-20.0f,0.0f), glm::vec3(16.0f,0.0f,16.0f));
+   // system.addEmitter(glm::vec3(-6.0f,-16.0f,0.0f), glm::vec3(4.0f,0.0f,4.0f));
+    //system.addEmitter(glm::vec3(0.0f,-16.0f,6.0f), glm::vec3(4.0f,0.0f,4.0f));
+   // system.addEmitter(glm::vec3(0.0f,-16.0f,-6.0f), glm::vec3(4.0f,0.0f,4.0f));
 
-    system.addSphere(glm::vec3(0.0f,0.0f,0.0f), 12.0f);
+    system.addSphere(glm::vec3(0.0f,0.0f,0.0f), 18.0f);
+    //system.addSphere(glm::vec3(0.0f,0.0f,0.0f), 12.0f);
+    //system.addSphere(glm::vec3(12.0f,0.0f,0.0f), 12.0f);
+    //system.addSphere(glm::vec3(0.0f,12.0f,8.0f), 12.0f);
 
     //system.addSphere(glm::vec3(0.0f,8.0f,0.0f), 4.0f);
     //system.addSphere(glm::vec3(0.0f,0.0f,8.0f), 4.0f);
@@ -148,6 +154,7 @@ int main(int argc, char**argv)
     // Usually: Intel, NVIIDA or AMD are platform vendors.
     std::vector<std::string> paths;
     std::vector<std::string> kernels;
+    paths.push_back("share/kernels/simplex.c");
     paths.push_back("share/kernels/particles.cl");
     paths.push_back("share/kernels/timers.cl");
     kernels.push_back("particles");
@@ -163,8 +170,12 @@ int main(int argc, char**argv)
     TwAddVarRW(myBar, "RespawnTime", TW_TYPE_FLOAT, system.referenceRespawnTime(),  " min=0 max=60 step=0.5 group=System label='Particle Time' ");
     TwAddVarRW(myBar, "FieldMagnitude", TW_TYPE_FLOAT, system.referenceFieldMagnitude(),  " min=-1 max=1 step=1 group=System label='Background field magnitude' ");
     TwAddVarRW(myBar, "NoiseRatio", TW_TYPE_FLOAT, system.referenceNoiseRatio(),  " min=0 max=1 step=0.01 group=System label='Noise ratio' ");
-    TwAddVarRW(myBar, "Field", TW_TYPE_DIR3F, system.referenceFieldDirection(),  " min=-1 max=1 step=0.01 group=System label='Field Direction' ");
-    TwAddVarRW(myBar, "Population", TW_TYPE_FLOAT, system.getMaxParticleCount(),  "min=0, max=1000000 step=100 group=System label='Particle count' ");
+    TwAddVarRW(myBar, "Field", TW_TYPE_DIR3F, system.referenceFieldDirection(),  " min=-1 max=1 step=0.01 group=Field label='Field Direction' ");
+    TwAddVarRW(myBar, "LengthScale", TW_TYPE_FLOAT, system.referenceLengthScale(),  "min=0.1, max=20 step=0.1 group=Field label='Noise Length Scale' ");
+    TwAddVarRW(myBar, "NoiseMagnitude", TW_TYPE_FLOAT, system.referenceNoiseMagnitude(),  "min=-1, max=1 step=0.01 group=Field label='Noise Magnitude' ");
+
+    TwAddVarRW(myBar, "SpawnRate", TW_TYPE_FLOAT, system.referenceParticlesPerFrame(),  " min=1 max=100 step=1 group=System label='Spawn Rate' ");
+    TwAddVarRW(myBar, "Population", TW_TYPE_FLOAT, system.getMaxParticleCount(),  "min=0, max=1000000 step=1000 group=System label='Particle count' ");
 
     // Add particle renderer variables to ANT.
     bool depthTest = false, alphaBlend = true;
