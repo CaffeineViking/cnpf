@@ -4,34 +4,25 @@
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage[pdftex, hidelinks,
-            pdftitle={"Flödessimulering" i Realtid med 3-D Curl-Brus},
+            pdftitle={Flödesanimering i Realtid med 3-D Curlbrus},
             pdfauthor={Martin Estgren and and Rasmus Hedin and Alfred Rundquist and Erik S. V. Jansson},
-            pdfsubject={curl-noise, fluid simulation, gpu, opencl, opengl, real-time},
-            pdfkeywords={}]{hyperref}
+            pdfsubject={Computer Graphics -- Animation -- Physical Simulation / Procedural Animation},
+            pdfkeywords={curl-noise,animation,fluid simulation,navier-stokes,gpu,real-time}]{hyperref}
 
 \usepackage{bm}
 \usepackage{caption}
-\usepackage{csquotes}
 \usepackage{listings}
-\usepackage{pdfpages}
-\usepackage{booktabs}
 \usepackage{mathtools}
-\usepackage{blindtext}
-\usepackage[margin=1.5in]{geometry}
+\usepackage[margin=1.0in]{geometry}
 \usepackage[parfill]{parskip}
 \usepackage[swedish]{babel}
 \usepackage{algorithmic}
-\usepackage{todonotes}
 \usepackage{graphicx}
 \usepackage{courier}
 \usepackage{hyperref}
-\usepackage{acronym}
 \usepackage{amsmath}
 \usepackage{amssymb}
-\usepackage{amsthm}
-\usepackage{siunitx}
 \usepackage{algorithm}
-\usepackage{lipsum}
 \usepackage[capitalize, noabbrev]{cleveref}
 \usepackage[activate={true, nocompatibility}, final,
             tracking=true, kerning=true, spacing=true,
@@ -56,7 +47,8 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
         aboveskip = \bigskipamount,
         escapeinside={<@}{@>}}
 
-\title{\vspace{-2.5cm}\textbf{"Flödessimulering" i Realtid med 3-D Curl-Brus}\\
+\date{\vspace{-1.8ex}} % Buys us some space.
+\title{\vspace{-2.2cm}\textbf{Flödesanimering i Realtid med 3-D Curlbrus}\\
        \Large{\textit{--- en kort teknisk saga angående dess fasor och dess under ---}}}
 \author{{\textbf{Martin Estgren}}\;\;\;\;\;\; {\href{mailto:mares480@student.liu.se}{\texttt{<mares480@student.liu.se>}}}\\
         {\textbf{Rasmus Hedin}}\;\;\;\;\;\;\;\; {\href{mailto:rashe877@student.liu.se}{\texttt{<rashe877@student.liu.se>}}}\\
@@ -66,53 +58,107 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
 \begin{document}
     \maketitle
 
-    \section{Inledning}
+    \section{Motivering samt problem}
 
     Ett viktigt område inom datorgrafik och visualisering är förmågan att kunna simulera verklighetstrogna flödessystem i realtid. I detta projekt har vi implementerat grundläggande flödesystem för ett partikelsystem i 3D via en metod kallad \textit{Curl-nosie} först presenterat av Robert Bridson et al.\cite{bridson2007curl}.
 
     \textit{Curl-noise} är en metod att framställa verklighetstroget partikelflöde genom att procentuellt animera turbulenta flöden genom med hjälp utav procentuellt brus som man applicerar några relativt billiga operationer på, istället för att beräkna flödet det genom t.ex. \textit{Navier-Stokes ekvationer}. 
 
-    \section{Teori}
+        \subsection{Mål och avgränsningar}
 
-    Flödets riktning beräknas för varje partikels position genom följande system. I original papperet presenteras både beräkningarna för två och tre dimensioner men efters vi valt att enbart implementera den sistnämnda fokuserar vi på den.
+        \subsection{Arbetsprocess och verktyg}
+
+    \section{Teori och implementering}
+
+        \subsection{Systemöversikt}
+
+        \subsection{Partikelsystemet}
+
+    Flödets riktning beräknas för varje partikels position genom följande system. I original papperet presenteras både beräkningarna för två och tre dimensioner men eftersom vi valt att enbart implementera den sistnämnda fokuserar vi på den. Vi kommer ej heller följa originalpapperets beräkningar exakt utan justerar så det passar vårat system bättre.
 
     \textbf{Brusriktningen}
     \begin{equation}
-        N(\hat{x}) =  
-        \begin{bmatrix}
-        Simplex((\hat{x} + \epsilon_x)\frac{1}{L})
+   N(\vec{x}) =  
+        \begin{pmatrix}
+        n((\vec{x} + \vec{\epsilon}_x)/L)
         \\
-        Simplex((\hat{x} + \epsilon_y)\frac{1}{L})
+        n((\vec{x} + \vec{\epsilon}_y)/L)
         \\ 
-        Simplex((\hat{x} + \epsilon_z)\frac{1}{L})
-        \end{bmatrix} * \gamma M_nL
+        n((\vec{x} + \vec{\epsilon}_z)/L)
+        \end{pmatrix} * \gamma M_nL
     \end{equation}
-    Där $\epsilon$ representerar en förskjutning så att inte alla komponenter samplas på exakt samma punkt. I detta fall $\epsilon = \begin{bmatrix}
+    Där $\vec{\epsilon}$ representerar en förskjutning så att inte alla komponenter får exakt samma värde, i detta fall $\vec{\epsilon} = \begin{bmatrix}
 8 & 0 & 0\\ 
 0 & 8 & 0\\ 
 0 & 0 & 8
-\end{bmatrix}$, $\gamma$ representerar förhållande mellan brus och bakgrundsfällt. $M_n$ är styrkan på bruset (Styrkan är först normerad så vi skalar upp det till vad vi vill ha). $L$ är längdskalan på bruset vilket i vårat fall är relativt stor då vi vill ha långa övergångar i bruset.
+\end{bmatrix}$. $n(\vec{x})$ är brusfunktionen som samplas för att producera turbulens i fältet. Vi valde att använda \textit{Simplex noise}\footnote{\url{http://webstaff.itn.liu.se/~stegu/simplexnoise/simplexnoise.pdf}}. $\gamma$ representerar förhållande mellan brus och bakgrundsfällt där $0$ är inget brus och därmed ingen turbulens medan $1$ är fullt brus utan något bakgrundsfällt. $M_n$ är styrkan på bruset (Fällriktningen är normerad så vi skalar upp det till vad vi vill ha). $L$ är längdskalan på bruset vilket i vårat fall är relativt stor (20-100) då vi vill ha långa övergångar i bruset.
 
 \textbf{Bargrundskikningen}
 \begin{equation}
-    F(\hat{x}) = (1.0-\gamma) * D(\hat{x}) * M_f
+    F(\vec{x}) = (1.0-\gamma) * D(\vec{x}) * M_f
 \end{equation}
-TBA
+$D(\vec{x})$ representerar fällriktningen i den angivna punkten. Fällriktningen är beräknad enligt följande formel
+\begin{equation}
+   D(\vec{x}) = \vec{x} \times \vec{p}
+\end{equation}
+Där $\vec{p}$ är fällriktningen vi är ute efter. Eftersom $\bigtriangledown \times$ roterar alla vektorer med $\pi/2$ behöver vi först rotera fällriktning själva så att efter $\bigtriangledown \times$ riktningen blir $\vec{p}$.
 
+Brusriktningen adderas med bargrundskikningen för att sedan justeras så den beaktar solida sfärer utplacerade i vektorfältet $\vec{\psi} = N(\vec{x} + F(\vec{x})$.
 
 \textbf{Alpha}
-
-\textbf{Potential}
+För att få alla partiklar att respektera de sfärer vi placerat i fältet använder vi en rampfunktion.
 \begin{equation}
-    P(\hat{x}) = N(\hat{x}) + F(\hat{x})
+ramp(r) = \left\{\begin{matrix}
+1  && r > 1
+\\
+10r^3 + 6r^4 && 0 \le r \le 1
+\\ 
+0  && r < 0
+\end{matrix}\right.
 \end{equation}
+där $r$ är skillnaden mellan distansen $\vec{x}$ och den närmsta sfären delat på marginalen runt sfären. 
 
+För att få partiklarna att gå runt sfärerna använder vi nu resultatet från ramp funktionen som $\alpha = | ramp(d(\vec{x})/d_0) |$ där $d_0$  är en arbiträr skalfaktor. Slutligen beräknar vi hur fältet runt sfären ska se ut genom 
+\begin{equation}
+\vec{\psi}_c(\vec{x}) = \alpha * \vec{\psi}(\vec{x}) + (1.0 - \alpha) * \vec{x} * \vec{\psi}(\vec{x}) \cdot \vec{x}
+\end{equation}
+vilket producerar en övergång från fällriktningen till en riktning enbart är normalen från fältet mot sfären.
 
 \textbf{Curl}
+Vi får fram $\bigtriangledown \vec{\psi}$ genom \textit{finite difference}
+\begin{equation}
+\vec{vx} = \vec{\psi}_c(\vec{x} + \vec{\epsilon}_x  ) - \vec{\psi}_c(\vec{x} - \vec{\epsilon}_x  )
+\end{equation}
+\begin{equation}
+\vec{vy} = \vec{\psi}_c(\vec{x} + \vec{\epsilon}_y  ) - \vec{\psi}_c(\vec{x} - \vec{\epsilon}_y  )
+\end{equation}
+\begin{equation}
+\vec{vz} = \vec{\psi}_c(\vec{x} + \vec{\epsilon}_z  ) - \vec{\psi}_c(\vec{x} - \vec{\epsilon}_z  )
+\end{equation}
+där $\vec{\epsilon} = \begin{bmatrix}
+0.0001 & 0 & 0\\ 
+0 & 0.0001 & 0\\ 
+0 & 0 & 0.0001
+\end{bmatrix}$ och varje resultatvektor $\vec{vx},\vec{vy},\vec{vz}$ är de partiella derivatorna i punkten $\vec{x}$.
 
-    \section{Metod}
+Slutligen beräknas den slutgiltiga fältriktningen genom att applicera curl operatorn på vår framtagna gradient genom
+\begin{equation}
+\bigtriangledown \times =\frac{\begin{pmatrix}
+vy_z - vz_y
+\\ 
+vz_z - vx_y
+\\ 
+vx_z - vy_y
+\end{pmatrix}}{0.0002}
+\end{equation}
+och normeras så att vi själva kan bestämma vad hastigheten för partiklarna ska vara.
 
-    \section{Resultat}
+        \subsection{Partikelrenderaren}
+
+        \subsection{Övriga funktioner}
+
+    \section{Resultat och diskussion}
+
 \begin{figure}[H]
 \center
 \begin{minipage}[]{0.19\textwidth}
@@ -132,9 +178,11 @@ TBA
 \end{minipage}
 \end{figure}
 
-    \section{Diskussion}
+        \subsection{Problem och Lösningar}
 
-    \section{Sammanfattning}
+        \subsection{Framtida förbättringar}
+
+        \subsection{Projektreflektioner}
 
     \nocite{*} % Include all.
     \bibliographystyle{abbrv}
