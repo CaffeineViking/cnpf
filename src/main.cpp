@@ -156,13 +156,9 @@ int main(int argc, char**argv)
     ParticleRenderer* renderer = new SampledParticleRenderer { "share/textures/arrow.png", 0.4,4 };
     const ShaderProgram& rendererProgram = renderer->getProgram();
 
-    // Create an example Backwake scenario.
-    BackwakeScenario backwakeScenario(16,16,16);
-    backwakeScenario.generate();
-
     // Create the particle system which will compute step.
-    float currentParticleCount = 50000;
-    ParticleSystem system = ParticleSystem(currentParticleCount, 12.0f);
+    int currentParticleCount = 50000;
+    ParticleSystem system = ParticleSystem(currentParticleCount);
 
     // Add a single emitter which will spawn particles into the scenario.
     system.addEmitter(glm::vec3(0.0f,-20.0f,0.0f), glm::vec3(16.0f,0.0f,16.0f));
@@ -196,19 +192,16 @@ int main(int argc, char**argv)
     kernels.push_back("timers");
 
     system.init(paths, kernels, DEVICE_NAME, rendererProgram);
-    // Finally, assign the scenario to it.
-    system.setScenario(backwakeScenario);
 
     // Add particle system varaibles to the tweak bar
     TwAddVarRW(myBar, "RespawnTime", TW_TYPE_FLOAT, system.referenceRespawnTime(),  " min=0 max=60 step=0.5 group=System label='Particle Time' ");
     TwAddVarRW(myBar, "FieldMagnitude", TW_TYPE_FLOAT, system.referenceFieldMagnitude(),  " min=-1 max=1 step=1 group=System label='Background field magnitude' ");
     TwAddVarRW(myBar, "NoiseRatio", TW_TYPE_FLOAT, system.referenceNoiseRatio(),  " min=0 max=1 step=0.01 group=System label='Noise ratio' ");
     TwAddVarRW(myBar, "Field", TW_TYPE_DIR3F, system.referenceFieldDirection(),  " min=-1 max=1 step=0.01 group=Field label='Field Direction' ");
-    TwAddVarRW(myBar, "LengthScale", TW_TYPE_FLOAT, system.referenceLengthScale(),  "min=0.1, max=20 step=0.1 group=Field label='Noise Length Scale' ");
+    TwAddVarRW(myBar, "LengthScale", TW_TYPE_FLOAT, system.referenceLengthScale(),  "min=1, max=200 step=1 group=Field label='Noise Length Scale' ");
     TwAddVarRW(myBar, "NoiseMagnitude", TW_TYPE_FLOAT, system.referenceNoiseMagnitude(),  "min=-1, max=1 step=0.01 group=Field label='Noise Magnitude' ");
 
-    TwAddVarRW(myBar, "SpawnRate", TW_TYPE_FLOAT, system.referenceParticlesPerFrame(),  " min=1 max=100 step=1 group=System label='Spawn Rate' ");
-    TwAddVarRW(myBar, "Population", TW_TYPE_FLOAT, system.getMaxParticleCount(),  "min=0, max=1000000 step=1000 group=System label='Particle count' ");
+    TwAddVarRW(myBar, "SpawnRate", TW_TYPE_INT32, system.referenceParticlesPerFrame(),  " min=1 max=100 step=1 group=System label='Spawn Rate' ");
 
     // Add particle renderer variables to ANT.
     bool depthTest = false, alphaBlend = true;

@@ -78,20 +78,20 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
 
     \textbf{Brusriktningen}
     \begin{equation}
-        N(\hat{x}) =  
-        \begin{bmatrix}
-        Simplex((\hat{x} + \epsilon_x)\frac{1}{L})
+   N(\hat{x}) =  
+        \begin{pmatrix}
+        n((\hat{x} + \epsilon_x)/L)
         \\
-        Simplex((\hat{x} + \epsilon_y)\frac{1}{L})
+        n((\hat{x} + \epsilon_y)/L)
         \\ 
-        Simplex((\hat{x} + \epsilon_z)\frac{1}{L})
-        \end{bmatrix} * \gamma M_nL
+        n((\hat{x} + \epsilon_z)/L)
+        \end{pmatrix} * \gamma M_nL
     \end{equation}
-    Där $\epsilon$ representerar en förskjutning så att inte alla komponenter samplas på exakt samma punkt. I detta fall $\epsilon = \begin{bmatrix}
+    Där $\epsilon$ representerar en förskjutning så att inte alla komponenter får exakt samma värde. I detta fall $\epsilon = \begin{bmatrix}
 8 & 0 & 0\\ 
 0 & 8 & 0\\ 
 0 & 0 & 8
-\end{bmatrix}$, $\gamma$ representerar förhållande mellan brus och bakgrundsfällt. $M_n$ är styrkan på bruset (Styrkan är först normerad så vi skalar upp det till vad vi vill ha). $L$ är längdskalan på bruset vilket i vårat fall är relativt stor då vi vill ha långa övergångar i bruset.
+\end{bmatrix}$, $n()$ är den generella brusfunktionen i detta fall \textit{Simplex noise}\footnote{\url{http://webstaff.itn.liu.se/~stegu/simplexnoise/simplexnoise.pdf}}, $\gamma$ representerar förhållande mellan brus och bakgrundsfällt. $M_n$ är styrkan på bruset (Styrkan är först normerad så vi skalar upp det till vad vi vill ha). $L$ är längdskalan på bruset vilket i vårat fall är relativt stor då vi vill ha långa övergångar i bruset.
 
 \textbf{Bargrundskikningen}
 \begin{equation}
