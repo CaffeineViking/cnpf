@@ -30,11 +30,9 @@ typedef struct Params {
 
 class ParticleSystem {
 private:
-	 const int PARTICLE_COUNT;
-	 float _maxParticleCount;
-	 float _currentParticles;
-	 float _particlePerFrame;
-	 float _maxTime;
+	 int _currentParticles;
+	 int _maxParticleCount;
+	 int _particlePerFrame;
 	 float _respawnTime;
 	 float _fieldMagnitude;
 	 float _noiseRatio;
@@ -43,7 +41,6 @@ private:
 	 glm::vec3 _fieldDirection;
 	 int _width, _height, _depth;
      int _positionsBufferSize, _positionsBufferHead;
-	 cl::ImageGL _texture;
 	 cl::Image2D _outputImage;
 	 clParameters _params;
 	 cl::BufferGL _tmp;
@@ -61,7 +58,7 @@ private:
 	std::vector<float> _spheres;
 public:	
 	~ParticleSystem();
-	ParticleSystem(const int,const float);
+	ParticleSystem(const int);
 
 	bool init(std::vector<std::string>, std::vector<std::string>, const std::string&, const ShaderProgram&);
 	bool setScenario(const Scenario&);
@@ -72,7 +69,7 @@ public:
 	float* referenceRespawnTime();
 	float* referenceFieldMagnitude();
 	float* referenceNoiseRatio();
-	float* referenceParticlesPerFrame();
+	int* referenceParticlesPerFrame();
 	float* referenceLengthScale();
 	float* referenceNoiseMagnitude();
 	glm::vec3* referenceFieldDirection();
@@ -83,6 +80,5 @@ public:
 
 	ParticleSystem(ParticleSystem&&) = default;
 	ParticleSystem& operator=(ParticleSystem&&) = default;
-	float* getMaxParticleCount();
 };
 #endif

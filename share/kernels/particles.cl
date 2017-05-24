@@ -15,7 +15,7 @@ typedef struct Params {
 } Params;
 
 float smooth(float p1, float p2, float d){
-   float r = (d - p1)/(p2-p1);
+   float r = (d - p1)/p2;
    if(r<0.0f) return 0.0f;
    else if(r>1.0f) return 1.0f;
    return r*r*r*(10.0f+r*(-15.0f+r*6.0f));
@@ -43,17 +43,14 @@ float get_closest_sphere(float3 p, const int nsph, __global float* sph, float3* 
 
 float getAlpha(float sphere_radius, float influence_radius, float distance){
 
-  return fabs(((float)smooth(sphere_radius, sphere_radius + influence_radius, distance)));
+  return fabs(((float)smooth(sphere_radius, influence_radius, distance)));
 }
 
 float3 getBackgorund(float3 p, const Params params){
   // Add Background Field
    
     const float3  field_direction = (float3)(params.fieldX,params.fieldY, params.fieldZ);
-
-    const float3 parallel = dot(field_direction, p) * field_direction;
-    const float3 ortho = p - parallel;
-    const float3 directional = cross(ortho, field_direction);
+    const float3 directional = cross(p, field_direction);
 
     return (1.0f - params.noise_ratio) * directional * params.field_magnitude;
 }
