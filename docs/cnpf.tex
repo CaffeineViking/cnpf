@@ -23,6 +23,8 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{algorithm}
+\usepackage{multicol}
+\setlength{\columnsep}{1cm}
 \usepackage[capitalize, noabbrev]{cleveref}
 \usepackage[activate={true, nocompatibility}, final,
             tracking=true, kerning=true, spacing=true,
@@ -57,26 +59,33 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
 
 \begin{document}
     \maketitle
+\begin{multicols}{2}
 
-    \section{Motivering samt problem}
+    \section{Introduktion}
 
     Ett viktigt område inom datorgrafik och visualisering är förmågan att kunna simulera verklighetstrogna flödessystem i realtid. I detta projekt har vi implementerat grundläggande flödesystem för ett partikelsystem i 3D via en metod kallad \textit{Curl-nosie} först presenterat av Robert Bridson et al.\cite{bridson2007curl}.
 
     \textit{Curl-noise} är en metod att framställa verklighetstroget partikelflöde genom att procentuellt animera turbulenta flöden genom med hjälp utav procentuellt brus som man applicerar några relativt billiga operationer på, istället för att beräkna flödet det genom t.ex. \textit{Navier-Stokes ekvationer}. 
 
-        \subsection{Mål och avgränsningar}
+    Målet med detta projekt var att skapa ett enkelt partikelsystem $\in \mathbb{R}^3$ där partiklarnas rörelse bestäms av ett riktningsfällt implementerat genom \textit{Curl-noise}. 
 
-        \subsection{Arbetsprocess och verktyg}
+    Den preliminära arbetsprocessen går ut på att parprogrammerade med versionshantering via  \textit{Git}. För att realisera partikelsystemet valde vi att använda \textit{OpenCL} för partikelberäkningar, \textit{OpenGL} för rendering, \textit{GLFW} för fönsterhantering, \textit{AntTweakbar} för run-time konfigurering, och \textit{GLEW} för att hantera \textit{OpenGL} extensions. Koden skrivs i C++ med \textit{OpenCL} kernels i C och shaders i \textit{GLSL}.
 
     \section{Teori och implementering}
 
-        \subsection{Systemöversikt}
+     \subsection{Systemöversikt}
 
-        \subsection{Partikelsystemet}
+    \subsection{Partikelsystemet}
 
-    Flödets riktning beräknas för varje partikels position genom följande system. I original papperet presenteras både beräkningarna för två och tre dimensioner men eftersom vi valt att enbart implementera den sistnämnda fokuserar vi på den. Vi kommer ej heller följa originalpapperets beräkningar exakt utan justerar så det passar vårat system bättre.
+    Varje partikel beräknas parallellt i Grafikprocessorn genom \textit{OpenCL} där följande operationer utförs för varje partikels koordinater.
 
-    \textbf{Brusriktningen}
+    I original papperet presenteras både beräkningarna för två och tre dimensioner men eftersom vi valt att enbart implementera den sistnämnda fokuserar vi på den. Vi kommer ej heller följa originalpapperets beräkningar exakt utan justerar så det passar vårat system bättre. Vidare har några förändringar gjorts för att bättre anpassa vektorfältet till vårat system.
+
+    I korthet kan man säga att vi producerar tre olika vektorfällt som vi kombinerar. De första två fälten representerar turbulensen och den allmänna riktningen som partiklarna ska följa som vi kombinerar genom att addera de resulterande fälten. Efter detta modifierar vi fältet så att den leder partiklar runt solida kroppar och slutligen applicerar vi en rotationsoperation (curl) vilket leder till ett divergensfritt vektorfällt.
+
+    \textbf{Turbulensen}
+
+    Turbulensen beräknas genom att sampla en brusfunktion. Vi valde att använda \textit{Simplex noise}\footnote{\url{http://webstaff.itn.liu.se/~stegu/simplexnoise/simplexnoise.pdf}} för procentuellt brus varpå vi samplar runt varje partikels position enligt följande funktion.
     \begin{equation}
    N(\vec{x}) =  
         \begin{pmatrix}
@@ -87,26 +96,44 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
         n((\vec{x} + \vec{\epsilon}_z)/L)
         \end{pmatrix} * \gamma M_nL
     \end{equation}
-    Där $\vec{\epsilon}$ representerar en förskjutning så att inte alla komponenter får exakt samma värde, i detta fall $\vec{\epsilon} = \begin{bmatrix}
+    Där $\vec{\epsilon}$ representerar en förskjutning så att inte alla komponenter får exakt samma värde, i detta fall $\vec{\epsilon} = \begin{pmatrix}
 8 & 0 & 0\\ 
 0 & 8 & 0\\ 
 0 & 0 & 8
-\end{bmatrix}$. $n(\vec{x})$ är brusfunktionen som samplas för att producera turbulens i fältet. Vi valde att använda \textit{Simplex noise}\footnote{\url{http://webstaff.itn.liu.se/~stegu/simplexnoise/simplexnoise.pdf}}. $\gamma$ representerar förhållande mellan brus och bakgrundsfällt där $0$ är inget brus och därmed ingen turbulens medan $1$ är fullt brus utan något bakgrundsfällt. $M_n$ är styrkan på bruset (Fällriktningen är normerad så vi skalar upp det till vad vi vill ha). $L$ är längdskalan på bruset vilket i vårat fall är relativt stor (20-100) då vi vill ha långa övergångar i bruset.
+\end{pmatrix}$. $n(\vec{x})$ är brusfunktionen som samplas för att producera turbulens i fältet. $\gamma$ representerar förhållande mellan brus och bakgrundsfällt där $0$ är inget brus och därmed ingen turbulens medan $1$ är fullt brus utan något bakgrundsfällt. $M_n$ är styrkan på bruset (Fällriktningen är normerad så vi skalar upp det till vad vi vill ha). $L$ är längdskalan på bruset vilket i vårat fall är relativt stor (20-100) då vi vill ha långa övergångar i bruset.
+\begin{figure}[H]
+\center
+\begin{minipage}[]{0.3\textwidth}
+\includegraphics[width=\textwidth]{share/Noise.png}
+\caption{Genomskärning av turbulensfältet.}
+\end{minipage}
+\end{figure}
 
 \textbf{Bargrundskikningen}
+
+Bakgrundsritningen representerar den generella riktningen vi vill att partiklarna ska följa. Detta beskrivs inte något vidare i referensartikel. Vi valde istället att anpassa en redan existerande implementation\footnote{\url{https://github.com/kbladin/Curl_Noise/blob/master/shaders/point_cloud_programs/update_velocities_curl_noise.frag}} vilket resulterar i ett relativt enkelt bakgrundsfällt som går i en uniform riktning.
 \begin{equation}
     F(\vec{x}) = (1.0-\gamma) * D(\vec{x}) * M_f
 \end{equation}
-$D(\vec{x})$ representerar fällriktningen i den angivna punkten. Fällriktningen är beräknad enligt följande formel
+$D(\vec{x})$ representerar fältriktningen i den angivna punkten. Fällriktningen är beräknad enligt följande formel
 \begin{equation}
    D(\vec{x}) = \vec{x} \times \vec{p}
 \end{equation}
-Där $\vec{p}$ är fällriktningen vi är ute efter. Eftersom $\bigtriangledown \times$ roterar alla vektorer med $\pi/2$ behöver vi först rotera fällriktning själva så att efter $\bigtriangledown \times$ riktningen blir $\vec{p}$.
+Där $\vec{p}$ är fällriktningen vi har valt att partiklarna ska följa.
 
-Brusriktningen adderas med bargrundskikningen för att sedan justeras så den beaktar solida sfärer utplacerade i vektorfältet $\vec{\psi} = N(\vec{x} + F(\vec{x})$.
+\begin{figure}[H]
+\center
+\begin{minipage}[]{0.3\textwidth}
+\includegraphics[width=\textwidth]{share/Background.png}
+\caption{Genomskärning av bakgrundsfället.}
+\end{minipage}
+\end{figure}
 
-\textbf{Alpha}
-För att få alla partiklar att respektera de sfärer vi placerat i fältet använder vi en rampfunktion.
+Brusriktningen adderas med bargrundskikningen ($\vec{\psi} = N(\vec{x} + F(\vec{x})$) för att sedan justeras så att partiklarna beaktar solida sfärer utplacerade i vektorfältet. 
+
+\textbf{Solida kroppar i fältet}
+
+För att få alla partiklar att respektera de sfärer vi placerat i fältet använder vi rampfunktionen
 \begin{equation}
 ramp(r) = \left\{\begin{matrix}
 1  && r > 1
@@ -117,15 +144,23 @@ ramp(r) = \left\{\begin{matrix}
 \end{matrix}\right.
 \end{equation}
 där $r$ är skillnaden mellan distansen $\vec{x}$ och den närmsta sfären delat på marginalen runt sfären. 
+\begin{figure}[H]
+\center
+\begin{minipage}[]{0.3\textwidth}
+\includegraphics[width=\textwidth]{share/Alpha.png}
+\caption{Genomskärning av ramp funktionen mot en sfär}
+\end{minipage}
+\end{figure}
 
-För att få partiklarna att gå runt sfärerna använder vi nu resultatet från ramp funktionen som $\alpha = | ramp(d(\vec{x})/d_0) |$ där $d_0$  är en arbiträr skalfaktor. Slutligen beräknar vi hur fältet runt sfären ska se ut genom 
+För att få partiklarna att gå runt sfärerna använder vi nu resultatet från rampfunktionen som $\alpha = | ramp(d(\vec{x})/d_0) |$ där $d_0$  är en arbiträr skalfaktor. Slutligen beräknar vi hur fältet runt sfären ska se ut genom 
 \begin{equation}
 \vec{\psi}_c(\vec{x}) = \alpha * \vec{\psi}(\vec{x}) + (1.0 - \alpha) * \vec{x} * \vec{\psi}(\vec{x}) \cdot \vec{x}
 \end{equation}
-vilket producerar en övergång från fällriktningen till en riktning enbart är normalen från fältet mot sfären.
+vilket producerar en övergång från fällriktningen till en riktning tangentiell mot sfären.
 
 \textbf{Curl}
-Vi får fram $\bigtriangledown \vec{\psi}$ genom \textit{finite difference}
+
+Vi får fram $\bigtriangledown \vec{\psi}$ genom en \textit{finit differensmetod}
 \begin{equation}
 \vec{vx} = \vec{\psi}_c(\vec{x} + \vec{\epsilon}_x  ) - \vec{\psi}_c(\vec{x} - \vec{\epsilon}_x  )
 \end{equation}
@@ -135,48 +170,36 @@ Vi får fram $\bigtriangledown \vec{\psi}$ genom \textit{finite difference}
 \begin{equation}
 \vec{vz} = \vec{\psi}_c(\vec{x} + \vec{\epsilon}_z  ) - \vec{\psi}_c(\vec{x} - \vec{\epsilon}_z  )
 \end{equation}
-där $\vec{\epsilon} = \begin{bmatrix}
+där $\vec{\epsilon} = \begin{pmatrix}
 0.0001 & 0 & 0\\ 
 0 & 0.0001 & 0\\ 
 0 & 0 & 0.0001
-\end{bmatrix}$ och varje resultatvektor $\vec{vx},\vec{vy},\vec{vz}$ är de partiella derivatorna i punkten $\vec{x}$.
+\end{pmatrix}$ och varje resultatvektor $\vec{vx},\vec{vy},\vec{vz}$ är de partiella derivatorna i punkten $\vec{x}$.
 
 Slutligen beräknas den slutgiltiga fältriktningen genom att applicera curl operatorn på vår framtagna gradient genom
 \begin{equation}
-\bigtriangledown \times =\frac{\begin{pmatrix}
-vy_z - vz_y
+\bigtriangledown \times \begin{pmatrix}
+\vec{vy}_z - \vec{vz}_y
 \\ 
-vz_z - vx_y
+\vec{vz}_z - \vec{vx}_y
 \\ 
-vx_z - vy_y
-\end{pmatrix}}{0.0002}
+\vec{vx}_z - \vec{vy}_y
+\end{pmatrix} / 0.0002
 \end{equation}
-och normeras så att vi själva kan bestämma vad hastigheten för partiklarna ska vara.
-
-        \subsection{Partikelrenderaren}
-
-        \subsection{Övriga funktioner}
-
-    \section{Resultat och diskussion}
-
+och normeras så att vi själva kan bestämma vad hastigheten för partiklarna ska vara. En genomskärning i $xy$-planet kan ses i nästa figur.
 \begin{figure}[H]
 \center
-\begin{minipage}[]{0.19\textwidth}
-\includegraphics[width=\textwidth]{share/Noise.png}
-\end{minipage}
-\begin{minipage}[]{0.19\textwidth}
-\includegraphics[width=\textwidth]{share/Background.png}
-\end{minipage}
-\begin{minipage}[]{0.19\textwidth}
-\includegraphics[width=\textwidth]{share/Alpha.png}
-\end{minipage}
-\begin{minipage}[]{0.19\textwidth}
-\includegraphics[width=\textwidth]{share/Potential.png}
-\end{minipage}
-\begin{minipage}[]{0.19\textwidth}
+\begin{minipage}[]{0.3\textwidth}
 \includegraphics[width=\textwidth]{share/Curl.png}
+\caption{Genomskärning av det slutgiltiga riktningsfället.}
 \end{minipage}
 \end{figure}
+
+\subsection{Partikelrenderaren}
+
+\subsection{Övriga funktioner}
+
+\section{Resultat och diskussion}
 
         \subsection{Problem och Lösningar}
 
@@ -187,5 +210,5 @@ och normeras så att vi själva kan bestämma vad hastigheten för partiklarna s
     \nocite{*} % Include all.
     \bibliographystyle{abbrv}
     \bibliography{cnpf}
-
+\end{multicols}
 \end{document}
