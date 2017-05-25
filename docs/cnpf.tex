@@ -85,9 +85,9 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
 
     \textbf{Turbulensen}
 
-    Turbulensen beräknas genom att sampla en brusfunktion. Vi valde att använda \textit{Simplex noise}\footnote{\url{http://webstaff.itn.liu.se/~stegu/simplexnoise/simplexnoise.pdf}} för procentuellt brus varpå vi samplar runt varje partikels position enligt följande funktion.
+    Turbulensen beräknas genom att sampla en brusfunktion. Vi valde att använda \textit{Simplex noise}\footnote{\url{https://github.com/stegu/perlin-noise/blob/master/src/simplexnoise1234.c}} vilket förklaras av S. Gustavsson\cite{gustavson2005simplex} för procentuellt brus varpå vi samplar runt varje partikels position enligt följande funktion.
     \begin{equation}
-   N(\vec{x}) =  
+   \vec{N}(\vec{x}) =  
         \begin{pmatrix}
         n((\vec{x} + \vec{\epsilon}_x)/L)
         \\
@@ -111,13 +111,13 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
 
 \textbf{Bargrundskikningen}
 
-Bakgrundsritningen representerar den generella riktningen vi vill att partiklarna ska följa. Detta beskrivs inte något vidare i referensartikel. Vi valde istället att anpassa en redan existerande implementation\footnote{\url{https://github.com/kbladin/Curl_Noise/blob/master/shaders/point_cloud_programs/update_velocities_curl_noise.frag}} vilket resulterar i ett relativt enkelt bakgrundsfällt som går i en uniform riktning.
+Bakgrundsritningen representerar den generella riktningen vi vill att partiklarna ska följa. Detta beskrivs inte något vidare i referensartikel. Vi valde istället att anpassa en redan existerande implementation\footnote{\url{https://github.com/kbladin/Curl_Noise/blob/master/shaders/point_cloud_programs/update_velocities_curl_noise.frag}} av K. Bladin, vilket resulterar i ett relativt enkelt bakgrundsfällt som går i en uniform riktning.
 \begin{equation}
-    F(\vec{x}) = (1.0-\gamma) * D(\vec{x}) * M_f
+     \vec{F}(\vec{x}) = (1.0-\gamma) *  \vec{D}(\vec{x}) * M_f
 \end{equation}
-$D(\vec{x})$ representerar fältriktningen i den angivna punkten. Fällriktningen är beräknad enligt följande formel
+$ \vec{D}(\vec{x})$ representerar fältriktningen i den angivna punkten. Fällriktningen är beräknad enligt följande formel
 \begin{equation}
-   D(\vec{x}) = \vec{x} \times \vec{p}
+    \vec{D}(\vec{x}) = \vec{x} \times \vec{p}
 \end{equation}
 Där $\vec{p}$ är fällriktningen vi har valt att partiklarna ska följa.
 
@@ -129,7 +129,7 @@ Där $\vec{p}$ är fällriktningen vi har valt att partiklarna ska följa.
 \end{minipage}
 \end{figure}
 
-Brusriktningen adderas med bargrundskikningen ($\vec{\psi} = N(\vec{x} + F(\vec{x})$) för att sedan justeras så att partiklarna beaktar solida sfärer utplacerade i vektorfältet. 
+Brusriktningen adderas med bargrundskikningen ($\vec{\psi} = \vec{N}(\vec{x}) + \vec{F}(\vec{x})$) för att sedan justeras så att partiklarna beaktar solida sfärer utplacerade i vektorfältet. 
 
 \textbf{Solida kroppar i fältet}
 
@@ -148,7 +148,7 @@ där $r$ är skillnaden mellan distansen $\vec{x}$ och den närmsta sfären dela
 \center
 \begin{minipage}[]{0.3\textwidth}
 \includegraphics[width=\textwidth]{share/Alpha.png}
-\caption{Genomskärning av ramp funktionen mot en sfär}
+\caption{Genomskärning av ramp funktionen mot en sfärisk solid kropp.}
 \end{minipage}
 \end{figure}
 
@@ -160,7 +160,7 @@ vilket producerar en övergång från fällriktningen till en riktning tangentie
 
 \textbf{Curl}
 
-Vi får fram $\bigtriangledown \vec{\psi}$ genom en \textit{finit differensmetod}
+Vi får fram $ \nabla \vec{\psi}$ genom en \textit{finit differensmetod}
 \begin{equation}
 \vec{vx} = \vec{\psi}_c(\vec{x} + \vec{\epsilon}_x  ) - \vec{\psi}_c(\vec{x} - \vec{\epsilon}_x  )
 \end{equation}
@@ -178,7 +178,7 @@ där $\vec{\epsilon} = \begin{pmatrix}
 
 Slutligen beräknas den slutgiltiga fältriktningen genom att applicera curl operatorn på vår framtagna gradient genom
 \begin{equation}
-\bigtriangledown \times \begin{pmatrix}
+ \nabla \times \begin{pmatrix}
 \vec{vy}_z - \vec{vz}_y
 \\ 
 \vec{vz}_z - \vec{vx}_y
