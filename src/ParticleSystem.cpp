@@ -104,11 +104,7 @@ bool ParticleSystem::init(std::vector<std::string> paths, std::vector<std::strin
    
       
 // Create timer buffer, this is not of interest to the renderer at the moment
-   for(int n = 0; n < _maxParticleCount; ++n) {
-      data[3*n+0] = 999; //distribution(generator);
-      data[3*n+1] = 999; //distribution(generator);
-      data[3*n+2] = 999; //distribution(generator);
-   }
+    std::fill(data.begin(), data.end(),999);
 // Create Vertex buffer for the timers
    _timerBuffer = OpenCLUtils::createBuffer(_params.context,_params.queue, CL_MEM_READ_WRITE, sizeof(float)*_maxParticleCount, data);
 // Create Vertex buffer for the spheres

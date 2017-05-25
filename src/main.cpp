@@ -7,7 +7,6 @@
 #include "OpenGLUtils.hpp"
 
 #include "Locator.hpp"
-#include "Scenario.hpp"
 #include "ParticleSystem.hpp"
 #include "ParticleRenderer.hpp"
 #include "MovingCamera.hpp"

@@ -10,7 +10,6 @@
 #include "OpenGLUtils.hpp"
 #include "ShaderProgram.hpp"
 #include "VectorField3D.hpp"
-#include "Scenario.hpp"
 #include <vector>
 #include <utility>
 
@@ -61,7 +60,6 @@ public:
 	ParticleSystem(const int);
 
 	bool init(std::vector<std::string>, std::vector<std::string>, const std::string&, const ShaderProgram&);
-	bool setScenario(const Scenario&);
 	void compute(const float, const float);
 	void addSphere(const glm::vec3&, const float);
 	void addEmitter(const glm::vec3&, const glm::vec3&);
