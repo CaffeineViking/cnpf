@@ -13,7 +13,7 @@
 \usepackage{caption}
 \usepackage{listings}
 \usepackage{mathtools}
-\usepackage[margin=1.0in]{geometry}
+\usepackage[margin=0.8in]{geometry}
 \usepackage[parfill]{parskip}
 \usepackage[swedish]{babel}
 \usepackage{algorithmic}
@@ -24,7 +24,7 @@
 \usepackage{amssymb}
 \usepackage{algorithm}
 \usepackage{multicol}
-\setlength{\columnsep}{1cm}
+\setlength{\columnsep}{0.5cm}
 \usepackage[capitalize, noabbrev]{cleveref}
 \usepackage[activate={true, nocompatibility}, final,
             tracking=true, kerning=true, spacing=true,
@@ -49,9 +49,9 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
         aboveskip = \bigskipamount,
         escapeinside={<@}{@>}}
 
-\date{\vspace{-1.8ex}} % Buys us some space.
+\date{\vspace{-0.5ex}} % Buys us some space.
 \title{\vspace{-2.2cm}\textbf{Flödesanimering i Realtid med 3-D Curlbrus}\\
-       \Large{\textit{--- en kort teknisk saga angående dess fasor och dess under ---}}}
+       \Large{\textit{--- en kort teknisk saga angående dess fasor och dess under ---}}\vspace{-0.25cm}}
 \author{{\textbf{Martin Estgren}}\;\;\;\;\;\; {\href{mailto:mares480@student.liu.se}{\texttt{<mares480@student.liu.se>}}}\\
         {\textbf{Rasmus Hedin}}\;\;\;\;\;\;\;\; {\href{mailto:rashe877@student.liu.se}{\texttt{<rashe877@student.liu.se>}}}\\
         {\textbf{Alfred Rundquist}}\;\;\; {\href{mailto:alfru536@student.liu.se}{\texttt{<alfru536@student.liu.se>}}}\\
@@ -63,15 +63,15 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
 
     \section{Introduktion}
 
-    Ett viktigt område inom datorgrafik och visualisering är förmågan att kunna simulera verklighetstrogna flödessystem i realtid. I detta projekt har vi implementerat grundläggande flödesystem för ett partikelsystem i 3D via en metod kallad \textit{Curl-nosie} först presenterat av Robert Bridson et al.\cite{bridson2007curl}.
+    Ett viktigt område inom \emph{datorgrafik och visualisering} är förmågan att \emph{simulera}/\emph{animera} verklighetstrogna \emph{flödessystem} i \emph{realtid}. Dessa används i bl.a. spel och filmer för att enkelt skapa \emph{visuella effekter} som t.ex. \emph{rök- och vattenrörelser}; effekter som vanligtvis inte görs ``för hand'', och är mer lämpliga att genereras av en dator. I detta projekt så har vi implementerat ett \emph{grundläggande flödessystem} för att \emph{animera ett partikelsystem} i 3-D med hjälp av den så kallade \emph{Curl-Noise} (``curlbrus''), först presenterad av \emph{Bridson et al.}~\cite{bridson2007curl} i 2007.
 
-    \textit{Curl-noise} är en metod att framställa verklighetstroget partikelflöde genom att procentuellt animera turbulenta flöden genom med hjälp utav procentuellt brus som man applicerar några relativt billiga operationer på, istället för att beräkna flödet det genom t.ex. \textit{Navier-Stokes ekvationer}. 
+    \textit{Curlbrus} används för att framställa verklighetstrogna \emph{partikelflöden} genom att \emph{procedurellt animera turbulenta flöden}. Detta görs genom att skapa \emph{procedurellt brus}, som används för att skapa ett \emph{divergens-fritt vektorfält} genom att applicera billiga vektorfältsoperationer. Detta är en billigare variant av \emph{Navier-Stokes}, som är fysiskt korrekt; men eftersom vi endast är efter dess visuella egenskaper, så är Curlbrus tillräckligt bra. Dessutom så kan Curlbrus beräknas i realtid, vilket gör den lämplig för integrering i t.ex. spel och infovis.
 
-    Målet med detta projekt var att skapa ett enkelt partikelsystem $\in \mathbb{R}^3$ där partiklarnas rörelse bestäms av ett riktningsfällt implementerat genom \textit{Curl-noise}. 
+    Målet med detta projekt var att skapa ett enkelt \emph{3-D partikelsystem} där rörelsen bestäms av ett riktningsfält genererat genom \emph{Curlbrus metoden}. Dessutom så producerades det några enkla \emph{visuella effekter}.
 
-    Den preliminära arbetsprocessen går ut på att parprogrammerade med versionshantering via  \textit{Git}. För att realisera partikelsystemet valde vi att använda \textit{OpenCL} för partikelberäkningar, \textit{OpenGL} för rendering, \textit{GLFW} för fönsterhantering, \textit{AntTweakbar} för run-time konfigurering, och \textit{GLEW} för att hantera \textit{OpenGL} extensions. Koden skrivs i C++ med \textit{OpenCL} kernels i C och shaders i \textit{GLSL}.
+    Den preliminära arbetsprocessen gick ut på att vi parprogrammerade med versionshantering via \textit{Git}. För att realisera partikelsystemet valde vi att använda \textit{OpenCL} för partikelberäkningar, \textit{OpenGL} för rendering, \textit{GLFW} för fönsterhantering, \textit{AntTweakbar} för ``run-time'' konfigurering, och \textit{GLEW} för att hantera \textit{OpenGL}-tillägg. Själva koden skrevs i C++, där våra kernels skrevs i \textit{OpenCLs} variant av C, samt shaders i \textit{GLSL}.
 
-    \section{Teori och implementering}
+    \section{Teori och metodik}
 
      \subsection{Systemöversikt}
 
@@ -199,7 +199,7 @@ och normeras så att vi själva kan bestämma vad hastigheten för partiklarna s
 
 \subsection{Övriga funktioner}
 
-\section{Resultat och diskussion}
+\section{Resultat \& diskussion}
 
         \subsection{Problem och Lösningar}
 
