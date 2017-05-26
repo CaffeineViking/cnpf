@@ -71,17 +71,23 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
 
     Den preliminära arbetsprocessen gick ut på att vi parprogrammerade med versionshantering via \textit{Git}. För att realisera partikelsystemet valde vi att använda \textit{OpenCL} för partikelberäkningar, \textit{OpenGL} för rendering, \textit{GLFW} för fönsterhantering, \textit{AntTweakbar} för ``run-time'' konfigurering, och \textit{GLEW} för att hantera \textit{OpenGL}-tillägg. Själva koden skrevs i C++, där våra kernels skrevs i \textit{OpenCLs} variant av C, samt shaders i \textit{GLSL}.
 
+    \vspace{-0.4cm}
     \section{Teori och metodik}
-
     \subsection{Systemöversikt}
+
+    Vid tidpunkten \(t_n\) så befinner sig varje partikel vid sin egen position \(\vec{x}\), lagrade i en \emph{buffer}. Målet är att räkna ut partikelns nästa position \(\vec{x}'\) vid tidpunkten \(t_{n+1}\) (d.v.s. vi stegar fram simuleringen). Detta görs genom \(\vec{x}' = \vec{x} + \mathbf{V}(\vec{x})\), där \(\mathbf{V}(\vec{x})\) är \emph{fältriktningen}. Allt detta hanteras av \emph{partikelsystemet}, där dessutom \(\mathbf{V}(\vec{x})\) skapas, och beskrivs väl under Rubrik~\ref{sec:partikelsystemet}. Detta görs parallelt på \emph{grafikprocessorn} (GPU) för varje partikel under samma \(t_n\). Vilket gör att positionerna \(\vec{x}'\) kan återanvändas när vi skall \emph{visualisera} dem med våran \emph{partikelrenderare}, då båda systemen behöver ej lämna grafikprocessorns minnesrymd. Se Figur~\ref{fig:system}.
 
     \begin{figure}[H]
     \center
     \includegraphics[width=0.5\textwidth]{share/System.eps}
     \caption{konceptuell översikt över våra två subsystem.}
+    \label{fig:system}
     \end{figure}
 
-    \subsection{Partikelsystemet}
+    Detta görs genom att ladda upp en \emph{kernel} (beräkningskärna) som läser in \(\vec{x}\) och därefter skriver över denna med \(\vec{x}'\). Genom att läsa \(\vec{x}'\) från den delade buffern så kan en \emph{shader} användas för att rita partiklarna, genom att tolka hela \(\vec{x}'\) som en \emph{vertex buffer}. Man kan enkelt ändra \emph{visualiseringsmetod} (hur man ritar \(\vec{x}'\)) genom att byta shader, vilket beskrivs under Rubrik~\ref{sec:partikelrenderaren}.
+
+    \vspace{-0.35cm}
+    \subsection{Partikelsystemet} \label{sec:partikelsystemet}
 
     Varje partikel beräknas parallellt i Grafikprocessorn genom \textit{OpenCL} där följande operationer utförs för varje partikels koordinater.
 
@@ -201,7 +207,7 @@ och normeras så att vi själva kan bestämma vad hastigheten för partiklarna s
 \end{minipage}
 \end{figure}
 
-\subsection{Partikelrenderaren}
+\subsection{Partikelrenderaren} \label{sec:partikelrenderaren}
 
 \begin{figure}[H]
 \center
