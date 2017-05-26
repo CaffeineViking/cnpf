@@ -85,9 +85,9 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
 
     Varje partikel beräknas parallellt i Grafikprocessorn genom \textit{OpenCL} där följande operationer utförs för varje partikels koordinater.
 
-    I original papperet presenteras både beräkningarna för två och tre dimensioner men eftersom vi valt att enbart implementera den sistnämnda fokuserar vi på den. Vi kommer ej heller följa originalpapperets beräkningar exakt utan justerar så det passar vårat system bättre. Vidare har några förändringar gjorts för att bättre anpassa vektorfältet till vårat system.
+    I originalpapperet presenteras både beräkningarna för två och tre dimensioner men eftersom vi valt att enbart implementera den sistnämnda fokuserar vi på den. Vi kommer ej heller följa originalpapperets beräkningar exakt utan justerar så det passar vårat system bättre. Vidare har några förändringar gjorts för att bättre anpassa vektorfältet till vårat system.
 
-    I korthet kan man säga att vi producerar tre olika vektorfällt som vi kombinerar. De första två fälten representerar turbulensen och den allmänna riktningen som partiklarna ska följa som vi kombinerar genom att addera de resulterande fälten. Efter detta modifierar vi fältet så att den leder partiklar runt solida kroppar och slutligen applicerar vi en rotationsoperation (curl) vilket leder till ett divergensfritt vektorfällt.
+    I korthet kan man säga att vi producerar tre olika vektorfält som vi kombinerar. De första två fälten representerar turbulensen och den allmänna riktningen som partiklarna ska följa som vi kombinerar genom att addera de resulterande fälten. Efter detta modifierar vi fältet så att den leder partiklar runt solida kroppar och slutligen applicerar vi en rotationsoperation (curl) vilket leder till ett divergensfritt vektorfält.
 
     \textbf{Turbulensen}
 
@@ -106,7 +106,7 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
 8 & 0 & 0\\ 
 0 & 8 & 0\\ 
 0 & 0 & 8
-\end{pmatrix}$. $n(\vec{x})$ är brusfunktionen som samplas för att producera turbulens i fältet. $\gamma$ representerar förhållande mellan brus och bakgrundsfällt där $0$ är inget brus och därmed ingen turbulens medan $1$ är fullt brus utan något bakgrundsfällt. $M_n$ är styrkan på bruset (Fällriktningen är normerad så vi skalar upp det till vad vi vill ha). $L$ är längdskalan på bruset vilket i vårat fall är relativt stor (20-100) då vi vill ha långa övergångar i bruset.
+\end{pmatrix}$. $n(\vec{x})$ är brusfunktionen som samplas för att producera turbulens i fältet. $\gamma$ representerar förhållande mellan brus och bakgrundsfält där $0$ är inget brus och därmed ingen turbulens medan $1$ är fullt brus utan något bakgrundsfält. $M_n$ är styrkan på bruset (fältriktningen är normerad så vi skalar upp det till vad vi vill ha). $L$ är längdskalan på bruset vilket i vårat fall är relativt stor (20-100) då vi vill ha långa övergångar i bruset.
 \begin{figure}[H]
 \center
 \begin{minipage}[]{0.3\textwidth}
@@ -115,17 +115,17 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
 \end{minipage}
 \end{figure}
 
-\textbf{Bargrundskikningen}
+\textbf{Bakgrundsriktningen}
 
-Bakgrundsritningen representerar den generella riktningen vi vill att partiklarna ska följa. Detta beskrivs inte något vidare i referensartikel. Vi valde istället att anpassa en redan existerande implementation\footnote{\url{https://github.com/kbladin/Curl_Noise/blob/master/shaders/point_cloud_programs/update_velocities_curl_noise.frag}} av K. Bladin, vilket resulterar i ett relativt enkelt bakgrundsfällt som går i en uniform riktning.
+Bakgrundsriktningen representerar den generella riktningen vi vill att partiklarna ska följa. Detta beskrivs inte något vidare i referensartikeln. Vi valde istället att anpassa en redan existerande implementation\footnote{\url{https://github.com/kbladin/Curl_Noise/blob/master/shaders/point_cloud_programs/update_velocities_curl_noise.frag}} av K. Bladin, vilket resulterar i ett relativt enkelt bakgrundsfält som går i en uniform riktning.
 \begin{equation}
      \vec{F}(\vec{x}) = (1.0-\gamma) *  \vec{D}(\vec{x}) * M_f
 \end{equation}
-$ \vec{D}(\vec{x})$ representerar fältriktningen i den angivna punkten. Fällriktningen är beräknad enligt följande formel
+$ \vec{D}(\vec{x})$ representerar fältriktningen i den angivna punkten. Fältriktningen är beräknad enligt följande formel
 \begin{equation}
     \vec{D}(\vec{x}) = \vec{x} \times \vec{p}
 \end{equation}
-Där $\vec{p}$ är fällriktningen vi har valt att partiklarna ska följa.
+Där $\vec{p}$ är fältriktningen vi har valt att partiklarna ska följa.
 
 \begin{figure}[H]
 \center
@@ -135,7 +135,7 @@ Där $\vec{p}$ är fällriktningen vi har valt att partiklarna ska följa.
 \end{minipage}
 \end{figure}
 
-Brusriktningen adderas med bargrundskikningen ($\vec{\psi} = \vec{N}(\vec{x}) + \vec{F}(\vec{x})$) för att sedan justeras så att partiklarna beaktar solida sfärer utplacerade i vektorfältet. 
+Brusriktningen adderas med bakgrundsriktningen ($\vec{\psi} = \vec{N}(\vec{x}) + \vec{F}(\vec{x})$) för att sedan justeras så att partiklarna beaktar solida sfärer utplacerade i vektorfältet. 
 
 \textbf{Solida kroppar i fältet}
 
@@ -144,7 +144,7 @@ För att få alla partiklar att respektera de sfärer vi placerat i fältet anv�
 ramp(r) = \left\{\begin{matrix}
 1  && r > 1
 \\
-10r^3 + 6r^4 && 0 \le r \le 1
+6r^4 - 15r^4 + 10r^3 && 0 \le r \le 1
 \\ 
 0  && r < 0
 \end{matrix}\right.
@@ -162,7 +162,7 @@ För att få partiklarna att gå runt sfärerna använder vi nu resultatet från
 \begin{equation}
 \vec{\psi}_c(\vec{x}) = \alpha * \vec{\psi}(\vec{x}) + (1.0 - \alpha) * \vec{x} * \vec{\psi}(\vec{x}) \cdot \vec{x}
 \end{equation}
-vilket producerar en övergång från fällriktningen till en riktning tangentiell mot sfären.
+vilket producerar en övergång från fältriktningen till en riktning tangentiell mot sfären.
 
 \textbf{Curl}
 
