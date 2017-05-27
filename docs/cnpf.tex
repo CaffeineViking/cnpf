@@ -75,7 +75,7 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
     \section{Teori och metodik}
     \subsection{Systemöversikt}
 
-    Vid tidpunkten \(t_n\) så befinner sig varje partikel vid sin egen position \(\vec{x}\), lagrade i en \emph{buffer}. Målet är att räkna ut partikelns nästa position \(\vec{x}'\) vid tidpunkten \(t_{n+1}\) (d.v.s. vi stegar fram simuleringen). Detta görs genom \(\vec{x}' = \vec{x} + \mathbf{V}(\vec{x})\), där \(\mathbf{V}(\vec{x})\) är \emph{fältriktningen}. Allt detta hanteras av \emph{partikelsystemet}, där dessutom \(\mathbf{V}(\vec{x})\) skapas, och beskrivs väl under Rubrik~\ref{sec:partikelsystemet}. Detta görs parallelt på \emph{grafikprocessorn} (GPU) för varje partikel under samma \(t_n\). Vilket gör att positionerna \(\vec{x}'\) kan återanvändas när vi skall \emph{visualisera} dem med våran \emph{partikelrenderare}, då båda systemen behöver ej lämna grafikprocessorns minnesrymd. Se Figur~\ref{fig:system}.
+    Vid tidpunkten \(t_n\) så befinner sig varje partikel vid sin egen position \(\vec{x}\), lagrade i en \emph{buffer}. Målet är att räkna ut partikelns nästa position \(\vec{x}'\) vid tidpunkten \(t_{n+1}\) (d.v.s. vi stegar fram simuleringen). Detta görs genom \(\vec{x}' = \vec{x} + \mathbf{V}(\vec{x})\), där \(\mathbf{V}(\vec{x})\) är \emph{fältriktningen}. Allt detta hanteras av \emph{partikelsystemet}, där dessutom \(\mathbf{V}(\vec{x})\) skapas, och beskrivs under Rubrik~\ref{sec:partikelsystemet}. Detta görs parallellt på GPU:n för varje partikel under samma \(t_n\). Vilket gör att positionerna \(\vec{x}'\) kan återanvändas när vi skall \emph{visualisera} dem med \emph{partikelrenderaren}, då båda systemen ej behöver lämna grafikprocessorns minnesrymd. Se Figur~\ref{fig:system}.
 
     \begin{figure}[H]
     \center
@@ -89,9 +89,9 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
     \vspace{-0.35cm}
     \subsection{Partikelsystemet} \label{sec:partikelsystemet}
 
-    Varje partikel beräknas parallellt i Grafikprocessorn genom \textit{OpenCL} där följande operationer utförs för varje partikels koordinater.
+    Partikelsystemet bygger på att varje partikels nästkommande position beräknas parallellt genom en \texit{OpenCL} kernel för varje frame. 
 
-    I originalpapperet presenteras både beräkningarna för två och tre dimensioner men eftersom vi valt att enbart implementera den sistnämnda fokuserar vi på den. Vi kommer ej heller följa originalpapperets beräkningar exakt utan justerar så det passar vårat system bättre. Vidare har några förändringar gjorts för att bättre anpassa vektorfältet till vårat system.
+    I originalpapperet presenteras både riktningsberäkningarna för två och tre dimensioner men eftersom vi valt att enbart implementera den sistnämnda fokuserar vi på den. Vi kommer ej heller följa originalpapperets beräkningar exakt utan justerar så det passar vårat system bättre. Vidare har några förändringar gjorts för att bättre anpassa vektorfältet till vårat system.
 
     I korthet kan man säga att vi producerar tre olika vektorfält som vi kombinerar. De första två fälten representerar turbulensen och den allmänna riktningen som partiklarna ska följa som vi kombinerar genom att addera de resulterande fälten. Efter detta modifierar vi fältet så att den leder partiklar runt solida kroppar och slutligen applicerar vi en rotationsoperation (curl) vilket leder till ett divergensfritt vektorfält.
 
