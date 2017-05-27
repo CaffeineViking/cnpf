@@ -71,11 +71,12 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
 
     Den preliminära arbetsprocessen gick ut på att vi parprogrammerade med versionshantering via \textit{Git}. För att realisera partikelsystemet valde vi att använda \textit{OpenCL} för partikelberäkningar, \textit{OpenGL} för rendering, \textit{GLFW} för fönsterhantering, \textit{AntTweakbar} för ``run-time'' konfigurering, och \textit{GLEW} för att hantera \textit{OpenGL}-tillägg. Själva koden skrevs i C++, där våra kernels skrevs i \textit{OpenCLs} variant av C, samt shaders i \textit{GLSL}.
 
-    \vspace{-0.4cm}
+    \vspace{-0.5cm}
     \section{Teori och metodik}
+    \vspace{-0.3cm}
     \subsection{Systemöversikt}
 
-    Vid tidpunkten \(t_n\) så befinner sig varje partikel vid sin egen position \(\vec{x}\), lagrade i en \emph{buffer}. Målet är att räkna ut partikelns nästa position \(\vec{x}'\) vid tidpunkten \(t_{n+1}\) (d.v.s. vi stegar fram simuleringen). Detta görs genom \(\vec{x}' = \vec{x} + \mathbf{V}(\vec{x})\), där \(\mathbf{V}(\vec{x})\) är \emph{fältriktningen}. Allt detta hanteras av \emph{partikelsystemet}, där dessutom \(\mathbf{V}(\vec{x})\) skapas, och beskrivs under Rubrik~\ref{sec:partikelsystemet}. Detta görs parallellt på GPU:n för varje partikel under samma \(t_n\). Vilket gör att positionerna \(\vec{x}'\) kan återanvändas när vi skall \emph{visualisera} dem med \emph{partikelrenderaren}, då båda systemen ej behöver lämna grafikprocessorns minnesrymd. Se Figur~\ref{fig:system}.
+    Vid tidpunkten \(t_n\) så befinner sig varje partikel vid sin egen position \(\vec{x}\), lagrade i en \emph{buffer}. Målet är att räkna ut partikelns nästa position \(\vec{x}'\) vid tidpunkten \(t_{n+1}\) (d.v.s. vi stegar fram simuleringen). Detta görs genom \(\vec{x}' = \vec{x} + \mathbf{V}(\vec{x})\), där \(\mathbf{V}(\vec{x})\) är \emph{fältriktningen}. Allt detta hanteras av \emph{partikelsystemet}, där dessutom \(\mathbf{V}(\vec{x})\) skapas, och beskrivs under Rubrik~\ref{sec:partikelsystemet}. Detta görs parallellt på GPU:n för varje partikel under samma \(t_n\). Vilket gör att positionerna \(\vec{x}'\) kan återanvändas när vi skall \emph{visualisera} dem med \emph{partikelrenderaren}, då båda systemen ej behöver lämna grafikprocessorns minnesrymd. Detta leder till god prestanda, och arbetstypen passar dessutom bra till sådana typer av processorer då synkroniseringen är minimal. Se Figur~\ref{fig:system}.
 
     \begin{figure}[H]
     \center
