@@ -59,7 +59,7 @@ public:
 	~ParticleSystem();
 	ParticleSystem(const int);
 
-	bool init(std::vector<std::string>, std::vector<std::string>, const std::string&, const ShaderProgram&);
+    bool init(std::vector<std::string>, std::vector<std::string>, const std::string&, const ShaderProgram&, const bool = false);
 	void compute(const float, const float);
 	void addSphere(const glm::vec3&, const float);
 	void addEmitter(const glm::vec3&, const glm::vec3&);

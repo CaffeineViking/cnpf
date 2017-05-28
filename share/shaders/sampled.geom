@@ -20,37 +20,23 @@ void createQuad(vec4 V0, vec4 V1, float uvStart, float uvEnd){
     // bottom left
     v = V0.xy + vec2(-0.5, 0.0) * size;
     gl_Position = projection * vec4(v, V0.zw);
+    texCoords = vec2(0.0, uvStart);
+    EmitVertex();
+
+    // bottom right
+    v = V0.xy + vec2(0.5, 0.0) * size;
+    gl_Position = projection * vec4(v, V0.zw);
     texCoords = vec2(1.0, uvStart);
-    EmitVertex();
-
-    // bottom right
-    v = V0.xy + vec2(0.5, 0.0) * size;
-    gl_Position = projection * vec4(v, V0.zw);
-    texCoords = vec2(0.0, uvStart);
-    EmitVertex();
-
-    // top left
-    v = V1.xy + vec2(-0.5, 0.0) * size;
-    gl_Position = projection * vec4(v, V1.zw);
-    texCoords = vec2(1.0, uvEnd);
-    EmitVertex();
-
-    EndPrimitive();
-
-    // top left
-    v = V1.xy + vec2(-0.5, 0.0) * size;
-    gl_Position = projection * vec4(v, V1.zw);
-    texCoords = vec2(1.0, uvEnd);
-    EmitVertex();
-    
-    // bottom right
-    v = V0.xy + vec2(0.5, 0.0) * size;
-    gl_Position = projection * vec4(v, V0.zw);
-    texCoords = vec2(0.0, uvStart);
     EmitVertex();
 
     // top right
     v = V1.xy + vec2(0.5, 0.0) * size;
+    gl_Position = projection * vec4(v, V1.zw);
+    texCoords = vec2(1.0, uvEnd);
+    EmitVertex();
+
+    // top left
+    v = V1.xy + vec2(-0.5, 0.0) * size;
     gl_Position = projection * vec4(v, V1.zw);
     texCoords = vec2(0.0, uvEnd);
     EmitVertex();

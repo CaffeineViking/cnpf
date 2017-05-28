@@ -177,9 +177,15 @@ int main(int argc, char**argv)
     // Usually: Intel, NVIIDA or AMD are platform vendors.
     std::vector<std::string> paths;
     std::vector<std::string> kernels;
-    paths.push_back("share/kernels/simplex.c");
-    paths.push_back("share/kernels/particles.cl");
-    paths.push_back("share/kernels/timers.cl");
+    //paths.push_back("share/kernels/simplex.c");
+    //paths.push_back("share/kernels/particles.cl");
+    //paths.push_back("share/kernels/timers.cl");
+    
+    /* The binary files needs to be pre-compiled with 'compile-cl.c' that 
+     * can be found in the utils directory (needs to be compiled).
+     * 'compile-cl.c' compiles one binary for each device so the correct one
+     * has to be specified. */ 
+    paths.push_back("bin/cl-out_0-1.bin");
     kernels.push_back("particles");
     kernels.push_back("exportCurl");
     kernels.push_back("exportBackground");
@@ -190,7 +196,7 @@ int main(int argc, char**argv)
 
     kernels.push_back("timers");
 
-    system.init(paths, kernels, DEVICE_NAME, rendererProgram);
+    system.init(paths, kernels, DEVICE_NAME, rendererProgram, true);
 
     // Add particle system varaibles to the tweak bar
     TwAddVarRW(myBar, "RespawnTime", TW_TYPE_FLOAT, system.referenceRespawnTime(),  " min=0 max=60 step=0.5 group=System label='Particle Time' ");

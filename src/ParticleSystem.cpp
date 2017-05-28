@@ -38,10 +38,10 @@ ParticleSystem::ParticleSystem(const int maxParticles):
 // =====================================
 // Setup devices and kernel for OpenCL  ( ͡° ͜ʖ ͡°).
 // =====================================
-bool ParticleSystem::init(std::vector<std::string> paths, std::vector<std::string> kernels, const std::string& device, const ShaderProgram& program){
+bool ParticleSystem::init(std::vector<std::string> paths, std::vector<std::string> kernels, const std::string& device, const ShaderProgram& program, const bool fromBinary){
 // Init random kernel with my NVIDIA card. You need to change
    std::cout << "Init OpenCL with device " << device <<  std::endl; 
-   _params = OpenCLUtils::initCL(paths, kernels, device);
+   _params = OpenCLUtils::initCL(paths, kernels, device, fromBinary);
 
    std::vector<float> spawnerData;
    for(int i = 0; i < _emitters.size(); i++){

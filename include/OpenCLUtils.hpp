@@ -22,9 +22,11 @@ public:
 	static cl::Platform getPlatform(const std::string&);
 	static bool checkExtensionSupport(const cl::Device&, const std::string&);
 	static cl::Program getProgram(const cl::Context&, std::vector<std::string>);
-	static clParameters initCL(std::vector<std::string>, std::vector<std::string>, const std::string&);
+    static cl::Program getProgramFromBinary(const cl::Context&, std::vector<cl::Device>, std::vector<std::string>);
+    static clParameters initCL(std::vector<std::string>, std::vector<std::string>, const std::string&, const bool=false);
 	static cl::ImageGL createTexture(const cl::Context&,int, GLenum,  GLuint);
 	static cl::Buffer createBuffer(const cl::Context&,const cl::CommandQueue&,int, const unsigned, const std::vector<float>&);
 	static void dumpInfo();
+    static const std::string getErrorString(cl_int);
 };
 #endif
