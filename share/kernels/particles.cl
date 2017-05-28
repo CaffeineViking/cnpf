@@ -49,7 +49,7 @@ float getAlpha(float sphere_radius, float influence_radius, float distance){
 float3 getBackgorund(float3 p, const Params params){
   // Add Background Field
    
-    const float3  field_direction = (float3)(params.fieldX,params.fieldY, params.fieldZ);
+    const float3 field_direction = (float3)(params.fieldX,params.fieldY, params.fieldZ);
     const float3 directional = cross(p, field_direction);
 
     return (1.0f - params.noise_ratio) * directional * params.field_magnitude;
@@ -78,7 +78,7 @@ float3 potential(float3 p,const int nsph, __global float* sph, const Params para
 
     float d = length(p - sphere_centre);
     float alpha = getAlpha(sphere_radius, params.boundrary_width, d);
-    float3 n = normalize(p);
+    float3 n = normalize(p - sphere_centre);
     return (alpha) * psi + (1.0f - alpha) * n * dot(n, psi);
 }
 

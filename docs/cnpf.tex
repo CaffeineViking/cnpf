@@ -63,20 +63,20 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
 
     \section{Introduktion}
 
-    Ett viktigt område inom \emph{datorgrafik och visualisering} är förmågan att \emph{simulera}/\emph{animera} verklighetstrogna \emph{flödessystem} i \emph{realtid}. Dessa används i bl.a. spel och filmer för att enkelt skapa \emph{visuella effekter} som t.ex. \emph{rök- och vattenrörelser}; effekter som vanligtvis inte görs ``för hand'', och är mer lämpliga att genereras av en dator. I detta projekt så har vi implementerat ett \emph{grundläggande flödessystem} för att \emph{animera ett partikelsystem} i 3-D med hjälp av den så kallade \emph{Curl-Noise} (``curlbrus''), först presenterad av \emph{Bridson et al.}~\cite{bridson2007curl} i 2007.
+    Ett viktigt område inom \emph{datorgrafik och visualisering} är förmågan att \emph{simulera}/\emph{animera} verklighetstrogna \emph{flödessystem} i \emph{realtid}. Dessa används i bl.a. spel och filmer för att enkelt skapa \emph{visuella effekter} som t.ex. \emph{rök- och vattenrörelser}; effekter som vanligtvis inte görs ``för hand'', och är mer lämpliga att genereras av en dator. I detta projekt har vi implementerat ett \emph{grundläggande flödessystem} för att \emph{animera ett partikelsystem} i 3-D med hjälp av den så kallade \emph{Curl-Noise} (``curlbrus''), först presenterad av \emph{Bridson et al.}~\cite{bridson2007curl} i 2007.
 
-    \textit{Curlbrus} används för att framställa verklighetstrogna \emph{partikelflöden} genom att \emph{procedurellt animera turbulenta flöden}. Detta görs genom att skapa \emph{procedurellt brus}, som används för att skapa ett \emph{divergens-fritt vektorfält} genom att applicera billiga vektorfältsoperationer. Detta är en billigare variant av \emph{Navier-Stokes}, som är fysiskt korrekt; men eftersom vi endast är efter dess visuella egenskaper, så är Curlbrus tillräckligt bra. Dessutom så kan Curlbrus beräknas i realtid, vilket gör den lämplig för integrering i t.ex. spel och infovis.
+    \textit{Curlbrus} används för att framställa verklighetstrogna \emph{partikelflöden} genom att procedurellt animera \emph{turbulenta flöden}. Detta görs genom att använda ett \emph{procedurellt brus} för att skapa ett \emph{divergens-fritt vektorfält}. Detta är ett billigare alternativ till \emph{Navier-Stokes}, som är fysiskt korrekt; men eftersom vi endast är efter dess visuella egenskaper, är Curlbrus tillräckligt bra. Dessutom kan Curlbrus beräknas i realtid, vilket gör den lämplig för integrering i t.ex. spel och infovis.
 
-    Målet med detta projekt var att skapa ett enkelt \emph{3-D partikelsystem} där rörelsen bestäms av ett riktningsfält genererat genom \emph{Curlbrus metoden}. Dessutom så producerades det några enkla \emph{visuella effekter}.
+    Målet med detta projekt var att skapa ett enkelt \emph{3-D partikelsystem} där partiklarnas rörelse bestäms av ett vektorfällt genererat genom \emph{Curlbrus metoden} tillsammans med några enkla visuella effekter.
 
-    Den preliminära arbetsprocessen gick ut på att vi parprogrammerade med versionshantering via \textit{Git}. För att realisera partikelsystemet valde vi att använda \textit{OpenCL} för partikelberäkningar, \textit{OpenGL} för rendering, \textit{GLFW} för fönsterhantering, \textit{AntTweakbar} för ``run-time'' konfigurering, och \textit{GLEW} för att hantera \textit{OpenGL}-tillägg. Själva koden skrevs i C++, där våra kernels skrevs i \textit{OpenCLs} variant av C, samt shaders i \textit{GLSL}.
+    Den preliminära arbetsprocessen gick ut på att vi parprogrammera med versionshantering via \textit{Git}. För att realisera partikelsystemet valde vi att använda \textit{OpenCL} för partikelberäkningar, \textit{OpenGL} för rendering, \textit{GLFW} för fönsterhantering, \textit{AntTweakbar} för ``run-time'' konfigurering, och \textit{GLEW} för att hantera \textit{OpenGL}-tillägg. Själva koden skrevs i C++, där våra kernels skrevs i \textit{OpenCLs} variant av C, samt shaders i \textit{GLSL}.
 
     \vspace{-0.5cm}
     \section{Teori och metodik}
     \vspace{-0.3cm}
     \subsection{Systemöversikt} \label{sec:system}
 
-    Vid tidpunkten \(t_n\) så befinner sig varje partikel vid sin egen position \(\vec{x}\), lagrade i en \emph{buffer}. Målet är att räkna ut partikelns nästa position \(\vec{x}'\) vid tidpunkten \(t_{n+1}\) (d.v.s. vi stegar fram simuleringen). Detta görs genom \(\vec{x}' = \vec{x} + \mathbf{V}(\vec{x})\), där \(\mathbf{V}(\vec{x})\) är \emph{fältriktningen}. Allt detta hanteras av \emph{partikelsystemet}, där dessutom \(\mathbf{V}(\vec{x})\) skapas, och beskrivs under Rubrik~\ref{sec:partikelsystemet}. Detta görs parallellt på GPU:n för varje partikel under samma \(t_n\). Vilket gör att positionerna \(\vec{x}'\) kan återanvändas när vi skall \emph{visualisera} dem med \emph{partikelrenderaren}, då båda systemen ej behöver lämna grafikprocessorns minnesrymd. Detta leder till god prestanda, och arbetstypen passar dessutom bra till sådana typer av processorer då synkroniseringen är minimal. Se Figur~\ref{fig:system}.
+    Vid tidpunkten \(t_n\) befinner sig varje partikel vid sin egen position \(\vec{x}\), lagrade i en \emph{buffer}. Målet är att räkna ut partikelns nästa position \(\vec{x}'\) vid tidpunkten \(t_{n+1}\) (d.v.s. vi stegar fram simuleringen). Detta görs genom \(\vec{x}' = \vec{x} + \mathbf{\hat{V}}(\vec{x})\), där \(\mathbf{\hat{V}}(\vec{x})\) är \emph{fältriktningen}. Allt detta hanteras av \emph{partikelsystemet}, där dessutom \(\mathbf{\hat{V}}(\vec{x})\) skapas, och beskrivs under Rubrik~\ref{sec:partikelsystemet}. Detta görs parallellt på GPU:n för varje partikel under samma \(t_n\). Vilket gör att positionerna \(\vec{x}'\) kan återanvändas när vi ska \emph{visualisera} dem med \emph{partikelrenderaren}, då båda systemen ej behöver lämna grafikprocessorns minnesrymd. Detta leder till god prestanda, och arbetstypen passar dessutom bra till sådana typer av processorer då synkroniseringen är minimal. Se Figur~\ref{fig:system}.
 
     \begin{figure}[H]
     \center
@@ -92,13 +92,13 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
 
     Partikelsystemet bygger på att varje partikels nästkommande position beräknas parallellt genom en \textit{OpenCL} kernel för varje frame. 
 
-    I originalpapperet presenteras både riktningsberäkningarna för två och tre dimensioner men eftersom vi valt att enbart implementera den sistnämnda fokuserar vi på den. Vi kommer ej heller följa originalpapperets beräkningar exakt utan justerar så det passar vårat system bättre. Vidare har några förändringar gjorts för att bättre anpassa vektorfältet till vårat system.
+    Originalpapperet presenterar både riktningsberäkningarna för två och tre dimensioner men eftersom vi valt att enbart implementera den sistnämnda fokuserar vi på den. Vi kommer ej heller följa originalpapperets beräkningar exakt utan justerar beroende på vad som passar vårat system bättre.
 
-    I korthet kan man säga att vi producerar tre olika vektorfält som vi kombinerar. De första två fälten representerar turbulensen och den allmänna riktningen som partiklarna ska följa som vi kombinerar genom att addera de resulterande fälten. Efter detta modifierar vi fältet så att den leder partiklar runt solida kroppar och slutligen applicerar vi en rotationsoperation (curl) vilket leder till ett divergensfritt vektorfält.
+    I korthet kan man säga att vi producerar tre olika vektorfält som vi kombinerar. De första två fälten representerar turbulensen och den allmänna riktningen som partiklarna ska följa. Dessa kombineras genom att adderas. Efter detta modifieras resultatfältet så att partiklarna åker runt solida kroppar och slutligen applicerar vi en rotationsoperation (curl) vilket resulterar i ett divergensfritt vektorfält.
 
-    \textbf{Turbulensen}
+    \textbf{Turbulensfältet}
 
-    Turbulensen beräknas genom att sampla en brusfunktion. Vi valde att använda \textit{Simplex noise}\footnote{\url{https://github.com/stegu/perlin-noise/blob/master/src/simplexnoise1234.c}} vilket förklaras av S. Gustavsson\cite{gustavson2005simplex} för procentuellt brus varpå vi samplar runt varje partikels position enligt följande funktion.
+    Turbulensfältet beräknas genom att sampla en procedurell brusfunktion. Vi valde att använda \textit{Simplex noise}\footnote{\url{https://github.com/stegu/perlin-noise/blob/master/src/simplexnoise1234.c}} vilket förklaras i närmare detalj av S. Gustavsson\cite{gustavson2005simplex}. Brusfunktionen samplas runt varje partikels position enligt följande funktion.
     \begin{equation}
    \vec{N}(\vec{x}) =  
         \begin{pmatrix}
@@ -109,7 +109,7 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
         n((\vec{x} + \vec{\epsilon}_z)/L)
         \end{pmatrix} * \gamma M_nL
     \end{equation}
-    Där $\vec{\epsilon}$ representerar en förskjutning så att inte alla komponenter får exakt samma värde, i detta fall $\vec{\epsilon} = \begin{pmatrix}
+    Där $\vec{\epsilon}$ representerar en förskjutning så att alla vektorkomponenter inte blir korrelerade, i detta fall $\vec{\epsilon} = \begin{pmatrix}
 8 & 0 & 0\\ 
 0 & 8 & 0\\ 
 0 & 0 & 8
@@ -124,15 +124,15 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
 
 \textbf{Bakgrundsriktningen}
 
-Bakgrundsriktningen representerar den generella riktningen vi vill att partiklarna ska följa. Detta beskrivs inte något vidare i referensartikeln. Vi valde istället att anpassa en redan existerande implementation\footnote{\url{https://github.com/kbladin/Curl_Noise/blob/master/shaders/point_cloud_programs/update_velocities_curl_noise.frag}} av K. Bladin, vilket resulterar i ett relativt enkelt bakgrundsfält som går i en uniform riktning.
+Bakgrundsriktningen representerar den generella riktningen vi vill att partiklarna ska följa. Detta beskrivs inte något vidare i referensartikeln. Vi valde istället att anpassa en redan existerande implementation\footnote{\url{https://github.com/kbladin/Curl_Noise/blob/master/shaders/point_cloud_programs/update_velocities_curl_noise.frag}} av K. Bladin, vilket resulterar i ett bakgrundsfält som går i en uniform riktning efter att $\nabla \times$ operatorn har applicerats.
 \begin{equation}
      \vec{F}(\vec{x}) = (1.0-\gamma) *  \vec{D}(\vec{x}) * M_f
 \end{equation}
-$ \vec{D}(\vec{x})$ representerar fältriktningen i den angivna punkten. Fältriktningen är beräknad enligt följande formel
+$ \vec{D}(\vec{x})$ representerar fältriktningen i den angivna punkten och $M_f$ är magnituden vi vill ha. Fältriktningen är beräknad enligt följande formel
 \begin{equation}
     \vec{D}(\vec{x}) = \vec{x} \times \vec{p}
 \end{equation}
-Där $\vec{p}$ är fältriktningen vi har valt att partiklarna ska följa.
+Där $\vec{p}$ är fältriktningen vi vill att partiklarna ska följa.
 
 \begin{figure}[H]
 \center
@@ -142,7 +142,7 @@ Där $\vec{p}$ är fältriktningen vi har valt att partiklarna ska följa.
 \end{minipage}
 \end{figure}
 
-Brusriktningen adderas med bakgrundsriktningen ($\vec{\psi} = \vec{N}(\vec{x}) + \vec{F}(\vec{x})$) för att sedan justeras så att partiklarna beaktar solida sfärer utplacerade i vektorfältet. 
+Turbulensfältet adderas med bakgrundsriktningen ($\vec{\psi} = \vec{N}(\vec{x}) + \vec{F}(\vec{x})$) för att sedan justeras så att partiklarna beaktar solida sfärer utplacerade i vektorfältet. 
 
 \textbf{Solida kroppar i fältet}
 
@@ -156,7 +156,7 @@ ramp(r) = \left\{\begin{matrix}
 0  && r < 0
 \end{matrix}\right.
 \end{equation}
-där $r$ är skillnaden mellan distansen $\vec{x}$ och den närmsta sfären delat på marginalen runt sfären. 
+där $r$ är distansen $\vec{x}$ till närmaste sfär delat på distansen av sfären inflytande. 
 \begin{figure}[H]
 \center
 \begin{minipage}[]{0.3\textwidth}
@@ -165,11 +165,11 @@ där $r$ är skillnaden mellan distansen $\vec{x}$ och den närmsta sfären dela
 \end{minipage}
 \end{figure}
 
-För att få partiklarna att gå runt sfärerna använder vi nu resultatet från rampfunktionen som $\alpha = | ramp(d(\vec{x})/d_0) |$ där $d_0$  är en arbiträr skalfaktor. Slutligen beräknar vi hur fältet runt sfären ska se ut genom 
+Resultatet från rampfunktionen som $\alpha = | ramp(d(\vec{x})/d_0) |$ där $d_0$  är en arbiträr skalfaktor. Slutligen beräknar vi hur fältet runt sfärer se ut genom 
 \begin{equation}
-\vec{\psi}_c(\vec{x}) = \alpha * \vec{\psi}(\vec{x}) + (1.0 - \alpha) * \vec{x} * \vec{\psi}(\vec{x}) \cdot \vec{x}
+\vec{\psi}_c(\vec{x}) = \alpha * \vec{\psi}(\vec{x}) + (1.0 - \alpha) * \hat{n} * \vec{\psi}(\vec{x}) \cdot \hat{n}
 \end{equation}
-vilket producerar en övergång från fältriktningen till en riktning tangentiell mot sfären.
+där $\hat{n}$ är normalen från $\vec{x}$ till den närmsta sfären. Detta producerar en övergång från fältriktningen till en riktning tangentiell mot sfären.
 
 \textbf{Curl}
 
@@ -191,8 +191,8 @@ där $\vec{\epsilon} = \begin{pmatrix}
 
 Slutligen beräknas den slutgiltiga fältriktningen genom att applicera curl operatorn på vår framtagna gradient genom
 \begin{equation}
- \mathbf{V}(\vec{x}) =
- \nabla \times \begin{pmatrix}
+\mathbf{\hat{V}}(\vec{x}) =
+\nabla \times \begin{pmatrix}
 \vec{vy}_z - \vec{vz}_y
 \\ 
 \vec{vz}_z - \vec{vx}_y
@@ -211,11 +211,11 @@ och normeras så att vi själva kan bestämma vad hastigheten för partiklarna s
 
 \subsection{Partikelrenderaren} \label{sec:partikelrenderaren}
 
-Då varje position \(\vec{x}\) finns tillgänglig i \emph{vertex shadern} (enligt Rubrik~\ref{sec:system}) så kan vi ändra på hur de ritas ut genom att modifiera senare \emph{shader ``pipeline'' steg}. Tre styckna olika visualiseringsmetoder har implementerats, som beskrivs individuellt i kommande delar. Dessutom så har vi valt att använda \emph{additiv färgblandning} när vi skriver till skärmbufferten, främst av estetiska skäl (områden med fler partiklar ger ett intryck att det är ``ljusare''), men dessutom av rent praktiska skäl (som kommer förklaras i kommande delar). Bilder över dessa visualiseringsmetoder finns i Rubrik~\ref{sec:results}.
+Då varje position \(\vec{x}\) finns tillgänglig i \emph{vertex shadern} (enligt Rubrik~\ref{sec:system}) kan vi ändra hur de ritas ut genom att modifiera senare \emph{shader ``pipeline'' steg}. Tre styckna olika visualiseringsmetoder har implementerats, som beskrivs individuellt i kommande delar. Dessutom har vi valt att använda \emph{additiv färgblandning} när vi skriver till skärmbufferten, främst av estetiska skäl (områden med fler partiklar ger ett intryck att det är ``ljusare''), men dessutom av rent praktiska skäl (som kommer förklaras i kommande delar). Bilder över dessa visualiseringsmetoder finns i Rubrik~\ref{sec:results}.
 
 \textbf{Punktvisualiseringen}
 
-Den enklaste typen av visualisering är att bara skapa en ``punkt'' där partikeln bör ligga. Här behöver vi endast en \emph{vertex shader} och en \emph{fragment shader}. Då användaren skall kunna observera scenen från flera håll, så måste positionerna \(\vec{x}\) omvandlas till det korrekta koordinatsystemet, \(\mathbf{MVP}\vec{x}\) i \emph{vertex shadern}. Därefter så ger vi punkten en enkel färg genom att sätta resultatet från \emph{fragment shadern} till \(\begin{bmatrix}|x| & |y| & |z| & 1.0\end{bmatrix}\). Det vill säga, färgen av partikeln ges av dess position \(\vec{x}\).
+Den enklaste typen av visualisering är att bara skapa en ``punkt'' där partikeln bör ligga. Här behöver vi endast en \emph{vertex shader} och en \emph{fragment shader}. Då användaren ska kunna observera scenen från flera håll, måste positionerna \(\vec{x}\) omvandlas till det korrekta koordinatsystemet, \(\mathbf{MVP}\vec{x}\) i \emph{vertex shadern}. Därefter ger vi punkten en enkel färg genom att sätta resultatet från \emph{fragment shadern} till \(\begin{bmatrix}|x| & |y| & |z| & 1.0\end{bmatrix}\). Det vill säga, färgen av partikeln ges av dess position \(\vec{x}\).
 
 \textbf{Billboardsvisualiseringen}
 
@@ -225,7 +225,7 @@ Visuella effekter så som eld och rök kan enkelt representeras med hjälp av s.
                                     0 & 0 & 0 & 1 \end{bmatrix}, \;
           \vec{x} = \begin{bmatrix}x & y & z\end{bmatrix}.\]
 
-Hur skapas detta plan dock, given en punkt \(\vec{x}\)? Då vi har valt att göra allt detta i våra shaders, så måste vi \emph{skapa ny geometri} under körtid. Man gör detta med hjälp av en s.k. \emph{geometry shader}, ett steg som ligger mellan en \emph{vertex shader} och en \emph{fragment shader}.
+Hur skapas detta plan dock, given en punkt \(\vec{x}\)? Då vi har valt att göra allt detta i våra shaders, måste vi \emph{skapa ny geometri} under körtid. Man gör detta med hjälp av en s.k. \emph{geometry shader}, ett steg som ligger mellan en \emph{vertex shader} och en \emph{fragment shader}.
 
 \vspace{-0.3cm}
 \begin{figure}[H]
@@ -236,11 +236,11 @@ Hur skapas detta plan dock, given en punkt \(\vec{x}\)? Då vi har valt att gör
 \end{figure}
 \vspace{-0.3cm}
 
-Som figur~\ref{fig:bill}~(a) visar, skapar våran geometry shader för varje punkt \(\vec{x}\) (representerad som en grå cirkel i figuren), 4st nya hörn centrerade runt \(\vec{x}\) (de vita cirklarna) genom \texttt{EmitVertex}. Dessa flyttats med \(s\) enheter åt respektive håll; en parameter som bestämmer hur stor planet skall vara. Man genererar primitiver (trianglar i detta fall) genom att anropa \texttt{EndPrimitive}. Sist så sätter vi \((u, v)\)-koordinaterna för de hörn vi skapat, och använder dessa i \emph{fragment shadern} för att rita ut en 2-D textur som har ``häftats'' till/på vårat plan.
+Som figur~\ref{fig:bill}~(a) visar, skapar våran geometry shader för varje punkt \(\vec{x}\) (representerad som en grå cirkel i figuren), 4st nya hörn centrerade runt \(\vec{x}\) (de vita cirklarna) genom \texttt{EmitVertex}. Dessa flyttats med \(s\) enheter åt respektive håll; en parameter som bestämmer hur stor planet ska vara. Man genererar primitiver (trianglar i detta fall) genom att anropa \texttt{EndPrimitive}. Sist sätter vi \((u, v)\)-koordinaterna för de hörn vi skapat, och använder dessa i \emph{fragment shadern} för att rita ut en 2-D textur som har ``häftats'' till/på vårat plan.
 
 \textbf{Vektorfältvisualiseringen}
 
-För att enklare kunna visualisera riktningsfältet så har vi implementerat \emph{``glyphs''}, som bl.a. beskrivs i \emph{McQuinn et al.}~\cite{mcquinn2013glyphsea}. Tekniken går ut på att ``dra ut'' en billboard så att den följer fältets riktning. Vi har gjort en förenklad variant, där de \(k\):st senaste \(\vec{x}\)-värden (vid tidsteg \(t_{n-1}, ..., t_{n-k}\)) lagras i en \emph{cirkulär buffer} \(\mathcal{C}\). Dessa används för att skapa en \emph{segmenterad billboard}, där de olika segmenten skapas mellan två punkter \(\vec{x}_{i-1}\),~\(\vec{x}_i\), där \(\vec{x}_{i-1}\),~\(\vec{x}_i\)~\(\in \mathcal{C}\). För varje segment så skapas två hörn vid sidan av \(\vec{x}_i\) och två hörn vid sidan av \(\vec{x}_{i-1}\) enligt figur~\ref{fig:bill}~(b), som sedan används för att generera primitiver för varje segment (som kopplas samman).
+För att enklare kunna visualisera riktningsfältet har vi implementerat \emph{``glyphs''}, som bl.a. beskrivs i \emph{McQuinn et al.}~\cite{mcquinn2013glyphsea}. Tekniken går ut på att ``dra ut'' en billboard så att den följer fältets riktning. Vi har gjort en förenklad variant, där de \(k\):st senaste \(\vec{x}\)-värden (vid tidsteg \(t_{n-1}, ..., t_{n-k}\)) lagras i en \emph{cirkulär buffer} \(\mathcal{C}\). Dessa används för att skapa en \emph{segmenterad billboard}, där de olika segmenten skapas mellan två punkter \(\vec{x}_{i-1}\),~\(\vec{x}_i\), där \(\vec{x}_{i-1}\),~\(\vec{x}_i\)~\(\in \mathcal{C}\). För varje segment skapas två hörn vid sidan av \(\vec{x}_i\) och två hörn vid sidan av \(\vec{x}_{i-1}\) enligt figur~\ref{fig:bill}~(b), som sedan används för att generera primitiver för varje segment (som kopplas samman).
 
 \subsection{Övriga funktioner}
 
