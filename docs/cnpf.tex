@@ -74,7 +74,7 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
     \vspace{-0.5cm}
     \section{Teori och metodik}
     \vspace{-0.3cm}
-    \subsection{Systemöversikt}
+    \subsection{Systemöversikt} \label{sec:system}
 
     Vid tidpunkten \(t_n\) så befinner sig varje partikel vid sin egen position \(\vec{x}\), lagrade i en \emph{buffer}. Målet är att räkna ut partikelns nästa position \(\vec{x}'\) vid tidpunkten \(t_{n+1}\) (d.v.s. vi stegar fram simuleringen). Detta görs genom \(\vec{x}' = \vec{x} + \mathbf{V}(\vec{x})\), där \(\mathbf{V}(\vec{x})\) är \emph{fältriktningen}. Allt detta hanteras av \emph{partikelsystemet}, där dessutom \(\mathbf{V}(\vec{x})\) skapas, och beskrivs under Rubrik~\ref{sec:partikelsystemet}. Detta görs parallellt på GPU:n för varje partikel under samma \(t_n\). Vilket gör att positionerna \(\vec{x}'\) kan återanvändas när vi skall \emph{visualisera} dem med \emph{partikelrenderaren}, då båda systemen ej behöver lämna grafikprocessorns minnesrymd. Detta leder till god prestanda, och arbetstypen passar dessutom bra till sådana typer av processorer då synkroniseringen är minimal. Se Figur~\ref{fig:system}.
 
@@ -191,6 +191,7 @@ där $\vec{\epsilon} = \begin{pmatrix}
 
 Slutligen beräknas den slutgiltiga fältriktningen genom att applicera curl operatorn på vår framtagna gradient genom
 \begin{equation}
+ \mathbf{V}(\vec{x}) =
  \nabla \times \begin{pmatrix}
 \vec{vy}_z - \vec{vz}_y
 \\ 
@@ -210,17 +211,40 @@ och normeras så att vi själva kan bestämma vad hastigheten för partiklarna s
 
 \subsection{Partikelrenderaren} \label{sec:partikelrenderaren}
 
+Då varje position \(\vec{x}\) finns tillgänglig i \emph{vertex shadern} (enligt Rubrik~\ref{sec:system}) så kan vi ändra på hur de ritas ut genom att modifiera senare \emph{shader ``pipeline'' steg}. Tre styckna olika visualiseringsmetoder har implementerats, som beskrivs individuellt i kommande delar. Dessutom så har vi valt att använda \emph{additiv färgblandning} när vi skriver till skärmbufferten, främst av estetiska skäl (områden med fler partiklar ger ett intryck att det är ``ljusare''), men dessutom av rent praktiska skäl (som kommer förklaras i kommande delar). Bilder över dessa visualiseringsmetoder finns i Rubrik~\ref{sec:results}.
+
+\textbf{Punktvisualiseringen}
+
+Den enklaste typen av visualisering är att bara skapa en ``punkt'' där partikeln bör ligga. Här behöver vi endast en \emph{vertex shader} och en \emph{fragment shader}. Då användaren skall kunna observera scenen från flera håll, så måste positionerna \(\vec{x}\) omvandlas till det korrekta koordinatsystemet, \(\mathbf{MVP}\vec{x}\) i \emph{vertex shadern}. Därefter så ger vi punkten en enkel färg genom att sätta resultatet från \emph{fragment shadern} till \(\begin{bmatrix}|x| & |y| & |z| & 1.0\end{bmatrix}\). Det vill säga, färgen av partikeln ges av dess position \(\vec{x}\).
+
+\textbf{Billboardsvisualiseringen}
+
+Visuella effekter så som eld och rök kan enkelt representeras med hjälp av s.k. \emph{``billboards''} (alt. \emph{``impostors''}), som är ett texturerat plan som alltid är riktad mot åskådaren (vilket ger intrycket att den är 2-D). Detta görs enligt \emph{Ingemar Ragnemalm}~\cite{ragnemalm2008polygons} genom att: \[\mathbf{M} = \begin{bmatrix} 1 & 0 & 0 & x \\
+                                    0 & 1 & 0 & y \\
+                                    0 & 0 & 1 & z \\
+                                    0 & 0 & 0 & 1 \end{bmatrix}, \;
+          \vec{x} = \begin{bmatrix}x & y & z\end{bmatrix}.\]
+
+Hur skapas detta plan dock, given en punkt \(\vec{x}\)? Då vi har valt att göra allt detta i våra shaders, så måste vi \emph{skapa ny geometri} under körtid. Man gör detta med hjälp av en s.k. \emph{geometry shader}, ett steg som ligger mellan en \emph{vertex shader} och en \emph{fragment shader}.
+
 \begin{figure}[H]
 \center
 \includegraphics[width=0.5\textwidth]{share/Billboards.eps}
-    \caption{(a) en billboard (b) segmenterade billboards.}
+\caption{(a) en billboard (b) segmenterade billboards.}
+\label{fig:bill}
 \end{figure}
+
+Som denna figur (a) beskriver, våran geometry shader gör att, för varje punkt \(\vec{x}\) (representerad som en grå cirkel i figuren), skapar 4st nya hörn centrerade runt \(\vec{x}\) (de vita cirklarna) genom \texttt{EmitVertex}. Dessa flyttats med \(s\) enheter åt respektive håll; en parameter som bestämmer hur stor planet skall vara. Man genererar primitiver (trianglar i detta fall) genom att anropa \texttt{EmitPrimitive}. Sist så sätter vi \((u, v)\)-koordinaterna för de hörn vi skapat, och använder dessa i \emph{fragment shadern} för att rita ut en förvald 2-D textur som har ``häftats'' till/på vårat plan.
+
+\textbf{Vektorfältvisualiseringen}
+
+För att enklare kunna visualisera riktningsfältet så har vi implementerat \emph{``glyphs''}, som bl.a. beskrivs i \emph{McQuinn et al.}~\cite{mcquinn2013glyphsea}. Tekniken går ut på att ``dra ut'' en billboard så att den följer fältets riktning. Vi har gjort en förenklad variant, där vi lagrar de \(k\):st senaste \(\vec{x}\)-värden (i \(t_{n-1}, ..., t_{n-k}\)) i en \emph{cirkulär buffer} \(\mathcal{C}\). Dessa används för att skapa en \emph{segmenterad billboard}, där de olika segment skapas centrerade runt \(\vec{x}_i\), där \(\vec{x}_i \in \mathcal{C}\). Dessa kopplas samman enligt t.ex. Figur~\ref{fig:bill} (b).
 
 \subsection{Övriga funktioner}
 
-\section{Resultat \& diskussion}
+\section{Resultat \& diskussion} \label{sec:results}
 
-        \subsection{Problem och Lösningar}
+        \subsection{Problem samt lösningar}
 
         \subsection{Framtida förbättringar}
 
