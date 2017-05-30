@@ -234,15 +234,14 @@ För att enklare kunna visualisera riktningsfältet har vi implementerat \emph{`
 
 \textbf{Grafiska gränssnittet}
 
-\textit{AntTweakBar} användes för att på ett smidigt sätt få ett grafisk gränssnitt där man kan ändra parametrar under körtid. När allt för en frame har renderats så ritas gränssnittet ut ovanpå allt. Som man kan se i figur~\ref{fig:atb} har vi lite olika parametrar som kan ändras för att få olika visuella effekter. T.ex. så kan man ändra riktingen på bakgrundsfältet, andel brus, och välja hur partiklarna ska visualiseras.
+\textit{AntTweakBar} användes för att på ett smidigt sätt få ett grafisk gränssnitt där man kan ändra parametrar under körtid. När allt för en frame har renderats så ritas gränssnittet ut ovanpå allt med \texttt{TwDraw}. Som man kan se i figur~\ref{fig:atb} har vi lite olika parametrar som kan ändras för att få olika visuella effekter. T.ex. så kan man ändra riktingen på bakgrundsfältet, andel brus, och välja hur partiklarna ska visualiseras.
 
 \begin{figure}[H]
 \center
 \includegraphics[width=0.48\textwidth]{share/atb.png}
-    \caption{Grafiska gränsnittet implementerad med \textit{AntTweakBar}}
+\caption{Grafiska gränsnittet använder \textit{AntTweakBar}}
 \label{fig:atb}
 \end{figure}
-
 
 \clearpage
 
@@ -259,7 +258,7 @@ För att enklare kunna visualisera riktningsfältet har vi implementerat \emph{`
 
             \textbf{``Svarta hål'' av ej divergens-frihet}
 
-            % ...
+            Tidigt i projektet hade vi problemet att partiklar konvergerade mot vissa punkter. Något som ej borde inträffa, då curl-noise skall vara ett divergens-fritt vektorfält. Det visade sig (med Stefans hjälp) att den linjära interpoleringen som vi gjorde av riktningsfältet i GPU:n förstörde den egenskapen. Evaluering av riktningsfältet på GPU:n kontinuerligt löste de problemet.
 
             \textbf{Interpoleringsfel av CPU Simplex}
 
@@ -272,19 +271,9 @@ För att enklare kunna visualisera riktningsfältet har vi implementerat \emph{`
             Ett annat problem som dök upp var att det saknades delar av våra billboards när de skulle ritas ut. Orsaken till problemet var att för varje segment skapades bara 4 hörn som sedan skulle bindas ihop till en quad vilket inte gav rätt resultat. Lösningen var att skapa varje quad med två polygoner manuellt (Se figur~\ref{fig:bill}). 
             % ...
 
-            \textbf{Utföra mjuka kamera övergångar}
-
-            % ...
-
-            \textbf{Hemska fulhack för ``callbacks'' }
-
-            % ...
-
         \subsection{Framtida förbättringar}
 
             \textbf{Segmentering med ``B-splines''}
-
-            % ...
 
             \textbf{Filformat för ``egna'' scenarion}
 
