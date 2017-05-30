@@ -96,11 +96,27 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
 
     I korthet kan man säga att vi producerar tre olika vektorfält som vi kombinerar. De första två fälten representerar turbulensen och den allmänna riktningen som partiklarna ska följa. Dessa kombineras genom att adderas. Efter detta modifieras resultatfältet så att partiklarna åker runt solida kroppar och slutligen applicerar vi en rotationsoperation (curl) vilket resulterar i ett divergensfritt vektorfält.
 
+\begin{figure}[H]
+\begin{minipage}[]{0.5\textwidth}
+\center
+\includegraphics[width=0.48\textwidth]{share/Background_downscale.png}
+\includegraphics[width=0.48\textwidth]{share/Noise_downscale.png}
+
+\vspace{0.1cm}
+
+\includegraphics[width=0.48\textwidth]{share/Alpha_downscale.png}
+\includegraphics[width=0.48\textwidth]{share/Curl_downscale.png}
+\end{minipage}
+    \caption{$xy$-plan genomskärningar av  a) \emph{turbulensfältet} b) \emph{bakgrundsfältet} c) \emph{rampfunktionen} d) \emph{riktningsfältet}. (i den ordningen som visas: vänster$\rightarrow$höger, upp$\rightarrow$ner)}
+\label{fig:curlnoise}
+\end{figure}
+
+\vspace{-0.3cm}
     \textbf{Turbulensfältet}
 
-    Turbulensfältet beräknas genom att sampla en procedurell brusfunktion. Vi valde att använda \textit{Simplex noise}\footnote{\url{https://github.com/stegu/perlin-noise/blob/master/src/simplexnoise1234.c}} vilket förklaras i närmare detalj av S. Gustavsson\cite{gustavson2005simplex}. Brusfunktionen samplas runt varje partikels position enligt följande funktion.
+    Turbulensfältet beräknas genom att sampla en procedurell brusfunktion. Vi valde att använda \textit{Simplex noise}\footnote{\url{https://github.com/stegu/perlin-noise/blob/master/src/simplexnoise1234.c}} vilket förklaras i detalj av \emph{Stefan Gustavsson}~\cite{gustavson2005simplex}. Brusfunktionen samplas runt varje partikels position enligt följande funktion.
     \begin{equation}
-   \vec{N}(\vec{x}) =  
+   \vec{N}(\vec{x}) =
         \begin{pmatrix}
         n((\vec{x} + \vec{\epsilon}_x)/L)
         \\
@@ -114,13 +130,6 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
 0 & 8 & 0\\ 
 0 & 0 & 8
 \end{pmatrix}$. $n(\vec{x})$ är brusfunktionen som samplas för att producera turbulens i fältet. $\gamma$ representerar förhållande mellan brus och bakgrundsfält där $0$ är inget brus och därmed ingen turbulens medan $1$ är fullt brus utan något bakgrundsfält. $M_n$ är styrkan på bruset (fältriktningen är normerad så vi skalar upp det till vad vi vill ha). $L$ är längdskalan på bruset vilket i vårat fall är relativt stor (20-100) då vi vill ha långa övergångar i bruset.
-\begin{figure}[H]
-\center
-\begin{minipage}[]{0.3\textwidth}
-\includegraphics[width=\textwidth]{share/Noise_downscale.png}
-\caption{Genomskärning av turbulensfältet.}
-\end{minipage}
-\end{figure}
 
 \textbf{Bakgrundsriktningen}
 
@@ -134,13 +143,6 @@ $ \vec{D}(\vec{x})$ representerar fältriktningen i den angivna punkten och $M_f
 \end{equation}
 Där $\vec{p}$ är fältriktningen vi vill att partiklarna ska följa.
 
-\begin{figure}[H]
-\center
-\begin{minipage}[]{0.3\textwidth}
-\includegraphics[width=\textwidth]{share/Background_downscale.png}
-\caption{Genomskärning av bakgrundsfället.}
-\end{minipage}
-\end{figure}
 
 Turbulensfältet adderas med bakgrundsriktningen ($\vec{\psi} = \vec{N}(\vec{x}) + \vec{F}(\vec{x})$) för att sedan justeras så att partiklarna beaktar solida sfärer utplacerade i vektorfältet. 
 
@@ -157,13 +159,6 @@ ramp(r) = \left\{\begin{matrix}
 \end{matrix}\right.
 \end{equation}
 där $r$ är distansen $\vec{x}$ till närmaste sfär delat på distansen av sfären inflytande. 
-\begin{figure}[H]
-\center
-\begin{minipage}[]{0.3\textwidth}
-\includegraphics[width=\textwidth]{share/Alpha_downscale.png}
-\caption{Genomskärning av ramp funktionen mot en sfärisk solid kropp.}
-\end{minipage}
-\end{figure}
 
 Resultatet från rampfunktionen som $\alpha = | ramp(d(\vec{x})/d_0) |$ där $d_0$  är en arbiträr skalfaktor. Slutligen beräknar vi hur fältet runt sfärer se ut genom 
 \begin{equation}
@@ -200,14 +195,7 @@ Slutligen beräknas den slutgiltiga fältriktningen genom att applicera curl ope
 \vec{vx}_z - \vec{vy}_y
 \end{pmatrix} / 0.0002
 \end{equation}
-och normeras så att vi själva kan bestämma vad hastigheten för partiklarna ska vara. En genomskärning i $xy$-planet kan ses i nästa figur.
-\begin{figure}[H]
-\center
-\begin{minipage}[]{0.3\textwidth}
-\includegraphics[width=\textwidth]{share/Curl_downscale.png}
-\caption{Genomskärning av det slutgiltiga riktningsfället.}
-\end{minipage}
-\end{figure}
+och normeras så att vi själva kan bestämma vad hastigheten för partiklarna ska vara. En genomskärning i $xy$-planet av dessa fält kan ses i Figur~\ref{fig:curlnoise}.
 
 \subsection{Partikelrenderaren} \label{sec:partikelrenderaren}
 
@@ -244,9 +232,38 @@ För att enklare kunna visualisera riktningsfältet har vi implementerat \emph{`
 
 \subsection{Övriga funktioner}
 
+\clearpage
+
 \section{Resultat \& diskussion} \label{sec:results}
 
+\begin{figure}[H]
+\center
+\includegraphics[width=0.48\textwidth]{share/merged_shaders.png}
+    \caption{visualisering av \emph{partikelsystemet} med tre olika metoder: \emph{vektorfält-}, \emph{billboard-}, och \emph{punktvisualisering} som drivs av \emph{partikelrenderaren}. Scenariot innehåller en solid sfärisk kropp och med en längdskala på \(L\approx20\).}
+\label{fig:verysexy}
+\end{figure}
+
         \subsection{Problem samt lösningar}
+
+            \textbf{``Svarta hål'' av ej divergens-frihet}
+
+            % ...
+
+            \textbf{Interpoleringsfel av CPU Simplex}
+
+            % ...
+
+            \textbf{Konstigheter i ``geometry shader''}
+
+            % ...
+
+            \textbf{Utföra mjuka kamera övergångar}
+
+            % ...
+
+            \textbf{Hämska fulhack för ``callbacks'' }
+
+            % ...
 
         \subsection{Framtida förbättringar}
 
