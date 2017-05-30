@@ -254,14 +254,17 @@ För att enklare kunna visualisera riktningsfältet har vi implementerat \emph{`
             % ...
 
             \textbf{Konstigheter i ``geometry shader''}
-
+            
+            För att få segmenterade billboards att fungera behövde partiklarnas gamla positioner samplas och skickas till ``geometry shader''. En buffer med plats för alla samplade gamla positioner användes av OpenCL. Att direkt föra över delar av denna buffer till en buffer i OpenGL fungerade inte och gav bara positioner i origo. Ett nytt försök gjordes med en separat buffer för varje tidpunkt. Alltså, för varje tidpunkt finns en buffer med alla partiklars gamla positioner för den tidpunkten. Detta var en lösning till problemet och vi hade nu tillgång till alla positioner som behövdes för att skapa segmenterade billboards.
+            
+            Ett annat problem som dök upp var att det saknades delar av våra billboards när de skulle ritas ut. Orsaken till problemet var att för varje segment skapades bara 4 hörn som sedan skulle bindas ihop till en quad vilket inte gav rätt resultat. Lösningen var att skapa varje quad med två polygoner manuellt (Se figur~\ref{fig:bill}). 
             % ...
 
             \textbf{Utföra mjuka kamera övergångar}
 
             % ...
 
-            \textbf{Hämska fulhack för ``callbacks'' }
+            \textbf{Hemska fulhack för ``callbacks'' }
 
             % ...
 
