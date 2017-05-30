@@ -230,7 +230,7 @@ Som figur~\ref{fig:bill}~(a) visar, skapar våran geometry shader för varje pun
 
 För att enklare kunna visualisera riktningsfältet har vi implementerat \emph{``glyphs''}, som bl.a. beskrivs i \emph{McQuinn et al.}~\cite{mcquinn2013glyphsea}. Tekniken går ut på att ``dra ut'' en billboard så att den följer fältets riktning. Vi har gjort en förenklad variant, där de \(k\):st senaste \(\vec{x}\)-värden (vid tidsteg \(t_{n-1}, ..., t_{n-k}\)) lagras i en \emph{cirkulär buffer} \(\mathcal{C}\). Dessa används för att skapa en \emph{segmenterad billboard}, där de olika segmenten skapas mellan två punkter \(\vec{x}_{i-1}\),~\(\vec{x}_i\), där \(\vec{x}_{i-1}\),~\(\vec{x}_i\)~\(\in \mathcal{C}\). För varje segment skapas två hörn vid sidan av \(\vec{x}_i\) och två hörn vid sidan av \(\vec{x}_{i-1}\) enligt figur~\ref{fig:bill}~(b), som sedan används för att generera primitiver för varje segment (som kopplas samman).
 
-\subsection{De övriga teknikaliteter}
+\subsection{De övriga teknikaliteterna}
 
 \clearpage
 
@@ -266,6 +266,18 @@ För att enklare kunna visualisera riktningsfältet har vi implementerat \emph{`
             % ...
 
         \subsection{Framtida förbättringar}
+
+            \textbf{Segmentering med ``B-splines''}
+
+            % ...
+
+            \textbf{Filformat för ``egna'' scenarion}
+
+            % ...
+
+            \textbf{Konkreta scenarion av shaders}
+
+            % ...
 
         \subsection{Projektreflektioner}
 
