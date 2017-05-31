@@ -161,13 +161,7 @@ där $\hat{n}$ är normalen från $\vec{x}$ till den närmsta sfären. Detta pro
 Vi får fram $ \nabla \vec{\psi}$ genom en \textit{finit differensmetod} där vi samplar fältet väldigt nära punkten vi vill ha gradienten i och tar genomsnittet. Sist beräknas den slutgiltiga fältriktningen genom att applicera curl operatorn på vår framtagna gradient genom
 \begin{equation}
 \mathbf{\hat{V}}(\vec{x}) =
-\nabla \times \begin{pmatrix}
-\vec{vy}_z - \vec{vz}_y
-\\ 
-\vec{vz}_z - \vec{vx}_y
-\\ 
-\vec{vx}_z - \vec{vy}_y
-\end{pmatrix} / 0.0002
+(\nabla \times \nabla \vec{\psi}(\vec{x})) / 0.0002
 \end{equation}
 och normeras så att vi själva kan bestämma vad hastigheten för partiklarna ska vara. En genomskärning i $xy$-planet av dessa fält kan ses i Figur~\ref{fig:curlnoise}. 
 
@@ -211,13 +205,6 @@ För att enklare kunna visualisera riktningsfältet har vi implementerat \emph{`
 
 \textit{AntTweakBar} användes för att på ett smidigt sätt få ett grafisk gränssnitt där man kan ändra parametrar under körtid. När allt för en frame har renderats, så ritas gränssnittet ut ovanpå allt med \texttt{TwDraw}. Som man kan se i figur~\ref{fig:atb} har vi lite olika parametrar som kan ändras för att få olika visuella effekter. Exempelvis kan man ändra riktningen på bakgrundsfältet, andel brus, och välja hur partiklarna ska visualiseras.
 
-\begin{figure}[H]
-\center
-\includegraphics[width=0.48\textwidth]{share/atb.png}
-\caption{Grafiska gränssnittet använder \textit{AntTweakBar}}
-\label{fig:atb}
-\end{figure}
-
 \textbf{Kamerasvep}
 
 För att enkelt röra sig mellan olika perspektiv i scenen så har vi definierat ``områden av intresse'' där kameran bör vara (och i vilken riktning).  För att få mjuka kameraövergångar interpolerades kamerans position med en \emph{ease in/out}-funktion, med tiden som parameter.
@@ -254,7 +241,7 @@ All kod\footnote{\url{http://github.com/CaffeineViking/cnpf}} är open-source oc
             % ...
 
         \subsection{Framtida förbättringar}
-
+        
             \textbf{Segmentering med ``B-splines''}
 
             Eftersom vi har en minnesbegränsning på \(\mathcal{C}\) kan vi endast segmentera billboards till en viss nivå tills det börjar bli ``dyrt''. Här kan vi använda en \emph{B-spline} för att interpolera mjukt t.ex. \(\sum \vec{x}_i N^3_i(t)\), mellan den ändliga mängden kontrollpunkter och få ``fler'' \(\vec{x}_i\), som kan användas för att skapa mer kurvade segment.
@@ -269,9 +256,15 @@ All kod\footnote{\url{http://github.com/CaffeineViking/cnpf}} är open-source oc
 
         \subsection{Projektreflektioner}
 
-            Över lag är vi mycket nöjda med resultatet. När vi gick in i detta projekt hade vi inte mer än en väldigt otydlig bild av vad som skulle göras. Genom projektets gång har vi progressivt utvecklat vår vision om vad vi ville se i slutet och hur det skulle implementeras.
+            Över lag är vi mycket nöjda med resultatet. Framför allt är vi nöjda med hur visualiseringen med hjälp utav segmenterade billboards och beräkningen av partikelflödet. Billboard-segmenteringen var inte något vi hade tänkt implementera förens väldigt sent i projektet men resultatet höjde slutvisualiseringen signifikant. 
 
-            Dessutom så har det förvärvats en del nya kunskaper som vi ej hade innan projektet. Något väldigt nytt för oss alla var att arbeta med ``geometry shaders'', vilket vi tror kommer vara användbart i framtida projekt. I tidigare kurser så har vissa i gruppen arbetat med CUDA, men inte OpenCL (i stora mängder i alla fall). Efter detta projekt så har vi blivit mycket mer bekanta med OpenCL och dess kernels, samt den komplexa ritualen för att sätta upp OpenGL interoperabilitet.
+            Partikelflödet var först tänkt att beräknas helt på CPU:n men efter de problem som vi redan nämnt bestämde vi oss för att flytta över det till GPU:n. Detta var inte en lätt sak att göra, vi hade nämligen redan implementerat en modell för vektorfällt på CPU:n som tagit åtskilliga dagar i arbete. Resultatet blev dock mycket bättre än vad vi fick från CPU implementationen både när det kommer till responstid och mängd partiklar.
+            
+            Arbetsmetoden fungerade bra men parprogrammeringen led av att alla projektmedlemmar har haft olika scheman. Vilket gjort det svårt att hitta tider under vardagar där alla som jobbade tillsammans har haft tiden till det. Därför blev det ofta att alla satte sig tillsammans på helgerna och planerade vad varje person skulle få gjort under den kommande veckan. Det krävdes mycket arbete att få mjukvaran att köra på allas datorer (det är fortfarande lite problem för vissa). Det har varit en kombination av vida skilda prestanda och en blandad GNU/Linux och Windows miljö. Ett av de mer involverade delarna av projektet var att få alla bibliotek och byggsystem att fungera.
+
+            Dessutom så har det förvärvats en del nya kunskaper som vi ej hade innan projektet. Något väldigt nytt för oss alla var att arbeta med ``geometry shaders'', vilket vi tror kommer vara användbart i framtida projekt. I tidigare kurser så har vissa i gruppen arbetat med CUDA, men inte OpenCL (i stora mängder i alla fall). Efter detta projekt så har vi blivit mycket mer bekanta med OpenCL och dess kernels, samt den komplexa ritualen för att sätta upp OpenGL interoperabilitet. 
+
+
 
     \nocite{*} % Include all.
     \bibliographystyle{abbrv}
