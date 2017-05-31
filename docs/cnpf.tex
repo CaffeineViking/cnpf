@@ -63,12 +63,10 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
 
     \section{Introduktion}
 
-    Ett viktigt område inom \emph{datorgrafik och visualisering} är förmågan att \emph{simulera}/\emph{animera} verklighetstrogna \emph{flödessystem} i \emph{realtid}. Dessa används i bl.a. spel och filmer för att enkelt skapa \emph{visuella effekter} som t.ex. \emph{rök- och vattenrörelser}; effekter som vanligtvis inte animeras ``för hand'', utan är mer lämpliga att generera i en dator. I detta projekt implementeras ett \emph{grundläggande flödessystem} för att \emph{animera ett partikelsystem} i 3D med hjälp av ett så kallat \emph{rotationsbrus} (``curl-noise''), först presenterad av \emph{Bridson et al.}~\cite{bridson2007curl} 2007.
+    Ett viktigt område inom \emph{datorgrafik och visualisering} är förmågan att \emph{simulera}/\emph{animera} verklighetstrogna \emph{flödessystem} i \emph{realtid}. Dessa används i bl.a. spel och filmer för att enkelt skapa \emph{visuella effekter} som t.ex. \emph{rök- och vattenrörelser}; effekter som vanligtvis inte animeras ``för hand'', utan är mer lämpliga att genereras av en dator. I detta projekt implementeras ett \emph{grundläggande flödessystem} för att \emph{animera ett partikelsystem} i 3D med hjälp av ett så kallat \emph{rotationsbrus} (``curl-noise''), först presenterad av \emph{Bridson et al.}~\cite{bridson2007curl} 2007.
 
-    \textit{Rotationsbrus} används för att framställa verklighetstrogna \emph{partikelflöden} genom att procedurellt animera \emph{turbulenta flöden}. Detta görs genom att beräkna rotationen av ett vektorfält som genererats av \emph{procedurellt brus}. På så sätt skapas ett \emph{divergensfritt vektorfält}, som påverkar partiklarnas rörelsebanor utan att de ackumuleras på punkter i fältet. Metoden är ett billigare alternativ till \emph{Navier-Stokes}, som är fysiskt korrekt, men eftersom det i detta fall är främst de visuella egenskaperna som är intressanta, är rotationsbrus tillräckligt bra. Dessutom kan rotationsbrus beräknas i realtid, vilket gör den lämplig för integrering i t.ex. spel och informationsvisualisering.
+    \textit{Rotationsbrus} används för att framställa verklighetstrogna \emph{partikelflöden} genom att procedurellt animera \emph{turbulenta flöden}. Detta görs genom att beräkna rotationen av ett vektorfält som genererats av \emph{procedurellt brus}. På så sätt skapas ett \emph{divergensfritt vektorfält}, som påverkar partiklarnas rörelsebanor utan att de ackumuleras på punkter i fältet. Metoden är ett billigare alternativ till \emph{Navier-Stokes ekvationer} för flöden, som är fysiskt korrekta, men eftersom det i detta fall är främst de visuella egenskaperna som är intressanta, är rotationsbrus tillräckligt bra. Dessutom kan rotationsbrus beräknas i realtid, vilket gör den lämplig för integrering i t.ex. spel och informationsvisualisering.
 
-	I originalrapporten presenteras beräkningar för både två och tre dimensioner men i detta projekt är endast det sistnämnda aktuellt. Dessutom är vissa beräkningar justerade för att bättre passa detta projekt.
-	
     Målet med detta projekt var att skapa ett enkelt \emph{3D-partikelsystem} där partiklarnas rörelse bestäms av ett vektorfält genererat genom \emph{rotationsbrusmetoden} tillsammans med några enkla visuella effekter.
 
     Arbetsprocessen gick till stor del ut på parprogrammering, och versionshantering via \textit{Git}. För att realisera partikelsystemet användes \textit{OpenCL} för partikelberäkningar, \textit{OpenGL} för rendering, \textit{GLFW} för fönsterhantering, \textit{AntTweakbar} för ``run-time'' konfigurering, och \textit{GLEW} för att hantera \textit{OpenGL}-tillägg. Själva koden skrevs i C++ med \emph{Premake} som byggsystem, kernels skrevs i \textit{OpenCL} C variant, och shaders i \textit{GLSL}.
@@ -94,7 +92,9 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
 
     Partikelsystemet bygger på att varje partikels nästkommande position beräknas parallellt av en \textit{OpenCL} kernel för varje frame. 
 
-    I korthet kan man säga att tre olika vektorfält produceras och kombineras. De första två fälten representerar turbulensen och den allmänna riktningen som partiklarna ska följa. Dessa kombineras genom addition. Sedan modifieras resultatfältet så att partiklarna tar sig runt solida kroppar och slutligen appliceras en rotationsoperation (curl) vilket resulterar i ett divergensfritt vektorfält.
+    I korthet kan man säga att tre olika vektorfält produceras och kombineras. De första två fälten representerar turbulensen och den allmänna riktningen som partiklarna ska följa. Dessa kombineras genom addition. Sedan modifieras resultatfältet så att partiklarna tar sig runt solida kroppar och slutligen appliceras en rotationsoperation, vilket resulterar i ett divergensfritt vektorfält \(\hat{\mathbf{V}}\), själva riktningsfältet till partiklarna.
+
+    I originalrapporten presenteras beräkningar för både 2-D och 3-D men i detta projekt är endast det sistnämnda aktuellt. Dessutom är vissa av de beräkningar som presenteras här justerade för just detta projekt.
 
 \begin{figure}[H]
 \begin{minipage}[]{0.5\textwidth}
@@ -187,6 +187,7 @@ Visuella effekter så som eld och rök kan enkelt representeras med hjälp av s.
                                     0 & 0 & 0 & 1 \end{bmatrix}, \;
           \vec{x} = \begin{bmatrix}x & y & z\end{bmatrix}.\]
 
+\vspace{-0.25cm}
 Hur skapas detta plan, givet en punkt \(\vec{x}\)? Då vi har valt att göra allt detta i våra shaders, måste vi \emph{skapa ny geometri} under körtid. Man gör detta med hjälp av en s.k. \emph{geometry shader}, ett steg som ligger mellan en \emph{vertex shader} och en \emph{fragment shader}.
 
 \vspace{-0.3cm}
@@ -234,6 +235,7 @@ All kod\footnote{\url{http://github.com/CaffeineViking/cnpf}} är open-source oc
 \label{fig:verysexy}
 \end{figure}
 
+\vspace{-0.8cm}
         \subsection{Problem samt lösningar}
 
             \textbf{``Svarta hål'' av ej divergensfrihet}
@@ -242,7 +244,7 @@ All kod\footnote{\url{http://github.com/CaffeineViking/cnpf}} är open-source oc
 
             \textbf{Interpoleringsfel av CPU Simplex}
 
-            Något liknande inträffade senare i projektet, där våra partiklar tenderade att röra sig mot en viss riktning. Till slut visade det sig att detta inträffade för att vi interpolerade simplexbruset och samplade alla komponenter på samma position. Genom att introducera $\vec{\epsilon}$ och flytta över samplingen till GPU:n så att vi inte behövde lagra det i en 3D textur löste sig problemet.
+            Något liknande inträffade senare i projektet, där våra partiklar tenderade att röra sig mot en viss riktning. Till slut visade det sig att detta inträffade för att vi interpolerade simplexbruset och samplade alla komponenter på samma position. Genom att introducera $\vec{\epsilon}$ och flytta över samplingen till GPU:n så att vi inte behövde lagra det i en 3-D textur så löste sig problemet.
 
             \textbf{Konstigheter i ``geometry shader''}
             
@@ -255,7 +257,7 @@ All kod\footnote{\url{http://github.com/CaffeineViking/cnpf}} är open-source oc
 
             \textbf{Segmentering med ``B-splines''}
 
-            Eftersom vi har en minnesbegränsning på \(\mathcal{C}\) kan vi endast segmentera billboards till en viss nivå tills det börjar bli ``dyrt''. Här kan vi använda en \emph{B-spline} för att interpolera mjukt t.ex. \(\sum \vec{x}_i N^3_i(t)\), mellan den ändliga mängden kontrollpunkter och få ``fler'' \(\vec{x}_i\).
+            Eftersom vi har en minnesbegränsning på \(\mathcal{C}\) kan vi endast segmentera billboards till en viss nivå tills det börjar bli ``dyrt''. Här kan vi använda en \emph{B-spline} för att interpolera mjukt t.ex. \(\sum \vec{x}_i N^3_i(t)\), mellan den ändliga mängden kontrollpunkter och få ``fler'' \(\vec{x}_i\), som kan användas för att skapa mer kurvade segment.
 
             \textbf{Filformat för ``egna'' scenarion}
 
@@ -263,11 +265,13 @@ All kod\footnote{\url{http://github.com/CaffeineViking/cnpf}} är open-source oc
 
             \textbf{Konkreta scenarion av shaders}
 
-            Några mer ``praktiskt relevanta'' shaders och scenarion skulle ha varit intressanta att ha i demonstrationen. Exempelvis, att ha en gryta över en brasa som dessutom skapar lite rök. Det skulle innehålla all teknik som finns i detta projekt, dock krävs mer kod.
+            Några mer ``praktiskt relevanta'' shaders och scenarion skulle ha varit intressanta att ha i demonstrationen. Exempelvis, att ha en gryta över en brasa som dessutom skapar lite rök. Det skulle innehålla all teknik som finns i detta projekt, dock krävs mer kod för att ladda in modeller samt sortera våra partiklar.
 
         \subsection{Projektreflektioner}
 
             Över lag är vi mycket nöjda med resultatet. När vi gick in i detta projekt hade vi inte mer än en väldigt otydlig bild av vad som skulle göras. Genom projektets gång har vi progressivt utvecklat vår vision om vad vi ville se i slutet och hur det skulle implementeras.
+
+            Dessutom så har det förvärvats en del nya kunskaper som vi ej hade innan projektet. Något väldigt nytt för oss alla var att arbeta med ``geometry shaders'', vilket vi tror kommer vara användbart i framtida projekt. I tidigare kurser så har vissa i gruppen arbetat med CUDA, men inte OpenCL (i stora mängder i alla fall). Efter detta projekt så har vi blivit mycket mer bekanta med OpenCL och dess kernels, samt den komplexa ritualen för att sätta upp OpenGL interoperabilitet.
 
     \nocite{*} % Include all.
     \bibliographystyle{abbrv}
