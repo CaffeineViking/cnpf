@@ -416,6 +416,8 @@ int main(int argc, char **argv) {
     read_file(&program_file, &program_size, "source.cl");
     
     // Compile binaries for each platforms and devices
+    std::cout << "Compiling binaries..." << std::endl;
+    
     compile_all(program_file, program_size);
     
     return 0;
