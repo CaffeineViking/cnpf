@@ -4,7 +4,7 @@
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage[pdftex, hidelinks,
-            pdftitle={Flödesanimering i Realtid med 3-D Curlbrus},
+            pdftitle={Flödesanimering i realtid med 3D-rotationsbrus},
             pdfauthor={Martin Estgren and and Rasmus Hedin and Alfred Rundquist and Erik S. V. Jansson},
             pdfsubject={Computer Graphics -- Animation -- Physical Simulation / Procedural Animation},
             pdfkeywords={curl-noise,animation,fluid simulation,navier-stokes,gpu,real-time}]{hyperref}
@@ -50,7 +50,7 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
         escapeinside={<@}{@>}}
 
 \date{\vspace{-0.5ex}} % Buys us some space.
-\title{\vspace{-2.2cm}\textbf{Flödesanimering i Realtid med 3-D Curlbrus}\\
+\title{\vspace{-2.2cm}\textbf{Flödesanimering i realtid med 3D-rotationsbrus}\\
        \Large{\textit{--- en kort teknisk saga angående dess fasor och dess under ---}}\vspace{-0.25cm}}
 \author{{\textbf{Martin Estgren}}\;\;\;\;\;\; {\href{mailto:mares480@student.liu.se}{\texttt{<mares480@student.liu.se>}}}\\
         {\textbf{Rasmus Hedin}}\;\;\;\;\;\;\;\; {\href{mailto:rashe877@student.liu.se}{\texttt{<rashe877@student.liu.se>}}}\\
@@ -63,38 +63,38 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
 
     \section{Introduktion}
 
-    Ett viktigt område inom \emph{datorgrafik och visualisering} är förmågan att \emph{simulera}/\emph{animera} verklighetstrogna \emph{flödessystem} i \emph{realtid}. Dessa används i bl.a. spel och filmer för att enkelt skapa \emph{visuella effekter} som t.ex. \emph{rök- och vattenrörelser}; effekter som vanligtvis inte görs ``för hand'', och är mer lämpliga att genereras av en dator. I detta projekt har vi implementerat ett \emph{grundläggande flödessystem} för att \emph{animera ett partikelsystem} i 3-D med hjälp av den så kallade \emph{Curl-Noise} (``curlbrus''), först presenterad av \emph{Bridson et al.}~\cite{bridson2007curl} i 2007.
+    Ett viktigt område inom \emph{datorgrafik och visualisering} är förmågan att \emph{simulera}/\emph{animera} verklighetstrogna \emph{flödessystem} i \emph{realtid}. Dessa används i bl.a. spel och filmer för att enkelt skapa \emph{visuella effekter} som t.ex. \emph{rök- och vattenrörelser}; effekter som vanligtvis inte animeras ``för hand'', utan är mer lämpliga att generera i en dator. I detta projekt implementeras ett \emph{grundläggande flödessystem} för att \emph{animera ett partikelsystem} i 3D med hjälp av ett så kallat \emph{rotationsbrus} (``curl-noise''), först presenterad av \emph{Bridson et al.}~\cite{bridson2007curl} 2007.
 
-    \textit{Curlbrus} används för att framställa verklighetstrogna \emph{partikelflöden} genom att procedurellt animera \emph{turbulenta flöden}. Detta görs genom att använda ett \emph{procedurellt brus} för att skapa ett \emph{divergens-fritt vektorfält}. Detta är ett billigare alternativ till \emph{Navier-Stokes}, som är fysiskt korrekt; men eftersom vi endast är efter dess visuella egenskaper, är Curlbrus tillräckligt bra. Dessutom kan Curlbrus beräknas i realtid, vilket gör den lämplig för integrering i t.ex. spel och infovis.
+    \textit{Rotationsbrus} används för att framställa verklighetstrogna \emph{partikelflöden} genom att procedurellt animera \emph{turbulenta flöden}. Detta görs genom att beräkna rotationen av ett vektorfält som genererats av \emph{procedurellt brus}. På så sätt skapas ett \emph{divergensfritt vektorfält}, som påverkar partiklarnas rörelsebanor utan att ackumulera dem. Detta är ett billigare alternativ till \emph{Navier-Stokes}, som är fysiskt korrekt, men eftersom det i detta fall är främst de visuella egenskaperna som är intressanta, är rotationsbrus tillräckligt bra. Dessutom kan rotationsbrus beräknas i realtid, vilket gör den lämplig för integrering i t.ex. spel och informationsvisualisering.
 
-    Målet med detta projekt var att skapa ett enkelt \emph{3-D partikelsystem} där partiklarnas rörelse bestäms av ett vektorfällt genererat genom \emph{Curlbrus metoden} tillsammans med några enkla visuella effekter.
+	I originalrapporten presenteras beräkningar för både två och tre dimensioner men i detta projekt är endast det sistnämnda aktuellt. Dessutom är vissa beräkningar från rapporten justerade för att bättre passa detta projekt.
+	
+    Målet med detta projekt var att skapa ett enkelt \emph{3D-partikelsystem} där partiklarnas rörelse bestäms av ett vektorfällt genererat genom \emph{rotationsbrusmetoden} tillsammans med några enkla visuella effekter.
 
-    Den preliminära arbetsprocessen gick ut på att vi parprogrammera med versionshantering via \textit{Git}. För att realisera partikelsystemet valde vi att använda \textit{OpenCL} för partikelberäkningar, \textit{OpenGL} för rendering, \textit{GLFW} för fönsterhantering, \textit{AntTweakbar} för ``run-time'' konfigurering, och \textit{GLEW} för att hantera \textit{OpenGL}-tillägg. Själva koden skrevs i C++, där våra kernels skrevs i \textit{OpenCLs} variant av C, samt shaders i \textit{GLSL}.
+    Arbetsprocessen gick till stor del ut på parprogrammering, och versionshantering via \textit{Git}. För att realisera partikelsystemet användes \textit{OpenCL} för partikelberäkningar, \textit{OpenGL} för rendering, \textit{GLFW} för fönsterhantering, \textit{AntTweakbar} för ``run-time'' konfigurering, och \textit{GLEW} för att hantera \textit{OpenGL}-tillägg. Själva koden skrevs i C++ med \emph{Premake} som byggsystem, kernels skrevs i \textit{OpenCL} C variant, och shaders i \textit{GLSL}.
 
     \vspace{-0.5cm}
     \section{Teori och metodik}
     \vspace{-0.3cm}
     \subsection{Systemöversikt} \label{sec:system}
 
-    Vid tidpunkten \(t_n\) befinner sig varje partikel vid sin egen position \(\vec{x}\), lagrade i en \emph{buffer}. Målet är att räkna ut partikelns nästa position \(\vec{x}'\) vid tidpunkten \(t_{n+1}\) (d.v.s. vi stegar fram simuleringen). Detta görs genom \(\vec{x}' = \vec{x} + \mathbf{\hat{V}}(\vec{x})\), där \(\mathbf{\hat{V}}(\vec{x})\) är \emph{fältriktningen}. Allt detta hanteras av \emph{partikelsystemet}, där dessutom \(\mathbf{\hat{V}}(\vec{x})\) skapas, och beskrivs under Rubrik~\ref{sec:partikelsystemet}. Detta görs parallellt på GPU:n för varje partikel under samma \(t_n\). Vilket gör att positionerna \(\vec{x}'\) kan återanvändas när vi ska \emph{visualisera} dem med \emph{partikelrenderaren}, då båda systemen ej behöver lämna grafikprocessorns minnesrymd. Detta leder till god prestanda, och arbetstypen passar dessutom bra till sådana typer av processorer då synkroniseringen är minimal. Se Figur~\ref{fig:system}.
+    Vid tidpunkten \(t_n\) befinner sig varje partikel vid sin egen position \(\vec{x}\), lagrad i en \emph{buffer}. Målet är att räkna ut partikelns nästa position \(\vec{x}'\) vid tidpunkten \(t_{n+1}\) (ett steg fram i simuleringen). Detta görs genom \(\vec{x}' = \vec{x} + \mathbf{\hat{V}}(\vec{x})\), där \(\mathbf{\hat{V}}(\vec{x})\) är \emph{fältriktningen}. Allt detta hanteras av \emph{partikelsystemet}, där dessutom \(\mathbf{\hat{V}}(\vec{x})\) skapas, och beskrivs under Rubrik~\ref{sec:partikelsystemet}. Detta görs parallellt på GPU:n för varje partikel under samma \(t_n\). Vilket gör att positionerna \(\vec{x}'\) kan återanvändas vid \emph{visualisering} i \emph{partikelrenderaren}, eftersom inget av systemen behöver lämna grafikprocessorns minnesrymd. Detta leder till god prestanda, och arbetstypen passar dessutom bra till sådana typer av processorer eftersom synkroniseringen är minimal. Se Figur~\ref{fig:system}.
 
     \begin{figure}[H]
     \center
     \includegraphics[width=0.5\textwidth]{share/System.eps}
-    \caption{konceptuell översikt över våra två subsystem.}
+    \caption{konceptuell översikt över de två subsystemen.}
     \label{fig:system}
     \end{figure}
 
-    Detta görs genom att ladda upp en \emph{kernel} (beräkningskärna) som läser in \(\vec{x}\) och därefter skriver över denna med \(\vec{x}'\). Genom att läsa \(\vec{x}'\) från den delade buffern så kan en \emph{shader} användas för att rita partiklarna, genom att tolka hela \(\vec{x}'\) som en \emph{vertex buffer}. Man kan enkelt ändra \emph{visualiseringsmetod} (hur man ritar \(\vec{x}'\)) genom att byta shader, vilket beskrivs under Rubrik~\ref{sec:partikelrenderaren}.
+    Detta görs genom att ladda upp en \emph{kernel} (beräkningskärna) som läser in \(\vec{x}\) och därefter skriver över denna med \(\vec{x}'\). Genom att läsa \(\vec{x}'\) från den delade buffern kan en \emph{shader} användas för att rita partiklarna, genom att tolka hela \(\vec{x}'\) som en \emph{vertex buffer}. Man kan enkelt ändra \emph{visualiseringsmetod} (hur man ritar \(\vec{x}'\)) genom att byta shader, vilket beskrivs under Rubrik~\ref{sec:partikelrenderaren}.
 
     \vspace{-0.35cm}
     \subsection{Partikelsystemet} \label{sec:partikelsystemet}
 
-    Partikelsystemet bygger på att varje partikels nästkommande position beräknas parallellt genom en \textit{OpenCL} kernel för varje frame. 
+    Partikelsystemet bygger på att varje partikels nästkommande position beräknas parallellt av en \textit{OpenCL} kernel för varje frame. 
 
-    Originalpapperet presenterar både riktningsberäkningarna för två och tre dimensioner men eftersom vi valt att enbart implementera den sistnämnda fokuserar vi på den. Vi kommer ej heller följa originalpapperets beräkningar exakt utan justerar beroende på vad som passar vårat system bättre.
-
-    I korthet kan man säga att vi producerar tre olika vektorfält som vi kombinerar. De första två fälten representerar turbulensen och den allmänna riktningen som partiklarna ska följa. Dessa kombineras genom att adderas. Efter detta modifieras resultatfältet så att partiklarna åker runt solida kroppar och slutligen applicerar vi en rotationsoperation (curl) vilket resulterar i ett divergensfritt vektorfält.
+    I korthet kan man säga att tre olika vektorfält produceras och kombineras. De första två fälten representerar turbulensen och den allmänna riktningen som partiklarna ska följa. Dessa kombineras genom addition. Sedan modifieras resultatfältet så att partiklarna tar sig runt solida kroppar och slutligen appliceras en rotationsoperation (curl) vilket resulterar i ett divergensfritt vektorfält.
 
 \begin{figure}[H]
 \begin{minipage}[]{0.5\textwidth}
@@ -148,7 +148,7 @@ Turbulensfältet adderas med bakgrundsriktningen ($\vec{\psi} = \vec{N}(\vec{x})
 
 \textbf{Solida kroppar i fältet}
 
-För att få alla partiklar att respektera de sfärer vi placerat i fältet använder vi rampfunktionen
+För att få alla partiklar att respektera de utplacerade sfärerna i fältet används rampfunktionen
 \begin{equation}
 ramp(r) = \left\{\begin{matrix}
 1  && r > 1
@@ -160,7 +160,7 @@ ramp(r) = \left\{\begin{matrix}
 \end{equation}
 där $r$ är distansen $\vec{x}$ till närmaste sfär delat på distansen av sfären inflytande. 
 
-Resultatet från rampfunktionen som $\alpha = | ramp(d(\vec{x})/d_0) |$ där $d_0$  är en arbiträr skalfaktor. Slutligen beräknar vi hur fältet runt sfärer se ut genom 
+Resultatet från rampfunktionen som $\alpha = | ramp(d(\vec{x})/d_0) |$ där $d_0$  är en arbiträr skalfaktor. Slutligen beräknar vi hur fältet runt sfärer ser ut genom 
 \begin{equation}
 \vec{\psi}_c(\vec{x}) = \alpha * \vec{\psi}(\vec{x}) + (1.0 - \alpha) * \hat{n} * \vec{\psi}(\vec{x}) \cdot \hat{n}
 \end{equation}
@@ -199,7 +199,7 @@ och normeras så att vi själva kan bestämma vad hastigheten för partiklarna s
 
 \subsection{Partikelrenderaren} \label{sec:partikelrenderaren}
 
-Då varje position \(\vec{x}\) finns tillgänglig i \emph{vertex shadern} (enligt Rubrik~\ref{sec:system}) kan vi ändra hur de ritas ut genom att modifiera senare \emph{shader ``pipeline'' steg}. Tre styckna olika visualiseringsmetoder har implementerats, som beskrivs individuellt i kommande delar. Dessutom har vi valt att använda \emph{additiv färgblandning} när vi skriver till skärmbufferten, främst av estetiska skäl (områden med fler partiklar ger ett intryck att det är ``ljusare''), men dessutom av rent praktiska skäl (som kommer förklaras i kommande delar). Bilder över dessa visualiseringsmetoder finns i Rubrik~\ref{sec:results}.
+Då varje position \(\vec{x}\) finns tillgänglig i \emph{vertex shadern} (enligt Rubrik~\ref{sec:system}) kan vi ändra hur de ritas ut genom att modifiera senare \emph{shader ``pipeline'' steg}. Tre olika visualiseringsmetoder har implementerats, som beskrivs individuellt i kommande delar. Dessutom har vi valt att använda \emph{additiv färgblandning} när vi skriver till skärmbufferten, främst av estetiska skäl (områden med fler partiklar ger ett intryck att det är ``ljusare''), men dessutom av rent praktiska skäl (som kommer förklaras i kommande delar). Bilder över dessa visualiseringsmetoder finns i Rubrik~\ref{sec:results}.
 
 \textbf{Punktvisualiseringen}
 
@@ -207,13 +207,13 @@ Den enklaste typen av visualisering är att bara skapa en ``punkt'' där partike
 
 \textbf{Billboardsvisualiseringen}
 
-Visuella effekter så som eld och rök kan enkelt representeras med hjälp av s.k. \emph{``billboards''} (alt. \emph{``impostors''}), som är ett texturerat plan som alltid är riktad mot åskådaren (vilket ger intrycket att den är 2-D). Detta görs enligt \emph{Ingemar Ragnemalm}~\cite{ragnemalm2008polygons} genom att: \[\mathbf{M} = \begin{bmatrix} 1 & 0 & 0 & x \\
+Visuella effekter så som eld och rök kan enkelt representeras med hjälp av s.k. \emph{``billboards''} (alt. \emph{``impostors''}), som är ett texturerat plan som alltid är riktad mot åskådaren (vilket ger intrycket att den är 2-D). Detta görs enligt \emph{Ingemar Ragnemalm}~\cite{ragnemalm2008polygons} enligt: \[\mathbf{M} = \begin{bmatrix} 1 & 0 & 0 & x \\
                                     0 & 1 & 0 & y \\
                                     0 & 0 & 1 & z \\
                                     0 & 0 & 0 & 1 \end{bmatrix}, \;
           \vec{x} = \begin{bmatrix}x & y & z\end{bmatrix}.\]
 
-Hur skapas detta plan dock, given en punkt \(\vec{x}\)? Då vi har valt att göra allt detta i våra shaders, måste vi \emph{skapa ny geometri} under körtid. Man gör detta med hjälp av en s.k. \emph{geometry shader}, ett steg som ligger mellan en \emph{vertex shader} och en \emph{fragment shader}.
+Hur skapas detta plan, givet en punkt \(\vec{x}\)? Då vi har valt att göra allt detta i våra shaders, måste vi \emph{skapa ny geometri} under körtid. Man gör detta med hjälp av en s.k. \emph{geometry shader}, ett steg som ligger mellan en \emph{vertex shader} och en \emph{fragment shader}.
 
 \vspace{-0.3cm}
 \begin{figure}[H]
@@ -224,17 +224,17 @@ Hur skapas detta plan dock, given en punkt \(\vec{x}\)? Då vi har valt att gör
 \end{figure}
 \vspace{-0.3cm}
 
-Som figur~\ref{fig:bill}~(a) visar, skapar våran geometry shader för varje punkt \(\vec{x}\) (representerad som en grå cirkel i figuren), 4st nya hörn centrerade runt \(\vec{x}\) (de vita cirklarna) genom \texttt{EmitVertex}. Dessa flyttats med \(s\) enheter åt respektive håll; en parameter som bestämmer hur stor planet ska vara. Man genererar primitiver (trianglar i detta fall) genom att anropa \texttt{EndPrimitive}. Sist sätter vi \((u, v)\)-koordinaterna för de hörn vi skapat, och använder dessa i \emph{fragment shadern} för att rita ut en 2-D textur som har ``häftats'' till/på vårat plan.
+Som figur~\ref{fig:bill}~(a) visar, skapar geometry shadern för varje punkt \(\vec{x}\) (representerad som en grå cirkel i figuren), 4 nya hörn centrerade runt \(\vec{x}\) (de vita cirklarna) genom \texttt{EmitVertex}. Dessa flyttats med \(s\) enheter åt respektive håll; en parameter som bestämmer hur stor planet ska vara. Man genererar primitiver (trianglar i detta fall) genom att anropa \texttt{EndPrimitive}. Sist sätter vi \((u, v)\)-koordinaterna för de hörn vi skapat, och använder dessa i \emph{fragment shadern} för att rita ut en 2-D textur som har ``häftats'' till/på vårat plan.
 
 \textbf{Vektorfältvisualiseringen}
 
-För att enklare kunna visualisera riktningsfältet har vi implementerat \emph{``glyphs''}, som bl.a. beskrivs i \emph{McQuinn et al.}~\cite{mcquinn2013glyphsea}. Tekniken går ut på att ``dra ut'' en billboard så att den följer fältets riktning. Vi har gjort en förenklad variant, där de \(k\):st senaste \(\vec{x}\)-värden (vid tidsteg \(t_{n-1}, ..., t_{n-k}\)) lagras i en \emph{cirkulär buffer} \(\mathcal{C}\). Dessa används för att skapa en \emph{segmenterad billboard}, där de olika segmenten skapas mellan två punkter \(\vec{x}_{i-1}\),~\(\vec{x}_i\), där \(\vec{x}_{i-1}\),~\(\vec{x}_i\)~\(\in \mathcal{C}\). För varje segment skapas två hörn vid sidan av \(\vec{x}_i\) och två hörn vid sidan av \(\vec{x}_{i-1}\) enligt figur~\ref{fig:bill}~(b), som sedan används för att generera primitiver för varje segment (som kopplas samman).
+För att enklare kunna visualisera riktningsfältet har vi implementerat \emph{``glyphs''}, som bl.a. beskrivs i \emph{McQuinn et al.}~\cite{mcquinn2013glyphsea}. Tekniken går ut på att ``dra ut'' en billboard så att den följer fältets riktning. Vi har gjort en förenklad variant, där de \(k\) senaste \(\vec{x}\)-värdena (vid tidsteg \(t_{n-1}, ..., t_{n-k}\)) lagras i en \emph{cirkulär buffer} \(\mathcal{C}\). Dessa används för att skapa en \emph{segmenterad billboard}, där de olika segmenten skapas mellan två punkter \(\vec{x}_{i-1}\),~\(\vec{x}_i\), där \(\vec{x}_{i-1}\),~\(\vec{x}_i\)~\(\in \mathcal{C}\). För varje segment skapas två hörn vid sidan av \(\vec{x}_i\) och två hörn vid sidan av \(\vec{x}_{i-1}\) enligt figur~\ref{fig:bill}~(b), som sedan används för att generera primitiver för varje segment (som kopplas samman).
 
 \subsection{De övriga teknikaliteterna}
 
 \textbf{Grafiska gränssnittet}
 
-\textit{AntTweakBar} användes för att på ett smidigt sätt få ett grafisk gränssnitt där man kan ändra parametrar under körtid. När allt för en frame har renderats så ritas gränssnittet ut ovanpå allt med \texttt{TwDraw}. Som man kan se i figur~\ref{fig:atb} har vi lite olika parametrar som kan ändras för att få olika visuella effekter. T.ex. så kan man ändra riktingen på bakgrundsfältet, andel brus, och välja hur partiklarna ska visualiseras.
+\textit{AntTweakBar} användes för att på ett smidigt sätt få ett grafisk gränssnitt där man kan ändra parametrar under körtid. När allt för en frame har renderats, så ritas gränssnittet ut ovanpå allt med \texttt{TwDraw}. Som man kan se i figur~\ref{fig:atb} har vi lite olika parametrar som kan ändras för att få olika visuella effekter. Exempelvis kan man ändra riktingen på bakgrundsfältet, andel brus, och välja hur partiklarna ska visualiseras.
 
 \begin{figure}[H]
 \center
@@ -243,7 +243,9 @@ För att enklare kunna visualisera riktningsfältet har vi implementerat \emph{`
 \label{fig:atb}
 \end{figure}
 
-\clearpage
+\textbf{Kamerasvep}
+
+För att enkelt röra sig mellan olika perspektiv i scenen så har vi definerat ``områden av intresse'' där kameran bör vara (och i vilken riktning).  För att få mjuka kameraövergångar interpolerades kamerans position med en \emph{ease in/out}-funktion, med tiden som parameter.
 
 \section{Resultat \& diskussion} \label{sec:results}
 
@@ -260,17 +262,17 @@ All kod\footnote{\url{http://github.com/CaffeineViking/cnpf}} är open-source oc
 
         \subsection{Problem samt lösningar}
 
-            \textbf{``Svarta hål'' av ej divergens-frihet}
+            \textbf{``Svarta hål'' av ej divergensfrihet}
 
-            Tidigt i projektet hade vi problemet att partiklar konvergerade mot vissa punkter. Något som ej borde inträffa, då curl-noise skall vara ett divergens-fritt vektorfält. Det visade sig (med Stefans hjälp) att den linjära interpoleringen som vi gjorde av riktningsfältet i GPU:n förstörde den egenskapen. Evaluering av riktningsfältet på GPU:n kontinuerligt löste de problemen.
+            Tidigt i projektet hade vi problemet att partiklar konvergerade mot vissa punkter. Något som ej borde inträffa, då curl-noise skall vara ett divergensfritt vektorfält. Det visade sig (med examinatorns hjälp) att linjära interpoleringen som gjordes av riktningsfältet i GPU:n förstörde den egenskapen. Evaluering av riktningsfältet på GPU:n kontinuerligt löste de problemen.
 
             \textbf{Interpoleringsfel av CPU Simplex}
 
-            % ...
+            Något liknande inträffade senare i projektet, där våra partiklar tenderade att röra sig mot en viss riktning. Till slut visade det sig att detta inträffade för att vi interpolerade simplexbruset. Genom att flytta hela den koden till en GPU kernel så löstes de problemen.
 
             \textbf{Konstigheter i ``geometry shader''}
             
-            För att få segmenterade billboards att fungera behövde partiklarnas gamla positioner samplas och skickas till ``geometry shader''. En buffer med plats för alla samplade gamla positioner användes av OpenCL. Att direkt föra över delar av denna buffer till en buffer i OpenGL fungerade inte och gav bara positioner i origo. Ett nytt försök gjordes med en separat buffer för varje tidpunkt. Alltså, för varje tidpunkt finns en buffer med alla partiklars gamla positioner för den tidpunkten. Detta var en lösning till problemet och vi hade nu tillgång till alla positioner som behövdes för att skapa segmenterade billboards.
+            För att få segmenterade billboards att fungera behövde partiklarnas gamla positioner samplas och skickas till en ``geometry shader''. En buffer med plats för alla samplade gamla positioner användes av OpenCL. Att direkt föra över delar av denna buffer till en buffer i OpenGL fungerade inte och gav bara positioner i origo. Ett nytt försök gjordes med en separat buffer (den \(\mathcal{C}\) i rapporten) för varje tidpunkt. Alltså, för varje tidpunkt finns en buffer med alla partiklars gamla positioner för den tidpunkten. Detta var en lösning till problemet, och vi hade nu tillgång till alla tidigare positioner som behövdes för att skapa segmenterade billboards.
             
             Ett annat problem som dök upp var att det saknades delar av våra billboards när de skulle ritas ut. Orsaken till problemet var att för varje segment skapades bara 4 hörn som sedan skulle bindas ihop till en quad vilket inte gav rätt resultat. Lösningen var att skapa varje quad med två polygoner manuellt (Se figur~\ref{fig:bill}). 
             % ...
@@ -279,15 +281,15 @@ All kod\footnote{\url{http://github.com/CaffeineViking/cnpf}} är open-source oc
 
             \textbf{Segmentering med ``B-splines''}
 
-            Eftersom vi har en minnesbegränsning på \(\mathcal{C}\) så kan vi endast segmentera billboards till en viss nivå tills det börjar bli ``dyrt''. Här kan vi använda en \emph{B-spline} för att interpolera mjukt t.ex. \(\sum \vec{x}_i N^3_i(t)\), mellan den ändliga mängden kontrollpunkter och skapa ``fler'' \(\vec{x}_i\):n.
+            Eftersom vi har en minnesbegränsning på \(\mathcal{C}\) kan vi endast segmentera billboards till en viss nivå tills det börjar bli ``dyrt''. Här kan vi använda en \emph{B-spline} för att interpolera mjukt t.ex. \(\sum \vec{x}_i N^3_i(t)\), mellan den ändliga mängden kontrollpunkter och få ``fler'' \(\vec{x}_i\).
 
             \textbf{Filformat för ``egna'' scenarion}
 
-            % ...
+            Att kunna modifiera upplägget med en egen fil (t.ex. i JSON eller XML) skulle ha gjort våran demo mer flexibel för att skapa scenarion snabbare. Exempelvis att kunna bestämma shaders, flera solida kroppar och möjligtvis omgivning (ladda in 3-D modeller).
 
             \textbf{Konkreta scenarion av shaders}
 
-            Några mer ``praktiskt relevanta'' shaders och scenarion skulle ha varit intressanta att ha i demonstrationen. Exempelvis, att ha en gryta över en brasa som skapar dessutom lite rök. Den innehåller all teknik som finns i detta projekt, men kräver en del extra arbete.
+            Några mer ``praktiskt relevanta'' shaders och scenarion skulle ha varit intressanta att ha i demonstrationen. Exempelvis, att ha en gryta över en brasa som dessutom skapar lite rök. Det skulle innehålla all teknik som finns i detta projekt, dock kräver mer kod.
 
         \subsection{Projektreflektioner}
 
