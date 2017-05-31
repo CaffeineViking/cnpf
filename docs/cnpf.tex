@@ -65,11 +65,11 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
 
     Ett viktigt område inom \emph{datorgrafik och visualisering} är förmågan att \emph{simulera}/\emph{animera} verklighetstrogna \emph{flödessystem} i \emph{realtid}. Dessa används i bl.a. spel och filmer för att enkelt skapa \emph{visuella effekter} som t.ex. \emph{rök- och vattenrörelser}; effekter som vanligtvis inte animeras ``för hand'', utan är mer lämpliga att generera i en dator. I detta projekt implementeras ett \emph{grundläggande flödessystem} för att \emph{animera ett partikelsystem} i 3D med hjälp av ett så kallat \emph{rotationsbrus} (``curl-noise''), först presenterad av \emph{Bridson et al.}~\cite{bridson2007curl} 2007.
 
-    \textit{Rotationsbrus} används för att framställa verklighetstrogna \emph{partikelflöden} genom att procedurellt animera \emph{turbulenta flöden}. Detta görs genom att beräkna rotationen av ett vektorfält som genererats av \emph{procedurellt brus}. På så sätt skapas ett \emph{divergensfritt vektorfält}, som påverkar partiklarnas rörelsebanor utan att ackumulera dem. Detta är ett billigare alternativ till \emph{Navier-Stokes}, som är fysiskt korrekt, men eftersom det i detta fall är främst de visuella egenskaperna som är intressanta, är rotationsbrus tillräckligt bra. Dessutom kan rotationsbrus beräknas i realtid, vilket gör den lämplig för integrering i t.ex. spel och informationsvisualisering.
+    \textit{Rotationsbrus} används för att framställa verklighetstrogna \emph{partikelflöden} genom att procedurellt animera \emph{turbulenta flöden}. Detta görs genom att beräkna rotationen av ett vektorfält som genererats av \emph{procedurellt brus}. På så sätt skapas ett \emph{divergensfritt vektorfält}, som påverkar partiklarnas rörelsebanor utan att de ackumuleras på punkter i fältet. Metoden är ett billigare alternativ till \emph{Navier-Stokes}, som är fysiskt korrekt, men eftersom det i detta fall är främst de visuella egenskaperna som är intressanta, är rotationsbrus tillräckligt bra. Dessutom kan rotationsbrus beräknas i realtid, vilket gör den lämplig för integrering i t.ex. spel och informationsvisualisering.
 
-	I originalrapporten presenteras beräkningar för både två och tre dimensioner men i detta projekt är endast det sistnämnda aktuellt. Dessutom är vissa beräkningar från rapporten justerade för att bättre passa detta projekt.
+	I originalrapporten presenteras beräkningar för både två och tre dimensioner men i detta projekt är endast det sistnämnda aktuellt. Dessutom är vissa beräkningar justerade för att bättre passa detta projekt.
 	
-    Målet med detta projekt var att skapa ett enkelt \emph{3D-partikelsystem} där partiklarnas rörelse bestäms av ett vektorfällt genererat genom \emph{rotationsbrusmetoden} tillsammans med några enkla visuella effekter.
+    Målet med detta projekt var att skapa ett enkelt \emph{3D-partikelsystem} där partiklarnas rörelse bestäms av ett vektorfält genererat genom \emph{rotationsbrusmetoden} tillsammans med några enkla visuella effekter.
 
     Arbetsprocessen gick till stor del ut på parprogrammering, och versionshantering via \textit{Git}. För att realisera partikelsystemet användes \textit{OpenCL} för partikelberäkningar, \textit{OpenGL} för rendering, \textit{GLFW} för fönsterhantering, \textit{AntTweakbar} för ``run-time'' konfigurering, och \textit{GLEW} för att hantera \textit{OpenGL}-tillägg. Själva koden skrevs i C++ med \emph{Premake} som byggsystem, kernels skrevs i \textit{OpenCL} C variant, och shaders i \textit{GLSL}.
 
@@ -125,30 +125,20 @@ labelfont=bf,singlelinecheck=off,labelsep=space}
         n((\vec{x} + \vec{\epsilon}_z)/L)
         \end{pmatrix} * \gamma M_nL
     \end{equation}
-    Där $\vec{\epsilon}$ representerar en förskjutning så att alla vektorkomponenter inte blir korrelerade, i detta fall $\vec{\epsilon} = \begin{pmatrix}
-8 & 0 & 0\\ 
-0 & 8 & 0\\ 
-0 & 0 & 8
-\end{pmatrix}$. $n(\vec{x})$ är brusfunktionen som samplas för att producera turbulens i fältet. $\gamma$ representerar förhållande mellan brus och bakgrundsfält där $0$ är inget brus och därmed ingen turbulens medan $1$ är fullt brus utan något bakgrundsfält. $M_n$ är styrkan på bruset (fältriktningen är normerad så vi skalar upp det till vad vi vill ha). $L$ är längdskalan på bruset vilket i vårat fall är relativt stor (20-100) då vi vill ha långa övergångar i bruset.
+    Där $\vec{\epsilon}$ representerar en förskjutning så att alla vektorkomponenter inte blir korrelerade med varandra. $n(\vec{x})$ är brusfunktionen som samplas för att producera turbulens i fältet. $\gamma$ representerar förhållande mellan brus och bakgrundsfält där $0$ är inget brus och därmed ingen turbulens medan $1$ är fullt brus utan något bakgrundsfält. $M_n$ är styrkan på bruset (fältriktningen är normerad så vi skalar upp det till vad vi vill ha). $L$ är längdskalan på bruset vilket i vårat fall är relativt stor (runt 20) då vi vill ha långa övergångar i bruset.
 
-\textbf{Bakgrundsriktningen}
+\textbf{Backgrundsfält}
 
-Bakgrundsriktningen representerar den generella riktningen vi vill att partiklarna ska följa. Detta beskrivs inte något vidare i referensartikeln. Vi valde istället att anpassa en redan existerande implementation\footnote{\url{https://github.com/kbladin/Curl_Noise/blob/master/shaders/point_cloud_programs/update_velocities_curl_noise.frag}} av K. Bladin, vilket resulterar i ett bakgrundsfält som går i en uniform riktning efter att $\nabla \times$ operatorn har applicerats.
-\begin{equation}
-     \vec{F}(\vec{x}) = (1.0-\gamma) *  \vec{D}(\vec{x}) * M_f
-\end{equation}
-$ \vec{D}(\vec{x})$ representerar fältriktningen i den angivna punkten och $M_f$ är magnituden vi vill ha. Fältriktningen är beräknad enligt följande formel
-\begin{equation}
-    \vec{D}(\vec{x}) = \vec{x} \times \vec{p}
-\end{equation}
-Där $\vec{p}$ är fältriktningen vi vill att partiklarna ska följa.
+Backgrundsfältet representerar den generella riktningen vi vill att partiklarna ska följa. Detta beskrivs inte något vidare i referensartikeln. Vi valde istället att anpassa en redan existerande implementation\footnote{\url{https://github.com/kbladin/Curl_Noise/blob/master/shaders/point_cloud_programs/update_velocities_curl_noise.frag}} av K. Bladin, vilket resulterar i ett bakgrundsfält som går i en uniform riktning efter att $\nabla \times$ operatorn har applicerats.
+$     \vec{F}(\vec{x}) = (1.0-\gamma) *  \vec{D}(\vec{x}) * M_f $. $ \vec{D}(\vec{x})$ representerar fältriktningen i den angivna punkten och $M_f$ är magnituden vi vill ha. 
 
+Fältriktningen är beräknad enligt följande formel $\vec{D}(\vec{x}) = \vec{x} \times \vec{p}$. Där $\vec{p}$ är fältriktningen vi vill att partiklarna ska följa.
 
-Turbulensfältet adderas med bakgrundsriktningen ($\vec{\psi} = \vec{N}(\vec{x}) + \vec{F}(\vec{x})$) för att sedan justeras så att partiklarna beaktar solida sfärer utplacerade i vektorfältet. 
+\textbf{Solida kroppar}
 
-\textbf{Solida kroppar i fältet}
+Turbulensfältet adderas med backgrundsfältet ($\vec{\psi} = \vec{N}(\vec{x}) + \vec{F}(\vec{x})$) för att sedan justeras så att partiklarna beaktar solida sfärer utplacerade i vektorfältet. 
 
-För att få alla partiklar att respektera de utplacerade sfärerna i fältet används rampfunktionen
+För att få alla partiklar att respektera de utplacerade sfärerna används rampfunktionen
 \begin{equation}
 ramp(r) = \left\{\begin{matrix}
 1  && r > 1
@@ -160,7 +150,7 @@ ramp(r) = \left\{\begin{matrix}
 \end{equation}
 där $r$ är distansen $\vec{x}$ till närmaste sfär delat på distansen av sfären inflytande. 
 
-Resultatet från rampfunktionen som $\alpha = | ramp(d(\vec{x})/d_0) |$ där $d_0$  är en arbiträr skalfaktor. Slutligen beräknar vi hur fältet runt sfärer ser ut genom 
+Resultatet från rampfunktionen $\alpha = | ramp(d(\vec{x})/d_0) |$ där $d_0$  är en arbiträr skalfaktor. Slutligen beräknar vi fältet runt sfärerna genom 
 \begin{equation}
 \vec{\psi}_c(\vec{x}) = \alpha * \vec{\psi}(\vec{x}) + (1.0 - \alpha) * \hat{n} * \vec{\psi}(\vec{x}) \cdot \hat{n}
 \end{equation}
@@ -168,23 +158,7 @@ där $\hat{n}$ är normalen från $\vec{x}$ till den närmsta sfären. Detta pro
 
 \textbf{Curl}
 
-Vi får fram $ \nabla \vec{\psi}$ genom en \textit{finit differensmetod}
-\begin{equation}
-\vec{vx} = \vec{\psi}_c(\vec{x} + \vec{\epsilon}_x  ) - \vec{\psi}_c(\vec{x} - \vec{\epsilon}_x  )
-\end{equation}
-\begin{equation}
-\vec{vy} = \vec{\psi}_c(\vec{x} + \vec{\epsilon}_y  ) - \vec{\psi}_c(\vec{x} - \vec{\epsilon}_y  )
-\end{equation}
-\begin{equation}
-\vec{vz} = \vec{\psi}_c(\vec{x} + \vec{\epsilon}_z  ) - \vec{\psi}_c(\vec{x} - \vec{\epsilon}_z  )
-\end{equation}
-där $\vec{\epsilon} = \begin{pmatrix}
-0.0001 & 0 & 0\\ 
-0 & 0.0001 & 0\\ 
-0 & 0 & 0.0001
-\end{pmatrix}$ och varje resultatvektor $\vec{vx},\vec{vy},\vec{vz}$ är de partiella derivatorna i punkten $\vec{x}$.
-
-Slutligen beräknas den slutgiltiga fältriktningen genom att applicera curl operatorn på vår framtagna gradient genom
+Vi får fram $ \nabla \vec{\psi}$ genom en \textit{finit differensmetod} där vi samplar fältet väldigt nära punkten vi vill ha gradienten i och tar genomsnittet. Sist beräknas den slutgiltiga fältriktningen genom att applicera curl operatorn på vår framtagna gradient genom
 \begin{equation}
 \mathbf{\hat{V}}(\vec{x}) =
 \nabla \times \begin{pmatrix}
@@ -195,7 +169,7 @@ Slutligen beräknas den slutgiltiga fältriktningen genom att applicera curl ope
 \vec{vx}_z - \vec{vy}_y
 \end{pmatrix} / 0.0002
 \end{equation}
-och normeras så att vi själva kan bestämma vad hastigheten för partiklarna ska vara. En genomskärning i $xy$-planet av dessa fält kan ses i Figur~\ref{fig:curlnoise}.
+och normeras så att vi själva kan bestämma vad hastigheten för partiklarna ska vara. En genomskärning i $xy$-planet av dessa fält kan ses i Figur~\ref{fig:curlnoise}. 
 
 \subsection{Partikelrenderaren} \label{sec:partikelrenderaren}
 
@@ -234,22 +208,22 @@ För att enklare kunna visualisera riktningsfältet har vi implementerat \emph{`
 
 \textbf{Grafiska gränssnittet}
 
-\textit{AntTweakBar} användes för att på ett smidigt sätt få ett grafisk gränssnitt där man kan ändra parametrar under körtid. När allt för en frame har renderats, så ritas gränssnittet ut ovanpå allt med \texttt{TwDraw}. Som man kan se i figur~\ref{fig:atb} har vi lite olika parametrar som kan ändras för att få olika visuella effekter. Exempelvis kan man ändra riktingen på bakgrundsfältet, andel brus, och välja hur partiklarna ska visualiseras.
+\textit{AntTweakBar} användes för att på ett smidigt sätt få ett grafisk gränssnitt där man kan ändra parametrar under körtid. När allt för en frame har renderats, så ritas gränssnittet ut ovanpå allt med \texttt{TwDraw}. Som man kan se i figur~\ref{fig:atb} har vi lite olika parametrar som kan ändras för att få olika visuella effekter. Exempelvis kan man ändra riktningen på bakgrundsfältet, andel brus, och välja hur partiklarna ska visualiseras.
 
 \begin{figure}[H]
 \center
 \includegraphics[width=0.48\textwidth]{share/atb.png}
-\caption{Grafiska gränsnittet använder \textit{AntTweakBar}}
+\caption{Grafiska gränssnittet använder \textit{AntTweakBar}}
 \label{fig:atb}
 \end{figure}
 
 \textbf{Kamerasvep}
 
-För att enkelt röra sig mellan olika perspektiv i scenen så har vi definerat ``områden av intresse'' där kameran bör vara (och i vilken riktning).  För att få mjuka kameraövergångar interpolerades kamerans position med en \emph{ease in/out}-funktion, med tiden som parameter.
+För att enkelt röra sig mellan olika perspektiv i scenen så har vi definierat ``områden av intresse'' där kameran bör vara (och i vilken riktning).  För att få mjuka kameraövergångar interpolerades kamerans position med en \emph{ease in/out}-funktion, med tiden som parameter.
 
 \section{Resultat \& diskussion} \label{sec:results}
 
-En teknisk ``demo'' har byggts med metoderna som har beskrivits, och ett exempel av resultaterna kan ses vid Figur~\ref{fig:verysexy}. Våran implementation klarar av att animera och rendera 10 000 aktiva partiklar i realtid (60 FPS), förmodligen mera, med en NVIDIA GTX 980ti.
+En teknisk ``demo'' har byggts med metoderna som har beskrivits, och ett exempel av resultaten kan ses vid Figur~\ref{fig:verysexy}. Våran implementation klarar av att trivialt animera och rendera 10 000 aktiva partiklar i realtid (60 FPS) med en NVIDIA GTX 980ti.
 
 All kod\footnote{\url{http://github.com/CaffeineViking/cnpf}} är open-source och delas under en permissiv licens, som kan byggas till Windows och Linux.
 
@@ -268,7 +242,7 @@ All kod\footnote{\url{http://github.com/CaffeineViking/cnpf}} är open-source oc
 
             \textbf{Interpoleringsfel av CPU Simplex}
 
-            Något liknande inträffade senare i projektet, där våra partiklar tenderade att röra sig mot en viss riktning. Till slut visade det sig att detta inträffade för att vi interpolerade simplexbruset. Genom att flytta hela den koden till en GPU kernel så löstes de problemen.
+            Något liknande inträffade senare i projektet, där våra partiklar tenderade att röra sig mot en viss riktning. Till slut visade det sig att detta inträffade för att vi interpolerade simplexbruset och samplade alla komponenter på samma position. Genom att introducera $\vec{\epsilon}$ och flytta över samplingen till GPU:n så att vi inte behövde lagra det i en 3D textur löste sig problemet.
 
             \textbf{Konstigheter i ``geometry shader''}
             
@@ -285,13 +259,15 @@ All kod\footnote{\url{http://github.com/CaffeineViking/cnpf}} är open-source oc
 
             \textbf{Filformat för ``egna'' scenarion}
 
-            Att kunna modifiera upplägget med en egen fil (t.ex. i JSON eller XML) skulle ha gjort våran demo mer flexibel för att skapa scenarion snabbare. Exempelvis att kunna bestämma shaders, flera solida kroppar och möjligtvis omgivning (ladda in 3-D modeller).
+            Att kunna modifiera upplägget med en egen fil (t.ex. i JSON eller XML) skulle ha gjort våra demon mer flexibla för att skapa scenarion snabbare. Exempelvis att kunna bestämma shaders, flera solida kroppar och möjligtvis omgivning (ladda in 3-D modeller).
 
             \textbf{Konkreta scenarion av shaders}
 
-            Några mer ``praktiskt relevanta'' shaders och scenarion skulle ha varit intressanta att ha i demonstrationen. Exempelvis, att ha en gryta över en brasa som dessutom skapar lite rök. Det skulle innehålla all teknik som finns i detta projekt, dock kräver mer kod.
+            Några mer ``praktiskt relevanta'' shaders och scenarion skulle ha varit intressanta att ha i demonstrationen. Exempelvis, att ha en gryta över en brasa som dessutom skapar lite rök. Det skulle innehålla all teknik som finns i detta projekt, dock krävs mer kod.
 
         \subsection{Projektreflektioner}
+
+            Över lag är vi mycket nöjda med resultatet. När vi gick in i detta projekt hade vi inte mer än en väldigt otydlig bild av vad som skulle göras. Genom projektets gång har vi progressivt utvecklat vår vision om vad vi ville se i slutet och hur det skulle implementeras.
 
     \nocite{*} % Include all.
     \bibliographystyle{abbrv}
