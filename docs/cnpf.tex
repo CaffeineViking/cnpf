@@ -247,6 +247,8 @@ För att enklare kunna visualisera riktningsfältet har vi implementerat \emph{`
 
 \section{Resultat \& diskussion} \label{sec:results}
 
+En teknisk ``demo'' har byggts med metoderna som har beskrivits, och ett exempel av resultaterna kan ses vid Figur~\ref{fig:verysexy}. Våran implementation klarar av att animera och rendera 10 000 aktiva partiklar i realtid (60 FPS), förmodligen mera, med en NVIDIA GTX 980ti.
+
 All kod\footnote{\url{http://github.com/CaffeineViking/cnpf}} är open-source och delas under en permissiv licens, som kan byggas till Windows och Linux.
 
 \begin{figure}[H]
@@ -277,7 +279,7 @@ All kod\footnote{\url{http://github.com/CaffeineViking/cnpf}} är open-source oc
 
             \textbf{Segmentering med ``B-splines''}
 
-            Eftersom vi har en minnesbegränsning på \(\mathcal{C}\) så kan vi endast segmentera billboards till en viss nivå tills det börjar bli ``dyrt''. Här kan vi använda en \emph{B-spline} för att interpolera mjukt t.ex. \(\sum \vec{x}_i N^3_i(t)\), mellan den ändliga mängden kontrollpunkter och få ``fler'' \(\vec{x}_i\).
+            Eftersom vi har en minnesbegränsning på \(\mathcal{C}\) så kan vi endast segmentera billboards till en viss nivå tills det börjar bli ``dyrt''. Här kan vi använda en \emph{B-spline} för att interpolera mjukt t.ex. \(\sum \vec{x}_i N^3_i(t)\), mellan den ändliga mängden kontrollpunkter och skapa ``fler'' \(\vec{x}_i\):n.
 
             \textbf{Filformat för ``egna'' scenarion}
 
@@ -285,7 +287,7 @@ All kod\footnote{\url{http://github.com/CaffeineViking/cnpf}} är open-source oc
 
             \textbf{Konkreta scenarion av shaders}
 
-            Några mer ``praktiskt relevanta'' shaders och scenarion skulle ha varit intressanta att ha i demonstrationen. Exempelvis, att ha en gryta över en brasa som skapar dessutom lite rök. Den innehåller all teknik som finns i detta projekt, men kräver en del extra kod.
+            Några mer ``praktiskt relevanta'' shaders och scenarion skulle ha varit intressanta att ha i demonstrationen. Exempelvis, att ha en gryta över en brasa som skapar dessutom lite rök. Den innehåller all teknik som finns i detta projekt, men kräver en del extra arbete.
 
         \subsection{Projektreflektioner}
 
