@@ -258,7 +258,7 @@ För att enklare kunna visualisera riktningsfältet har vi implementerat \emph{`
 
             \textbf{``Svarta hål'' av ej divergens-frihet}
 
-            Tidigt i projektet hade vi problemet att partiklar konvergerade mot vissa punkter. Något som ej borde inträffa, då curl-noise skall vara ett divergens-fritt vektorfält. Det visade sig (med Stefans hjälp) att den linjära interpoleringen som vi gjorde av riktningsfältet i GPU:n förstörde den egenskapen. Evaluering av riktningsfältet på GPU:n kontinuerligt löste de problemet.
+            Tidigt i projektet hade vi problemet att partiklar konvergerade mot vissa punkter. Något som ej borde inträffa, då curl-noise skall vara ett divergens-fritt vektorfält. Det visade sig (med Stefans hjälp) att den linjära interpoleringen som vi gjorde av riktningsfältet i GPU:n förstörde den egenskapen. Evaluering av riktningsfältet på GPU:n kontinuerligt löste de problemen.
 
             \textbf{Interpoleringsfel av CPU Simplex}
 
@@ -275,13 +275,15 @@ För att enklare kunna visualisera riktningsfältet har vi implementerat \emph{`
 
             \textbf{Segmentering med ``B-splines''}
 
+            Eftersom vi har en minnesbegränsning på \(\mathcal{C}\) så kan vi endast segmentera billboards till en viss nivå tills det börjar bli ``dyrt''. Här kan vi använda en \emph{B-spline} för att interpolera mjukt t.ex. \(\sum \vec{x}_i N^3_i(t)\), mellan den ändliga mängden kontrollpunkter och få ``fler'' \(\vec{x}_i\).
+
             \textbf{Filformat för ``egna'' scenarion}
 
             % ...
 
             \textbf{Konkreta scenarion av shaders}
 
-            % ...
+            Några mer ``praktiskt relevanta'' shaders och scenarion skulle ha varit intressanta att ha i demonstrationen. Exempelvis, att ha en gryta över en brasa som skapar dessutom lite rök. Den innehåller all teknik som finns i detta projekt, men kräver en del extra kod.
 
         \subsection{Projektreflektioner}
 
