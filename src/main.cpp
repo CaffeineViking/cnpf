@@ -14,7 +14,8 @@
 #include "stringPatch.hpp"
 
 const std::string TITLE = "Curl-Noise Particle Field @ ";
-const GLuint WIDTH = 1280, HEIGHT = 720;
+
+const GLuint WIDTH = 1920, HEIGHT = 1080;
 // Horizontal field of view of ~ 90 degrees.
 const float FIELD_OF_VIEW = glm::radians(60.0);
 
@@ -82,7 +83,7 @@ int main(int argc, char**argv)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, MINOR_VERSION);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, TITLE.c_str(), nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, TITLE.c_str(), glfwGetPrimaryMonitor(), nullptr);
     if (window == nullptr)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -165,7 +166,7 @@ int main(int argc, char**argv)
     //system.addEmitter(glm::vec3(0.0f,-16.0f,6.0f), glm::vec3(4.0f,0.0f,4.0f));
    // system.addEmitter(glm::vec3(0.0f,-16.0f,-6.0f), glm::vec3(4.0f,0.0f,4.0f));
 
-    system.addSphere(glm::vec3(0.0f,0.0f,0.0f), 18.0f);
+    system.addSphere(glm::vec3(0.0f,10.0f,0.0f), 16.0f);
     //system.addSphere(glm::vec3(0.0f,0.0f,0.0f), 12.0f);
     //system.addSphere(glm::vec3(12.0f,0.0f,0.0f), 12.0f);
     //system.addSphere(glm::vec3(0.0f,12.0f,8.0f), 12.0f);
@@ -228,7 +229,7 @@ int main(int argc, char**argv)
     float frameAccumulatedTime = 0.0;
 
     // We have arrived at the main loop!
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(0.01f, 0.01f, 0.01f, 1.0f);
     while (!glfwWindowShouldClose(window))
     {
 	currentTime = glfwGetTime();

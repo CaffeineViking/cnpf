@@ -1,0 +1,11 @@
+max_particles: 10000
+start_particles: 100
+particles_time: 20
+spawner: (0,0,0) (1,0,1)
+spawner: (1,0.0) (1,2,1)
+camera_start: (2,0,2) (0,0,0)
+camera_hotkey: (0,0,0) (4,0,0)
+camera_hotkey: (0,0,0) (4,0,0)
+boundrary: (0,0,0) 12
+boundrary: (0,12,0) 6
+boundrary: (2,10,10) 2
