@@ -9,7 +9,6 @@
 #include "OpenCLUtils.hpp"
 #include "OpenGLUtils.hpp"
 #include "ShaderProgram.hpp"
-#include "VectorField3D.hpp"
 #include <vector>
 #include <utility>
 
@@ -63,7 +62,7 @@ public:
 	void compute(const float, const float);
 	void addSphere(const glm::vec3&, const float);
 	void addEmitter(const glm::vec3&, const glm::vec3&);
-	int getParticleCount(const float) const;
+	int getParticleCount() const;
 	float* referenceRespawnTime();
 	float* referenceFieldMagnitude();
 	float* referenceNoiseRatio();

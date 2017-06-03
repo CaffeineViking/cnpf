@@ -5,16 +5,11 @@
 #include <GL/glew.h>
 #include <CL/cl.hpp>
 #include <algorithm>
-#include "VectorField3D.hpp"
 #include <limits>
-#include "Noise.hpp"
 #include <algorithm>
 #ifdef WINDOWS
 #include <windows.h>
 #endif
-
-#define OUTPUT_WIDTH 1024
-#define OUTPUT_HEIGHT 1024
 
 ParticleSystem::~ParticleSystem(){
     // Don't forget to clean this up!
@@ -44,7 +39,7 @@ bool ParticleSystem::init(std::vector<std::string> paths, std::vector<std::strin
    _params = OpenCLUtils::initCL(paths, kernels, device);
 
    std::vector<float> spawnerData;
-   for(int i = 0; i < _emitters.size(); i++){
+   for(unsigned i = 0; i < _emitters.size(); i++){
       spawnerData.push_back(_emitters.at(i).first.x);
       spawnerData.push_back(_emitters.at(i).first.y);
       spawnerData.push_back(_emitters.at(i).first.z);
@@ -190,8 +185,8 @@ _currentParticles += _particlePerFrame;
    // Enqueue kernel for snapshoting field
   
    // Equeue kernel
-   _params.queue.enqueueNDRangeKernel(_params.kernels.at("particles"),cl::NullRange,cl::NDRange(getParticleCount(time)),cl::NDRange(1));
-   _params.queue.enqueueNDRangeKernel(_params.kernels.at("timers"),cl::NullRange,cl::NDRange(getParticleCount(time)),cl::NDRange(1));
+   _params.queue.enqueueNDRangeKernel(_params.kernels.at("particles"),cl::NullRange,cl::NDRange(getParticleCount()),cl::NDRange(1));
+   _params.queue.enqueueNDRangeKernel(_params.kernels.at("timers"),cl::NullRange,cl::NDRange(getParticleCount()),cl::NDRange(1));
 
    // Copy from OpenCL to OpenGL 
    _params.queue.enqueueCopyBuffer(_vertexBuffer, _tmp, 0, 0, 3*_maxParticleCount*sizeof(float), NULL, NULL);
@@ -212,7 +207,7 @@ _currentParticles += _particlePerFrame;
    _params.queue.finish();
 }
 
-int ParticleSystem::getParticleCount(const float time) const {
+int ParticleSystem::getParticleCount() const {
 
   return std::min(_currentParticles, _maxParticleCount);
 }
