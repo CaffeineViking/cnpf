@@ -10,7 +10,6 @@
 #include "OpenGLUtils.hpp"
 #include "ShaderProgram.hpp"
 #include "VectorField3D.hpp"
-#include "Scenario.hpp"
 #include <vector>
 #include <utility>
 
@@ -26,19 +25,13 @@ typedef struct Params {
   glm::vec3 fieldDirection;
 } Params;
 
-enum SnapshotType{
-	CURL, DISTANCE
-};
-
 #define MAX_POSITIONS_BUFFERS 8
 
 class ParticleSystem {
 private:
-	 const int PARTICLE_COUNT;
-	 float _maxParticleCount;
-	 float _currentParticles;
-	 float _particlePerFrame;
-	 float _maxTime;
+	 int _currentParticles;
+	 int _maxParticleCount;
+	 int _particlePerFrame;
 	 float _respawnTime;
 	 float _fieldMagnitude;
 	 float _noiseRatio;
@@ -47,7 +40,6 @@ private:
 	 glm::vec3 _fieldDirection;
 	 int _width, _height, _depth;
      int _positionsBufferSize, _positionsBufferHead;
-	 cl::ImageGL _texture;
 	 cl::Image2D _outputImage;
 	 clParameters _params;
 	 cl::BufferGL _tmp;
@@ -65,10 +57,9 @@ private:
 	std::vector<float> _spheres;
 public:	
 	~ParticleSystem();
-	ParticleSystem(const int,const float);
+	ParticleSystem(const int);
 
 	bool init(std::vector<std::string>, std::vector<std::string>, const std::string&, const ShaderProgram&);
-	bool setScenario(const Scenario&);
 	void compute(const float, const float);
 	void addSphere(const glm::vec3&, const float);
 	void addEmitter(const glm::vec3&, const glm::vec3&);
@@ -76,17 +67,16 @@ public:
 	float* referenceRespawnTime();
 	float* referenceFieldMagnitude();
 	float* referenceNoiseRatio();
-	float* referenceParticlesPerFrame();
+	int* referenceParticlesPerFrame();
 	float* referenceLengthScale();
 	float* referenceNoiseMagnitude();
 	glm::vec3* referenceFieldDirection();
 
-	bool snapshot(const std::string&, const SnapshotType);
+	bool snapshot(const std::string&, const std::string&);
 	ParticleSystem(const ParticleSystem&) = default;
 	ParticleSystem& operator=(const ParticleSystem&) = default;
 
 	ParticleSystem(ParticleSystem&&) = default;
 	ParticleSystem& operator=(ParticleSystem&&) = default;
-	float* getMaxParticleCount();
 };
 #endif

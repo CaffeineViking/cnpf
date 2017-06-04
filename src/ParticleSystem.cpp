@@ -21,11 +21,10 @@ ParticleSystem::~ParticleSystem(){
     glDeleteBuffers(1, &_vertexBufferId);
 }
 
-ParticleSystem::ParticleSystem(const int particles, const float time):
- PARTICLE_COUNT{particles}, _maxParticleCount(particles), 
- _currentParticles{0},
+ParticleSystem::ParticleSystem(const int maxParticles):
+ _currentParticles{0}, 
+ _maxParticleCount{maxParticles}, 
  _particlePerFrame{10},
- _maxTime{time},
  _respawnTime{20.0f},
  _fieldMagnitude{1.0f},
  _noiseRatio{0.0f},
@@ -56,35 +55,35 @@ bool ParticleSystem::init(std::vector<std::string> paths, std::vector<std::strin
 
    _spawnerBuffer = OpenCLUtils::createBuffer(_params.context,_params.queue, CL_MEM_READ_WRITE, sizeof(float)*_emitters.size()*6, spawnerData);
 
-   std::vector<float> data(3*PARTICLE_COUNT);
+   std::vector<float> data(3*_maxParticleCount);
 
    _positionsBufferSize = 64;
    _positionsBufferHead = 0;
 
-   std::vector<float> positionsBufferData(4*3*PARTICLE_COUNT);
+   std::vector<float> positionsBufferData(4*3*_maxParticleCount);
    for(int i = 0; i < 4; i++)
        std::copy(data.begin(), data.end(), positionsBufferData.begin() + i*data.size());
    
 
    // Same but for OpenGL
-   _vertexBufferId = OpenGLUtils::createBuffer(3*PARTICLE_COUNT, data.data(), GL_DYNAMIC_DRAW);
+   _vertexBufferId = OpenGLUtils::createBuffer(3*_maxParticleCount, data.data(), GL_DYNAMIC_DRAW);
 // _tmp buffer to do some copying on
    _tmp = cl::BufferGL(_params.context, CL_MEM_READ_WRITE, _vertexBufferId, NULL);
    
    for(int i = 0; i < MAX_POSITIONS_BUFFERS; i++){
-       _positionsBufferId[i] = OpenGLUtils::createBuffer(3*PARTICLE_COUNT, data.data(), GL_DYNAMIC_DRAW);
+       _positionsBufferId[i] = OpenGLUtils::createBuffer(3*_maxParticleCount, data.data(), GL_DYNAMIC_DRAW);
        _positionsGLBuffer[i] = cl::BufferGL(_params.context, CL_MEM_READ_WRITE, _positionsBufferId[i], NULL);
    }
 
 // Create Vertex buffer for the positions
-   _vertexBuffer = cl::Buffer(_params.context, CL_MEM_READ_WRITE, sizeof(float)*3*PARTICLE_COUNT);
-   _positionsBuffer = cl::Buffer(_params.context, CL_MEM_READ_WRITE, sizeof(float)*3*PARTICLE_COUNT*_positionsBufferSize);
+   _vertexBuffer = cl::Buffer(_params.context, CL_MEM_READ_WRITE, sizeof(float)*3*_maxParticleCount);
+   _positionsBuffer = cl::Buffer(_params.context, CL_MEM_READ_WRITE, sizeof(float)*3*_maxParticleCount*_positionsBufferSize);
 
    for(int i = 0; i < _positionsBufferSize; i++){
-       _params.queue.enqueueWriteBuffer(_positionsBuffer, CL_TRUE, i*sizeof(float)*3*PARTICLE_COUNT, sizeof(float)*3*PARTICLE_COUNT, data.data());
+       _params.queue.enqueueWriteBuffer(_positionsBuffer, CL_TRUE, i*sizeof(float)*3*_maxParticleCount, sizeof(float)*3*_maxParticleCount, data.data());
    }
    // Write position data to buffer
-   _params.queue.enqueueWriteBuffer(_vertexBuffer, CL_TRUE, 0, sizeof(float)*3*PARTICLE_COUNT, data.data());
+   _params.queue.enqueueWriteBuffer(_vertexBuffer, CL_TRUE, 0, sizeof(float)*3*_maxParticleCount, data.data());
 // Bind buffer to shader
    glBindBuffer(GL_ARRAY_BUFFER, _vertexBufferId);
    GLint position_attribute = glGetAttribLocation(program.getId(), "position");
@@ -105,13 +104,9 @@ bool ParticleSystem::init(std::vector<std::string> paths, std::vector<std::strin
    
       
 // Create timer buffer, this is not of interest to the renderer at the moment
-   for(int n = 0; n < PARTICLE_COUNT; ++n) {
-      data[3*n+0] = 999; //distribution(generator);
-      data[3*n+1] = 999; //distribution(generator);
-      data[3*n+2] = 999; //distribution(generator);
-   }
+    std::fill(data.begin(), data.end(),999);
 // Create Vertex buffer for the timers
-   _timerBuffer = OpenCLUtils::createBuffer(_params.context,_params.queue, CL_MEM_READ_WRITE, sizeof(float)*PARTICLE_COUNT, data);
+   _timerBuffer = OpenCLUtils::createBuffer(_params.context,_params.queue, CL_MEM_READ_WRITE, sizeof(float)*_maxParticleCount, data);
 // Create Vertex buffer for the spheres
    _spheresBuffer = OpenCLUtils::createBuffer(_params.context,_params.queue, CL_MEM_READ_WRITE, sizeof(float)*_spheres.size(), _spheres);
 
@@ -132,25 +127,9 @@ void ParticleSystem::addEmitter(const glm::vec3& position, const glm::vec3& dime
    _emitters.push_back(std::make_pair(position, dimensions));
 }
 
-bool ParticleSystem::setScenario(const Scenario& s){
-   _width = s.getWidth();
-   _height = s.getHeight();
-   _depth = s.getDepth();
-   std::vector<float> textureData = s.getField().getData();
-
-   GLuint glTexture = OpenGLUtils::createTexture3D(_width, _height,_depth, textureData.data());
-   int errCode;
-   _texture = cl::ImageGL(_params.context,CL_MEM_READ_ONLY,GL_TEXTURE_3D,0,glTexture,&errCode);
-   if (errCode!=CL_SUCCESS) {
-      std::cout<<"Failed to create OpenGL texture refrence: "<<errCode<<std::endl;
-      return false;
-    }
-    return true;
-}
-
 void ParticleSystem::compute(const float time, const float timeDelta){
 
-  _currentParticles += _particlePerFrame;
+_currentParticles += _particlePerFrame;
 // CL event used to wait for kernel osv...
    cl::Event ev;
 // set kernel arguments
@@ -163,7 +142,6 @@ void ParticleSystem::compute(const float time, const float timeDelta){
    std::vector<cl::Memory> objs;
    objs.clear();
    objs.push_back(_tmp);
-   objs.push_back(_texture);
    for(int i = 0; i < MAX_POSITIONS_BUFFERS; i++)
        objs.push_back(_positionsGLBuffer[i]);
    
@@ -192,7 +170,7 @@ void ParticleSystem::compute(const float time, const float timeDelta){
    _params.kernels.at("particles").setArg(3,kernelParameters);
    _params.kernels.at("particles").setArg(4,timeDelta);
    _params.kernels.at("particles").setArg(5,_positionsBuffer);
-   _params.kernels.at("particles").setArg(6,PARTICLE_COUNT);
+   _params.kernels.at("particles").setArg(6,_maxParticleCount);
    _params.kernels.at("particles").setArg(7,_positionsBufferHead);
 
    _positionsBufferHead++;
@@ -203,7 +181,7 @@ void ParticleSystem::compute(const float time, const float timeDelta){
    _params.kernels.at("timers").setArg(2,timeDelta);
    _params.kernels.at("timers").setArg(3,_respawnTime);
    _params.kernels.at("timers").setArg(4,_positionsBuffer);
-   _params.kernels.at("timers").setArg(5,PARTICLE_COUNT);
+   _params.kernels.at("timers").setArg(5,_maxParticleCount);
    _params.kernels.at("timers").setArg(6,_positionsBufferSize);
    _params.kernels.at("timers").setArg(7,_spawnerBuffer);
    _params.kernels.at("timers").setArg(8,_emitters.size());
@@ -216,13 +194,13 @@ void ParticleSystem::compute(const float time, const float timeDelta){
    _params.queue.enqueueNDRangeKernel(_params.kernels.at("timers"),cl::NullRange,cl::NDRange(getParticleCount(time)),cl::NDRange(1));
 
    // Copy from OpenCL to OpenGL 
-   _params.queue.enqueueCopyBuffer(_vertexBuffer, _tmp, 0, 0, 3*PARTICLE_COUNT*sizeof(float), NULL, NULL);
+   _params.queue.enqueueCopyBuffer(_vertexBuffer, _tmp, 0, 0, 3*_maxParticleCount*sizeof(float), NULL, NULL);
    size_t stride = _positionsBufferSize/MAX_POSITIONS_BUFFERS;
    for(int i = 0; i < MAX_POSITIONS_BUFFERS; i++){
        size_t bufferIndex = (_positionsBufferHead + stride*(i+1)) % _positionsBufferSize;
        _params.queue.enqueueCopyBuffer(_positionsBuffer, _positionsGLBuffer[i],
-				       bufferIndex*3*PARTICLE_COUNT*sizeof(float), 0,
-				       3*PARTICLE_COUNT*sizeof(float), NULL, NULL);
+				       bufferIndex*3*_maxParticleCount*sizeof(float), 0,
+				       3*_maxParticleCount*sizeof(float), NULL, NULL);
    }
    res = _params.queue.enqueueReleaseGLObjects(&objs);
    ev.wait();
@@ -233,20 +211,10 @@ void ParticleSystem::compute(const float time, const float timeDelta){
       // Wait for copy to be done
    _params.queue.finish();
 }
-float* ParticleSystem::getMaxParticleCount(){
-	return &_maxParticleCount;
-}
+
 int ParticleSystem::getParticleCount(const float time) const {
 
   return std::min(_currentParticles, _maxParticleCount);
-	/*
-  if (PARTICLE_COUNT > _maxParticleCount){
-		return std::min(time/_maxTime,1.0f)*_maxParticleCount;
-	}
-	else {
-		return std::min(time/_maxTime,1.0f)*PARTICLE_COUNT;
-   }
-   */
 }
 
 float* ParticleSystem::referenceRespawnTime() {
@@ -262,7 +230,7 @@ float* ParticleSystem::referenceNoiseRatio() {
 }
 
 
-float* ParticleSystem::referenceParticlesPerFrame() {
+int* ParticleSystem::referenceParticlesPerFrame() {
    return &_particlePerFrame;
 }
 
@@ -280,7 +248,7 @@ float* ParticleSystem::referenceNoiseMagnitude() {
 }
 
 // A real bastard of a function
-bool ParticleSystem::snapshot(const std::string& filePath, const SnapshotType type = SnapshotType::CURL) {
+bool ParticleSystem::snapshot(const std::string& filePath, const std::string& kenelName) {
 
 const unsigned w = 2048;
 const unsigned h = 2048;
@@ -297,7 +265,6 @@ const float scaleFactor = 0.018f;
    std::vector<cl::Memory> objs;
    objs.clear();
    objs.push_back(_tmp);
-   objs.push_back(_texture);
    objs.push_back(_positionsGLBuffer[0]);
 // Aquire GL Object ( ͡° ͜ʖ ͡°)
    cl_int res = _params.queue.enqueueAcquireGLObjects(&objs,NULL,&ev);
@@ -328,7 +295,7 @@ const float scaleFactor = 0.018f;
     region[1] = h;
     region[2] = 1;
 
-    _params.queue.enqueueWriteImage(outputImage, CL_TRUE, origin, region,0,0, data.data());
+//    _params.queue.enqueueWriteImage(outputImage, CL_TRUE, origin, region,0,0, data.data());
 
    Params kernelParameters{};
    kernelParameters.width = w;
@@ -341,22 +308,17 @@ const float scaleFactor = 0.018f;
    kernelParameters.boundraryWidth = 1.0f;
    kernelParameters.fieldDirection = _fieldDirection;
 
-   std::string kernel = "exportCurl";
-   if(type == SnapshotType::CURL){
-    kernel = "exportCurl";
-   }else if (type == SnapshotType::DISTANCE){
-    kernel =  "exportDistance";
-   }
-   _params.kernels.at(kernel).setArg(0,outputImage);
-   _params.kernels.at(kernel).setArg(1,_spheresBuffer);
-   _params.kernels.at(kernel).setArg(2,_spheres.size()/4);
-   _params.kernels.at(kernel).setArg(3,kernelParameters);
-   _params.kernels.at(kernel).setArg(4,scaleFactor);
+
+   _params.kernels.at(kenelName).setArg(0,outputImage);
+   _params.kernels.at(kenelName).setArg(1,_spheresBuffer);
+   _params.kernels.at(kenelName).setArg(2,_spheres.size()/4);
+   _params.kernels.at(kenelName).setArg(3,kernelParameters);
+   _params.kernels.at(kenelName).setArg(4,scaleFactor);
 
    cl_int err;
-   err = _params.queue.enqueueNDRangeKernel(_params.kernels.at(kernel),cl::NDRange(0,0),cl::NDRange(w,h),cl::NDRange(1,1));
+   err = _params.queue.enqueueNDRangeKernel(_params.kernels.at(kenelName),cl::NDRange(0,0),cl::NDRange(w,h),cl::NDRange(1,1));
    if(err != 0){
-    std::cout << "Something went wrong when running kernel: "<< kernel << " " << err << std::endl;
+    std::cout << "Something went wrong when running kernel: "<< kenelName << " " << err << std::endl;
     return false;
    }
 
