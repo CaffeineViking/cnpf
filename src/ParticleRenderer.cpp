@@ -23,8 +23,7 @@ PointParticleRenderer::PointParticleRenderer(const float pointSize)
 }
 
 void PointParticleRenderer::draw(const ParticleSystem& system,
-                                 const MovingCamera& camera,
-                                 const float time) {
+                                 const MovingCamera& camera) {
     // Make sure we have bound an program.
     shaderProgram_.begin(); // Yea baby!!!
     // Fetch the MVP matrix of the camera.
@@ -32,7 +31,7 @@ void PointParticleRenderer::draw(const ParticleSystem& system,
 
     glPointSize(particleSize_);
     // Finally, render the particles. *PARTICLES*.
-    int particles { system.getParticleCount(time)};
+    int particles { system.getParticleCount()};
     glDrawArrays(GL_POINTS, 0, particles);
 }
 
@@ -74,8 +73,7 @@ void BillboardParticleRenderer::changeBillboardTexture(const std::string& textur
 }
 
 void BillboardParticleRenderer::draw(const ParticleSystem& system,
-                                     const MovingCamera& camera,
-                                     const float time) {
+                                     const MovingCamera& camera) {
     // Make sure we have bound an program.
     shaderProgram_.begin(); // Yea baby!!!
     // Fetch the MVP matrix of the camera.
@@ -87,7 +85,7 @@ void BillboardParticleRenderer::draw(const ParticleSystem& system,
                 particleSize_);
 
     // Finally, render the particles. *PARTICLES*.
-    int particles { system.getParticleCount(time)};
+    int particles { system.getParticleCount()};
     glDrawArrays(GL_POINTS, 0, particles);
 }
 
@@ -252,8 +250,7 @@ void SampledParticleRenderer::changeBillboardTexture(const std::string& textureP
 }
 
 void SampledParticleRenderer::draw(const ParticleSystem& system,
-                                     const MovingCamera& camera,
-                                     const float time) {
+                                     const MovingCamera& camera) {
     // Make sure we have bound an program.
     shaderProgram_.begin(); // Yea baby!!!
     // Fetch the MVP matrix of the camera.
@@ -267,6 +264,6 @@ void SampledParticleRenderer::draw(const ParticleSystem& system,
                 segmentCount_);
 
     // Finally, render the particles. *PARTICLES*.
-    int particles { system.getParticleCount(time)};
+    int particles { system.getParticleCount()};
     glDrawArrays(GL_POINTS, 0, particles);
 }
