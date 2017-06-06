@@ -111,10 +111,6 @@ int main(int argc, char**argv)
         return -1;
     }
 
-    // Setup the Z-buffer
-    // glEnable(GL_DEPTH_TEST);
-    // glDepthFunc(GL_LESS);
-
     // Setup our buffer blending method.
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
     glEnable(GL_BLEND);
@@ -161,18 +157,8 @@ int main(int argc, char**argv)
 
     // Add a single emitter which will spawn particles into the scenario.
     system.addEmitter(glm::vec3(0.0f,-20.0f,0.0f), glm::vec3(16.0f,0.0f,16.0f));
-   // system.addEmitter(glm::vec3(-6.0f,-16.0f,0.0f), glm::vec3(4.0f,0.0f,4.0f));
-    //system.addEmitter(glm::vec3(0.0f,-16.0f,6.0f), glm::vec3(4.0f,0.0f,4.0f));
-   // system.addEmitter(glm::vec3(0.0f,-16.0f,-6.0f), glm::vec3(4.0f,0.0f,4.0f));
 
     system.addSphere(glm::vec3(0.0f,0.0f,0.0f), 18.0f);
-    //system.addSphere(glm::vec3(0.0f,0.0f,0.0f), 12.0f);
-    //system.addSphere(glm::vec3(12.0f,0.0f,0.0f), 12.0f);
-    //system.addSphere(glm::vec3(0.0f,12.0f,8.0f), 12.0f);
-
-    //system.addSphere(glm::vec3(0.0f,8.0f,0.0f), 4.0f);
-    //system.addSphere(glm::vec3(0.0f,0.0f,8.0f), 4.0f);
-
     // Initialize with the correct computing accelerator.
     // Usually: Intel, NVIIDA or AMD are platform vendors.
     std::vector<std::string> paths;
@@ -261,12 +247,9 @@ int main(int argc, char**argv)
         } else glDisable(GL_BLEND);
 
         // Step the particle simulation time forward:
-       //if (Locator::input()->isKeyPressed(GLFW_KEY_LEFT))
         if(accumulatedFrames > 0){
             system.compute(accumulatedTime, deltaTime);
         }
-        //if (Locator::input()->isKeyPressed(GLFW_KEY_RIGHT))
-         //   system.compute(accumulatedTime, -deltaTime);
 
         // // Compute the next step in the particle simpulation
         // // where we issue each step in parallel using a GPU.
@@ -280,7 +263,7 @@ int main(int argc, char**argv)
 
         glBindVertexArray(vao);
         // Finally, draw the simulated particles.
-        renderer->draw(system, camera, currentTime);
+        renderer->draw(system, camera);
         glBindVertexArray(0);
 
         TwDraw();

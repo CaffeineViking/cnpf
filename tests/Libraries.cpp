@@ -3,7 +3,6 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <CL/cl.hpp>
-#include "OpenCLUtils.hpp"
 bool checkInitGLFW(){
 
     const int MAJOR_VERSION = 2;
@@ -42,43 +41,10 @@ bool checkInitGLEW(){
     return true;
 }
 
-bool checkInitOpenCL() {
-    OpenCLUtils::dumpInfo();
-    clParameters clParams = OpenCLUtils::initCL(std::vector<std::string>{"share/kernels/simple_add.cl"},
-                                                std::vector<std::string>{"simple_add"}, "NVIDIA");
-
-    cl::Buffer buffer_A(clParams.context,CL_MEM_READ_WRITE,sizeof(int)*10);
-    cl::Buffer buffer_B(clParams.context,CL_MEM_READ_WRITE,sizeof(int)*10);
-    cl::Buffer buffer_C(clParams.context,CL_MEM_READ_WRITE,sizeof(int)*10);
-    int A[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-    int B[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-
-    clParams.queue.enqueueWriteBuffer(buffer_A,CL_TRUE,0,sizeof(int)*10,A);
-    clParams.queue.enqueueWriteBuffer(buffer_B,CL_TRUE,0,sizeof(int)*10,B);
-    clParams.kernels["simple_add"].setArg(0, buffer_A);
-    clParams.kernels["simple_add"].setArg(1, buffer_B);
-    clParams.kernels["simple_add"].setArg(2, buffer_C);
-    clParams.queue.enqueueNDRangeKernel(clParams.kernels["simple_add"], cl::NullRange,cl::NDRange(10), cl::NullRange);
-    int C[10];
-    clParams.queue.enqueueReadBuffer(buffer_C,CL_TRUE,0,sizeof(int)*10,C);
-
-    int expectedResult[] = {0,2,4,6,8,10,12,14,16,18};
-    for(int i=0;i<10;i++){
-       if(expectedResult[i] != C[i])
-        return false;
-    }
-
-    return true;
-}
-
 TEST_CASE("Check GLFW init") {
     REQUIRE( checkInitGLFW() == true);
 }
 
 TEST_CASE("Check GLEW init") {
     REQUIRE( checkInitGLEW() == true);
-}
-
-TEST_CASE("Check OpenCL init") {
-    REQUIRE(checkInitOpenCL() == true);
 }

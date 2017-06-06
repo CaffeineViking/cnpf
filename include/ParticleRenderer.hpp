@@ -26,7 +26,7 @@ public:
     float* refParticleSize() { return &particleSize_; };
     float getParticleSize() const { return particleSize_; }
     void setParticleSize(const float value) { particleSize_ = value; }
-    virtual void draw(const ParticleSystem&, const MovingCamera&, const float) = 0;
+    virtual void draw(const ParticleSystem&, const MovingCamera&) = 0;
     const ShaderProgram& getProgram() const { return shaderProgram_; }
 
 protected:
@@ -37,14 +37,14 @@ protected:
 class PointParticleRenderer : public ParticleRenderer {
 public:
     PointParticleRenderer(const float pointSize);
-    void draw(const ParticleSystem&, const MovingCamera&, const float) override;
+    void draw(const ParticleSystem&, const MovingCamera&) override;
 };
 
 class BillboardParticleRenderer : public ParticleRenderer {
 public:
     void changeBillboardTexture(const std::string&);
     BillboardParticleRenderer(const std::string&, const float);
-    void draw(const ParticleSystem&, const MovingCamera&, const float) override;
+    void draw(const ParticleSystem&, const MovingCamera&) override;
     std::string& getTexturePath() { return texturePath_; }
     Texture& getTexture() { return texture_; }
 
@@ -68,7 +68,7 @@ public:
     SampledParticleRenderer(const std::string&, const float, const int);
     int getSegmentCount() const { return segmentCount_; }
     void  setSegmentCount(const int count) { segmentCount_ = count; }
-    void draw(const ParticleSystem&, const MovingCamera&, const float) override;
+    void draw(const ParticleSystem&, const MovingCamera&) override;
     std::string& getTexturePath() { return texturePath_; }
     Texture& getTexture() { return texture_; }
 
