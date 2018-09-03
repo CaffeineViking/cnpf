@@ -1,5 +1,8 @@
 #include "Camera.hpp"
 #include "Locator.hpp"
+
+#define GLM_ENABLE_EXPERIMENTAL
+
 #include <glm/gtx/rotate_vector.hpp>
 
 Camera::Camera(float FOV, float width, float height):

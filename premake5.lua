@@ -2,7 +2,7 @@
 name = "cnpf"
 workspace (name)
     language "C++"
-    flags {"C++11"}
+    cppdialect "C++11"
     location "build"
     warnings "Extra"
     -- platforms {"Static", "Shared"}
