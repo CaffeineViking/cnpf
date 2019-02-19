@@ -7,6 +7,8 @@ Curl Noise Particle Flow
 
 Based on the *Curl-Noise for Procedural Fluid Flow* by Bridson et al. from 2007, we designed an implemented an application which enables the simulation and visualization of particles in real-time by calculating each curl-noise iteration purely on the GPU by using OpenCL kernels. We did this by generating a 3-D *Simplex noise*, and converted it to a vector field by finding the gradient in each point in space. Afterwards, we apply the curl operator on the vector field, which provides a divergence-free vector field (and no particles will therefore get stuck together at any point in space). With this, we can in each step, for every particle, calculate the new position of the particle by assuming a point in the curl-field is the velocity (e.g. in a fluid) of a particle in that position. Since we apply these steps on the GPU by using OpenCL (for the simulation) and OpenGL (for the visualization), and share the buffer state by OpenCL-OpenGL buffer interoperability, we never leave GPU-space, and can therefore do this in real-time, even when rendering a huge number of particle billboards.
 
+You can find our *very* short article describing this technique over here: [Fluid Animation in Real-Time using 3-D Curl-Noise](https://eriksvjansson.net/papers/firmtdr.pdf)
+
 Dependencies
 --------
 
