@@ -1,0 +1,6 @@
+meta/*                  linguist-vendored
+share/kernels/simplex.c linguist-vendored
+include/foreign/*       linguist-vendored
+include/foreign/*       linguist-vendored
+src/foreign/*           linguist-vendored
+utils/*                 linguist-vendored
