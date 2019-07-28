@@ -26,24 +26,13 @@ project (name)
     includedirs {"include"}
     filter {"system:windows"} -- Inconsistent...
         defines {"WINDOWS"}
-        links {"OpenCL", "glew32", "glfw3dll", "opengl32", "AntTweakBar"}
+        libdirs {"C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v10.0/lib/x64"}
+        libdirs {"bin/"}
+        links {"OpenCL", "glew32", "glfw3", "opengl32", "AntTweakBar64"}
         buildoptions { " -static -static-libgcc -static-libstdc++", "-mwindows", "-mconsole" }
     filter {"system:linux or bsd or macosx"}
         links {"OpenCL", "glfw", "GLEW", "AntTweakBar", "GL"}
         defines {"UNIX"}
-
--- ------ Library
--- project (name)
---     targetdir "lib"
---     files {"src/**.cc"}
---     includedirs {"include"}
---     -- links {"library"}
---     filter {"platforms:Static"}
---         defines {"STATIC"}
---         kind "StaticLib"
---     filter {"platforms:Shared"}
---         defines {"SHARED"}
---         kind "SharedLib"
 
 ---------------- Testing
 project (name.."-tests")
@@ -56,7 +45,9 @@ project (name.."-tests")
     includedirs {"include"}
     filter {"system:windows"} -- Inconsistent...
         defines {"WINDOWS"}
-        links {"OpenCL", "glew32", "glfw3dll", "opengl32", "antTweakBar"}
+        libdirs {"C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v10.0/lib/x64"}
+        libdirs {"bin/"}
+        links {"OpenCL", "glew32", "glfw3", "opengl32", "AntTweakBar64"}
         buildoptions { " -static -static-libgcc -static-libstdc++", "-mwindows", "-mconsole"}
     filter {"system:linux or bsd or macosx"}
         links {"OpenCL", "glfw", "GLEW", "AntTweakBar", "GL"}
